@@ -19,27 +19,28 @@ module GitBlame
     def initialize(args)
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
-    end
-
-    #
-    # @return Fixnum Total number of lines
-    #
-    def loc
-
-    end
-
-    #
-    # @return Fixnum Total number of commits
-    #
-    def commits
-      
+      @authors3 = Hash.new { |h,k| h[k] = {} }
     end
 
     #
     # @return Fixnum Total number of files
     #
     def files
-      
+      pop.instance_variable_get("@files").count
+    end
+
+    #
+    # @return Fixnum Total number of commits
+    #
+    def commits
+      authors.inject(0){ |result, author| author.commits + result }
+    end
+
+    #
+    # @return Fixnum Total number of lines
+    #
+    def loc
+      pop.authors.inject(0) {|result, author| author.loc + result }
     end
 
     #
@@ -71,22 +72,64 @@ module GitBlame
     # @return Author
     #
     def update(author, args)
-      @authors[author] ||= Author.new(name: author)
+      found = fetch(author)
       args.keys.each do |key|
-         @authors[author].send("#{key}=", args[key])
+        found.send("#{key}=", args[key])
       end
 
-      return @authors[author]
+      return found
+    end
+
+    #
+    # @return Author
+    # @author String
+    #
+    def fetch(author)
+      @authors[author] ||= Author.new({name: author})
+    end
+
+    def pop
+      @_pop ||= lambda {
+        @files = execute("git ls-files").split("\n")
+        @files.each do |file|
+          if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
+            begin
+              execute("git blame '#{file}'").scan(/\((.+?)\s+\d{4}-\d{2}-\d{2}/).each do |author|
+                fetch(author).loc += 1
+                @authors3[author.first][file] ||= 1
+              end
+            rescue ArgumentError; end # Encoding error
+          end
+
+          authors.each do |author|
+            author.files = @authors3[author.name].keys.count
+          end
+        end
+      }.call
+      return self
     end
   end
 
   class Author
-    attr_accessor :commits, :name
+    attr_accessor :name, :files
+    attr_writer :commits, :loc
+
     #
     # @args Hash
     #
     def initialize(args = {})
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
+    end
+
+    #
+    # @return Fixnum
+    #
+    def loc
+      @loc ||= 0
+    end
+
+    def commits
+      @commits || 0
     end
   end
 end
