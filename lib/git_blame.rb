@@ -26,7 +26,7 @@ module GitBlame
     # @return Fixnum Total number of files
     #
     def files
-      pop.instance_variable_get("@files").count
+      populate.instance_variable_get("@files").count
     end
 
     #
@@ -40,14 +40,14 @@ module GitBlame
     # @return Fixnum Total number of lines
     #
     def loc
-      pop.authors.inject(0) {|result, author| author.loc + result }
+      populate.authors.inject(0){|result, author| author.loc + result }
     end
 
     #
     # @return Array<Author> A list of authors
     #
     def authors
-      pop.instance_variable_get("@authors").values
+      populate.instance_variable_get("@authors").values
     end
 
     private
@@ -79,10 +79,13 @@ module GitBlame
     # @author String
     #
     def fetch(author)
-      @authors[author] ||= Author.new({name: author})
+      @authors[author] ||= Author.new({name: author, parent: self})
     end
 
-    def pop
+    #
+    # @return GitBlame
+    #
+    def populate
       @_pop ||= lambda {
         @files = execute("git ls-files").split("\n")
         @files.each do |file|
@@ -118,14 +121,26 @@ module GitBlame
     end
 
     #
-    # @return Fixnum
+    # @return Fixnum Number of lines
     #
     def loc
       @loc ||= 0
     end
 
+    #
+    # @return Fixnum Number of commits
+    #
     def commits
       @commits || 0
+    end
+
+    #
+    # @return String Percent of total
+    # @format loc / commits / files
+    #
+    def percent
+      "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
+        map{ |w| (send(w) / @parent.send(w).to_f) * 100 }
     end
   end
 end

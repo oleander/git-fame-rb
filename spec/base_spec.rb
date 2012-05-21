@@ -6,17 +6,25 @@ describe GitBlame::Base do
     end
 
     describe "author" do
-      let(:author) { subject.authors.first }
-      it "should respond to commits" do
-        author.commits.should > 0
+      let(:author) { subject.authors[1] }
+      it "should have a bunch of commits" do
+        author.commits.should eq(21)
       end
 
       it "should respond to name" do
-        author.name.length.should > 0
+        author.name.should eq("Linus Oleander")
       end
 
       it "should have a number of locs" do
-        author.loc.should > 0
+        author.loc.should eq(136)
+      end
+
+      it "should have a number of files" do
+        author.files.should eq(6)
+      end
+
+      it "should have some percentage" do
+        author.percent.should eq("12.6 / 30.9 / 40.0")
       end
     end
   end
@@ -24,8 +32,8 @@ describe GitBlame::Base do
   describe "total" do
     it "should respond to #loc, #commits and #files" do
       subject.files.should eq(15)
-      subject.commits.should eq(69)
-      subject.loc.should eq(1081)
+      subject.commits.should eq(68)
+      subject.loc.should eq(1082)
     end
   end
 end
