@@ -44,7 +44,7 @@ Start by navigating to a git repository.
 
 #### Order by a specific field
 
-Order by the amounts of current lines of code `loc`, the amounts of `commits` or author
+Order by the amounts of current lines of code `loc`, the amounts of `commits` or author.
 
 - `git accuse --order=loc`
 - `git accuse --order=commits`
@@ -62,7 +62,12 @@ Want to work with the data before printing it?
 
 The constructor takes a hash with arguments, one being the `order` key.
 
-`GitBlame.new({order: "loc"})`
+``` ruby
+GitBlame::Base.new({
+  order: "loc", 
+  repository: "/tmp/repo"
+})
+```
 
 #### Print table to console
 
@@ -101,3 +106,7 @@ The constructor takes a hash with arguments, one being the `order` key.
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+## Testing
+
+TODO: Add notice about submodule
