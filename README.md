@@ -58,13 +58,13 @@ Want to work with the data before printing it?
 
 `repository = GitBlame.new`
 
-#### Order by
+#### Sort by
 
-The constructor takes a hash with arguments, one being the `order` key.
+The constructor takes a hash with arguments, one being the `sort` key.
 
 ``` ruby
 GitBlame::Base.new({
-  order: "loc", 
+  sort: "loc", 
   repository: "/tmp/repo"
 })
 ```
