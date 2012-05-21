@@ -5,12 +5,19 @@ describe GitBlame::Base do
       should have(3).authors
     end
 
-    it "should respond to commits" do
-      subject.authors.first.commits.should > 0
-    end
+    describe "author" do
+      let(:author) { subject.authors.first }
+      it "should respond to commits" do
+        author.commits.should > 0
+      end
 
-    it "should respond to name" do
-      subject.authors.first.name.length.should > 0
+      it "should respond to name" do
+        author.name.length.should > 0
+      end
+
+      it "should have a number of locs" do
+        author.loc.should > 0
+      end
     end
   end
 
