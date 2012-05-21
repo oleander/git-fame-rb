@@ -35,7 +35,14 @@ module GitBlame
     # @return Array<Author> A list of authors
     #
     def authors
-      populate.instance_variable_get("@authors").values
+      authors = populate.instance_variable_get("@authors").values
+      @sort ? authors.sort_by do |author| 
+        if @sort == "name"
+          author.send(@sort) 
+        else
+          -1 * author.send(@sort)
+        end
+      end : authors
     end
 
     private

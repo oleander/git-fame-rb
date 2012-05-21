@@ -36,4 +36,21 @@ describe GitBlame::Base do
       subject.loc.should eq(1082)
     end
   end
+
+  describe "sort" do
+    it "should be able to sort #authors by name" do
+      authors = GitBlame::Base.new({repository: @repository, sort: "name"}).authors
+      authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
+    end
+
+    it "should be able to sort #authors by commits" do
+      authors = GitBlame::Base.new({repository: @repository, sort: "commits"}).authors
+      authors.map(&:name).should eq(["Magnus Holm", "Linus Oleander", "7rans"])
+    end
+
+    it "should be able to sort #authors by files" do
+      authors = GitBlame::Base.new({repository: @repository, sort: "files"}).authors
+      authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
+    end
+  end
 end
