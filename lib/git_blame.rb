@@ -47,16 +47,10 @@ module GitBlame
     # @return Array<Author> A list of authors
     #
     def authors
-      execute("git shortlog -se").split("\n").map do |l| 
-        _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-        update(u, {commits: commits.to_i})
-      end
-
-      return @authors.values
+      pop.instance_variable_get("@authors").values
     end
 
     private
-
     #
     # @command String Command to be executed inside the @repository path
     #
@@ -95,16 +89,18 @@ module GitBlame
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             begin
               execute("git blame '#{file}'").scan(/\((.+?)\s+\d{4}-\d{2}-\d{2}/).each do |author|
-                fetch(author).loc += 1
+                fetch(author.first).loc += 1
                 @authors3[author.first][file] ||= 1
               end
             rescue ArgumentError; end # Encoding error
           end
-
-          authors.each do |author|
-            author.files = @authors3[author.name].keys.count
-          end
         end
+
+        execute("git shortlog -se").split("\n").map do |l| 
+          _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
+          update(u, {commits: commits.to_i, files: @authors3[u].keys.count})
+        end
+
       }.call
       return self
     end
