@@ -1,5 +1,8 @@
 module GitBlame
-    class Base
+
+  class Base
+    include ActionView::Helpers::NumberHelper
+
     #
     # @args[:repository] String Absolute path to git repository
     # @args[:order] String What should #authors be sorted by?
@@ -8,6 +11,17 @@ module GitBlame
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
+    end
+
+    #
+    # Generates pretty output
+    #
+    def pretty_puts
+      extend Hirb::Console
+      puts "Total number of files: #{number_with_delimiter(files)}"
+      puts "Total number of lines: #{number_with_delimiter(loc)}"
+      puts "Total number of commits: #{number_with_delimiter(commits)}"
+      table(authors, fields: [:name, :loc, :commits, :files, :percent])
     end
 
     #

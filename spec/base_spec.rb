@@ -53,4 +53,12 @@ describe GitBlame::Base do
       authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
   end
+
+  describe "#pretty_print" do
+    it "should print" do
+      lambda {
+        2.times { subject.pretty_puts }
+      }.should_not raise_error
+    end
+  end
 end

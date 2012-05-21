@@ -10,9 +10,4 @@ require "git_blame/base"
 output = $-v
 $-v = false
 
-module GitBlame
-  extend Hirb::Console
-  include ActionView::Helpers::NumberHelper
-end
-
 $-v = output

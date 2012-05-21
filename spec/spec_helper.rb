@@ -3,6 +3,7 @@ require "git_blame"
 
 RSpec.configure do |config|
   config.mock_with :rspec
+  config.order = "random"
   config.before(:all) do 
     @repository = File.join(File.dirname(File.dirname(__FILE__)), "spec/fixtures/gash")
     Dir.chdir(@repository) do
