@@ -8,7 +8,7 @@ describe GitBlame::Base do
     describe "author" do
       let(:author) { subject.authors.last }
       it "should have a bunch of commits" do
-        author.commits.should eq(21)
+        author.f_commits.should eq(21)
       end
 
       it "should respond to name" do
@@ -16,11 +16,11 @@ describe GitBlame::Base do
       end
 
       it "should have a number of locs" do
-        author.loc.should eq(136)
+        author.f_loc.should eq(136)
       end
 
       it "should have a number of files" do
-        author.files.should eq(6)
+        author.f_files.should eq(6)
       end
 
       it "should have some percentage" do
@@ -28,17 +28,17 @@ describe GitBlame::Base do
       end
     end
     describe "format" do
-      let(:author) { GitBlame::Author.new({commits: 12345, files: 6789, loc: 1234})}
+      let(:author) { GitBlame::Author.new({f_commits: 12345, f_files: 6789, f_loc: 1234})}
       it "should format #commits" do
-        author.f_commits.should eq("12,345")
+        author.commits.should eq("12,345")
       end
 
       it "should format #files" do
-        author.f_files.should eq("6,789")
+        author.files.should eq("6,789")
       end
 
       it "should format #loc" do
-        author.f_loc.should eq("1,234")
+        author.loc.should eq("1,234")
       end
     end
   end
