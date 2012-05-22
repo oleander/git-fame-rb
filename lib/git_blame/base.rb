@@ -38,14 +38,14 @@ module GitBlame
     # @return Fixnum Total number of commits
     #
     def commits
-      authors.inject(0){ |result, author| author.f_commits + result }
+      authors.inject(0){ |result, author| author.raw_commits + result }
     end
 
     #
     # @return Fixnum Total number of lines
     #
     def loc
-      populate.authors.inject(0){ |result, author| author.f_loc + result }
+      populate.authors.inject(0){ |result, author| author.raw_loc + result }
     end
 
     #
@@ -57,7 +57,7 @@ module GitBlame
         if @sort == "name"
           author.send(@sort) 
         else
-          -1 * author.send("f_#{@sort}")
+          -1 * author.send("raw_#{@sort}")
         end
       end : authors
     end
@@ -106,7 +106,7 @@ module GitBlame
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             begin
               execute("git blame '#{file}'").scan(/\((.+?)\s+\d{4}-\d{2}-\d{2}/).each do |author|
-                fetch(author.first).f_loc += 1
+                fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
               end
             rescue ArgumentError; end # Encoding error
@@ -115,7 +115,7 @@ module GitBlame
 
         execute("git shortlog -se").split("\n").map do |l| 
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-          update(u, {f_commits: commits.to_i, f_files: @file_authors[u].keys.count})
+          update(u, {raw_commits: commits.to_i, raw_files: @file_authors[u].keys.count})
         end
 
         progressbar.finish
