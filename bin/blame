@@ -4,5 +4,6 @@ require "git_blame"
 
 GitBlame::Base.new({
   repository: Dir.pwd,
-  progressbar: true
+  progressbar: true,
+  sort: "loc"
 }).pretty_puts
