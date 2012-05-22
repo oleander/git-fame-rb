@@ -58,14 +58,17 @@ Want to work with the data before printing it?
 
 `repository = GitBlame.new`
 
-#### Sort by
+#### Arguments
 
-The constructor takes a hash with arguments, one being the `sort` key.
+- **repository** (String) Absolute path to repository.
+- **sort** (String) What should #authors be sorted by. Options are: `loc`, `commits` and `files`. Default is `loc`.
+- **progressbar** (Boolean) Should a progressbar be shown during the calculation? Default is `false`.
 
 ``` ruby
 GitBlame::Base.new({
   sort: "loc", 
-  repository: "/tmp/repo"
+  repository: "/tmp/repo",
+  progressbar: false
 })
 ```
 

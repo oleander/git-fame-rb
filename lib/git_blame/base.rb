@@ -8,7 +8,7 @@ module GitBlame
     # @args[:order] String What should #authors be sorted by?
     #
     def initialize(args)
-      @sort = nil
+      @sort = "loc"
       @progressbar = false
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
