@@ -23,7 +23,6 @@ Generates data like:
   gem.name          = "git_fame"
   gem.require_paths = ["lib"]
   gem.version       = GitFame::VERSION
-  gem.executables = ["git-fame"]
 
   gem.add_dependency("progressbar")
   gem.add_dependency("trollop")
