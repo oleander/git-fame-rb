@@ -20,7 +20,7 @@ module GitBlame
     #
     def pretty_puts
       extend Hirb::Console
-      Hirb.enable({pager: true})
+      Hirb.enable({pager: false})
       puts "Total number of files: #{number_with_delimiter(files)}"
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}"
