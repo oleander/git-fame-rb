@@ -1,3 +1,0 @@
-[submodule "spec/fixtures/gash"]
-	path = spec/fixtures/gash
-	url = git://github.com/water/gash.git
