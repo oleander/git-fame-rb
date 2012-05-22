@@ -6,7 +6,7 @@ describe GitBlame::Base do
     end
 
     describe "author" do
-      let(:author) { subject.authors[1] }
+      let(:author) { subject.authors.last }
       it "should have a bunch of commits" do
         author.commits.should eq(21)
       end
