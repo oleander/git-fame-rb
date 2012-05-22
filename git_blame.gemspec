@@ -14,5 +14,5 @@ Gem::Specification.new do |gem|
   gem.name          = "git_blame"
   gem.require_paths = ["lib"]
   gem.version       = GitBlame::VERSION
-  gem.executables = ["blame"]
+  gem.executables = ["git-flame"]
 end

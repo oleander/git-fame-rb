@@ -1,7 +1,6 @@
 # GitBlame
 
 Who did what in your project?
-GitBlame generates som much needed statistics from your current git repository. 
 
 ## Output
 
