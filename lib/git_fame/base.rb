@@ -4,7 +4,7 @@ module GitFame
 
     #
     # @args[:repository] String Absolute path to git repository
-    # @args[:order] String What should #authors be sorted by?
+    # @args[:sort] String What should #authors be sorted by?
     #
     def initialize(args)
       @sort = "loc"
@@ -85,12 +85,11 @@ module GitFame
     # @return Author
     #
     def update(author, args)
-      found = fetch(author)
-      args.keys.each do |key|
-        found.send("#{key}=", args[key])
+      fetch(author).tap do |found|
+        args.keys.each do |key|
+          found.send("#{key}=", args[key])
+        end
       end
-
-      return found
     end
 
     #

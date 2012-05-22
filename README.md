@@ -4,12 +4,11 @@ Who did what in your project?
 
 ## Output
 
-Example out from the [water project](https://github.com/water/mainline).
-
 ```
 Total number of files: 2,053
 Total number of lines: 63,132
 Total number of commits: 4,330
+
 +------------------------+--------+---------+-------+--------------------+
 | name                   | loc    | commits | files | percent            |
 +------------------------+--------+---------+-------+--------------------+
@@ -31,40 +30,36 @@ Total number of commits: 4,330
 +------------------------+--------+---------+-------+--------------------+
 ```
 
+## Installation
+
+`[sudo] gem install git_fame`
+
 ## Usage
 
 ### Console
 
 Start by navigating to a git repository.
 
-#### Plain
+Run `git fame` to generate output as above.
 
-`git accuse`
+#### Options
 
-#### Order by a specific field
-
-Order by the amounts of current lines of code `loc`, the amounts of `commits` or author.
-
-- `git fame --order=loc`
-- `git fame --order=commits`
-- `git fame --order=author`
-
-Default is `loc`.
+- `git fame --order=loc` Order table by `loc`. Available options are: `loc`, `commits` and `files`. Default is `loc`.
+- `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
+- `git fame --progressbar=1` Should a progressbar be visible during the calculation? Default is `1`.
 
 ### Class
 
 Want to work with the data before printing it?
 
-`repository = GitFame.new`
+#### Constructor arguments
 
-#### Arguments
-
-- **repository** (String) Absolute path to repository.
-- **sort** (String) What should #authors be sorted by. Options are: `loc`, `commits` and `files`. Default is `loc`.
+- **repository** (String) Path to repository.
+- **sort** (String) What should #authors be sorted by? Available options are: `loc`, `commits` and `files`. Default is `loc`.
 - **progressbar** (Boolean) Should a progressbar be shown during the calculation? Default is `false`.
 
 ``` ruby
-GitFame::Base.new({
+repository = GitFame::Base.new({
   sort: "loc", 
   repository: "/tmp/repo",
   progressbar: false
@@ -73,33 +68,30 @@ GitFame::Base.new({
 
 #### Print table to console
 
-`repository.pretty_print`
+`repository.pretty_puts`
 
 ### Statistics
 
 #### GitFame
 
-- Total number of lines
-  - `repository.loc`
-- Total number of commits
-  - `repository.commits`
-- Total number of files
-  - `repository.files`
-- All authors
-  - `repository.authors`
+- `repository.loc` (Fixnum) Total number of lines.
+- `repository.commits` (Fixnum) Total number of commits.
+- `repository.files` (Fixnum) Total number of files.
+- `repository.authors` (Array< Author >) All authors.
 
 #### Author
 
-`author = repository.authors`
+`author = repository.authors.first`
 
-- Number of lines
-  - `author.loc`
-- Number of commits
-  - `author.commits`
-- Number of files changed
-  - `author.files`
-- Percent of total (loc/commits/files)
-  - `author.percent`
+- Formated
+  - `author.loc` (String) Number of lines.
+  - `author.commits` (String) Number of commits.
+  - `author.files` (String) Number of files changed.
+- Non formated
+  - `author.percent` (String) Percent of total (loc/commits/files)
+  - `author.raw_loc` (Fixnum) Number of lines.
+  - `author.raw_commits` (Fixnum) Number of commits.
+  - `author.raw_files` (Fixnum) Number of files changed.
 
 ## Contributing
 
@@ -111,4 +103,13 @@ GitFame::Base.new({
 
 ## Testing
 
-TODO: Add notice about submodule
+1. Download fixtures (`spec/fixtures`) using `git submodule update --init`.
+2. Run rspec using `rspec spec`.
+
+## Requirements
+
+*GitFame* is tested in *OS X 10.7.4* using Ruby *1.9.2*.
+
+## License
+
+*GitFame* is released under the *MIT license*.
