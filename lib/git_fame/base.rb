@@ -20,9 +20,9 @@ module GitFame
     def pretty_puts
       extend Hirb::Console
       Hirb.enable({pager: false})
-      puts "Total number of files: #{number_with_delimiter(files)}"
+      puts "\nTotal number of files: #{number_with_delimiter(files)}"
       puts "Total number of lines: #{number_with_delimiter(loc)}"
-      puts "Total number of commits: #{number_with_delimiter(commits)}"
+      puts "Total number of commits: #{number_with_delimiter(commits)}\n"
       table(authors, fields: [:name, :loc, :commits, :files, :percent])
     end
 
