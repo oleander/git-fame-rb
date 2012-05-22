@@ -7,7 +7,7 @@ RSpec.configure do |config|
   config.before(:all) do 
     @repository = File.join(File.dirname(File.dirname(__FILE__)), "spec/fixtures/gash")
     Dir.chdir(@repository) do
-      `git checkout d0dbdc7 2&> /dev/null`
+      `git checkout cc94119 2&> /dev/null`
     end
   end
 end

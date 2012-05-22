@@ -1,7 +1,7 @@
 module GitFame
   class Author
     include GitFame::Helper
-    attr_accessor :name, :raw_files, :raw_commits, :raw_loc
+    attr_accessor :name, :raw_files, :raw_commits, :raw_loc, :files_list
     #
     # @args Hash
     #

@@ -122,7 +122,13 @@ module GitFame
 
         execute("git shortlog -se").split("\n").map do |l| 
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-          update(u, {raw_commits: commits.to_i, raw_files: @file_authors[u].keys.count})
+          user = fetch(u)
+          if user.raw_commits.zero?
+            update(u, {raw_commits: commits.to_i, raw_files: @file_authors[u].keys.count, files_list: @file_authors[u].keys})
+          else
+            files = (user.files_list + @file_authors[u].keys).uniq
+            update(u, {raw_commits: commits.to_i + user.raw_commits, raw_files: files.count, files_list: files})
+          end
         end
 
         progressbar.finish
