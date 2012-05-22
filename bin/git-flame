@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby -w
 
-require "git_blame"
+require "git_flame"
 
-GitBlame::Base.new({
+GitFlame::Base.new({
   repository: Dir.pwd,
   progressbar: true,
   sort: "loc"

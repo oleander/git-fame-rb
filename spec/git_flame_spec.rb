@@ -1,5 +1,5 @@
-describe GitBlame::Base do
-  let(:subject) { GitBlame::Base.new({repository: @repository}) }
+describe GitFlame::Base do
+  let(:subject) { GitFlame::Base.new({repository: @repository}) }
   describe "#authors" do
     it "should have a list of authors" do
       should have(3).authors
@@ -28,7 +28,7 @@ describe GitBlame::Base do
       end
     end
     describe "format" do
-      let(:author) { GitBlame::Author.new({raw_commits: 12345, raw_files: 6789, raw_loc: 1234})}
+      let(:author) { GitFlame::Author.new({raw_commits: 12345, raw_files: 6789, raw_loc: 1234})}
       it "should format #commits" do
         author.commits.should eq("12,345")
       end
@@ -53,17 +53,17 @@ describe GitBlame::Base do
 
   describe "sort" do
     it "should be able to sort #authors by name" do
-      authors = GitBlame::Base.new({repository: @repository, sort: "name"}).authors
+      authors = GitFlame::Base.new({repository: @repository, sort: "name"}).authors
       authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by commits" do
-      authors = GitBlame::Base.new({repository: @repository, sort: "commits"}).authors
+      authors = GitFlame::Base.new({repository: @repository, sort: "commits"}).authors
       authors.map(&:name).should eq(["Magnus Holm", "Linus Oleander", "7rans"])
     end
 
     it "should be able to sort #authors by files" do
-      authors = GitBlame::Base.new({repository: @repository, sort: "files"}).authors
+      authors = GitFlame::Base.new({repository: @repository, sort: "files"}).authors
       authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
   end

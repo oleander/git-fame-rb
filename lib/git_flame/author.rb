@@ -1,4 +1,4 @@
-module GitBlame
+module GitFlame
   class Author
     include ActionView::Helpers::NumberHelper
     attr_accessor :name, :raw_files, :raw_commits, :raw_loc

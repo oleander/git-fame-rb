@@ -1,5 +1,4 @@
-module GitBlame
-
+module GitFlame
   class Base
     include ActionView::Helpers::NumberHelper
 
@@ -95,7 +94,7 @@ module GitBlame
     end
 
     #
-    # @return GitBlame
+    # @return GitFlame
     #
     def populate
       @_pop ||= lambda {
