@@ -27,6 +27,20 @@ describe GitBlame::Base do
         author.percent.should eq("12.6 / 30.9 / 40.0")
       end
     end
+    describe "format" do
+      let(:author) { GitBlame::Author.new({commits: 12345, files: 6789, loc: 1234})}
+      it "should format #commits" do
+        author.f_commits.should eq("12,345")
+      end
+
+      it "should format #files" do
+        author.f_files.should eq("6,789")
+      end
+
+      it "should format #loc" do
+        author.f_loc.should eq("1,234")
+      end
+    end
   end
 
   describe "total" do

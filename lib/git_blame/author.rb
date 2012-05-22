@@ -1,5 +1,6 @@
 module GitBlame
   class Author
+    include ActionView::Helpers::NumberHelper
     attr_accessor :name, :files
     attr_accessor :commits, :loc
     #
@@ -19,6 +20,12 @@ module GitBlame
     def percent
       "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
         map{ |w| (send(w) / @parent.send(w).to_f) * 100 }
+    end
+
+    [:f_commits, :f_files, :f_loc].each do |method|
+      define_method(method) do
+        number_with_delimiter(send(method.to_s.gsub(/^f_/, "")))
+      end
     end
   end
 end
