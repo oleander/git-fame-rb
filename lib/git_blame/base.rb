@@ -9,6 +9,7 @@ module GitBlame
     #
     def initialize(args)
       @sort = nil
+      @progressbar = false
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
@@ -98,7 +99,9 @@ module GitBlame
     def populate
       @_pop ||= lambda {
         @files = execute("git ls-files").split("\n")
+        progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)
         @files.each do |file|
+          progressbar.inc
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             begin
               execute("git blame '#{file}'").scan(/\((.+?)\s+\d{4}-\d{2}-\d{2}/).each do |author|
@@ -113,6 +116,8 @@ module GitBlame
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           update(u, {commits: commits.to_i, files: @file_authors[u].keys.count})
         end
+
+        progressbar.finish
 
       }.call
       return self
