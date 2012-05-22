@@ -75,4 +75,22 @@ describe GitFlame::Base do
       }.should_not raise_error
     end
   end
+
+  describe ".git_repository?" do
+    it "should know if a folder is a git repository [absolute path]" do
+      GitFlame::Base.git_repository?(@repository).should be_true
+    end
+
+    it "should know if a folder exists or not [absolute path]" do
+      GitFlame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+    end
+
+    it "should know if a folder is a git repository [relative path]" do
+      GitFlame::Base.git_repository?("spec/fixtures/gash").should be_true
+    end
+
+    it "should know if a folder exists or not [relative path]" do
+      GitFlame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+    end
+  end
 end

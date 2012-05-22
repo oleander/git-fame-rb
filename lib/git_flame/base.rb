@@ -61,6 +61,14 @@ module GitFlame
       end : authors
     end
 
+    #
+    # @return Boolean Is the given @dir a git repository?
+    # @dir Path (relative or absolute) to git repository
+    #
+    def self.git_repository?(dir)
+      Dir.exists?(File.join(dir, ".git"))
+    end
+
     private
     #
     # @command String Command to be executed inside the @repository path
