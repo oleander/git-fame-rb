@@ -123,11 +123,22 @@ module GitFame
         execute("git shortlog -se").split("\n").map do |l| 
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
+
+          # Has this user been updated before?
           if user.raw_commits.zero?
-            update(u, {raw_commits: commits.to_i, raw_files: @file_authors[u].keys.count, files_list: @file_authors[u].keys})
+            update(u, {
+              raw_commits: commits.to_i, 
+              raw_files: @file_authors[u].keys.count, 
+              files_list: @file_authors[u].keys
+            })
           else
+            # Calculate the number of files edited by users
             files = (user.files_list + @file_authors[u].keys).uniq
-            update(u, {raw_commits: commits.to_i + user.raw_commits, raw_files: files.count, files_list: files})
+            update(u, {
+              raw_commits: commits.to_i + user.raw_commits, 
+              raw_files: files.count, 
+              files_list: files
+            })
           end
         end
 
