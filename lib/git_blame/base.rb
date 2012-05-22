@@ -8,6 +8,7 @@ module GitBlame
     # @args[:order] String What should #authors be sorted by?
     #
     def initialize(args)
+      @sort = nil
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }

@@ -1,3 +1,6 @@
+output = $-v
+$-v = false
+
 require "git_blame/version"
 require "progressbar"
 require "mimer_plus"

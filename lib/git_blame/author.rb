@@ -1,26 +1,15 @@
 module GitBlame
   class Author
     attr_accessor :name, :files
-    attr_writer :commits, :loc
+    attr_accessor :commits, :loc
     #
     # @args Hash
     #
     def initialize(args = {})
+      @loc = 0
+      @commits = 0
+      @files = 0
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
-    end
-
-    #
-    # @return Fixnum Number of lines
-    #
-    def loc
-      @loc ||= 0
-    end
-
-    #
-    # @return Fixnum Number of commits
-    #
-    def commits
-      @commits || 0
     end
 
     #
