@@ -24,7 +24,7 @@ module GitBlame
       puts "Total number of files: #{number_with_delimiter(files)}"
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}"
-      table(authors, fields: [:name, :loc, :commits, :files, :percent])
+      table(authors, fields: [:name, :f_loc, :f_commits, :f_files, :percent])
     end
 
     #
