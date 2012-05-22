@@ -1,4 +1,4 @@
-module GitFlame
+module GitFame
   module Helper
     #
     # @value Fixnum Value to be formated

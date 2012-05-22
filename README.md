@@ -1,4 +1,4 @@
-# GitFlame
+# GitFame
 
 Who did what in your project?
 
@@ -45,9 +45,9 @@ Start by navigating to a git repository.
 
 Order by the amounts of current lines of code `loc`, the amounts of `commits` or author.
 
-- `git flame --order=loc`
-- `git flame --order=commits`
-- `git flame --order=author`
+- `git fame --order=loc`
+- `git fame --order=commits`
+- `git fame --order=author`
 
 Default is `loc`.
 
@@ -55,7 +55,7 @@ Default is `loc`.
 
 Want to work with the data before printing it?
 
-`repository = GitFlame.new`
+`repository = GitFame.new`
 
 #### Arguments
 
@@ -64,7 +64,7 @@ Want to work with the data before printing it?
 - **progressbar** (Boolean) Should a progressbar be shown during the calculation? Default is `false`.
 
 ``` ruby
-GitFlame::Base.new({
+GitFame::Base.new({
   sort: "loc", 
   repository: "/tmp/repo",
   progressbar: false
@@ -77,7 +77,7 @@ GitFlame::Base.new({
 
 ### Statistics
 
-#### GitFlame
+#### GitFame
 
 - Total number of lines
   - `repository.loc`

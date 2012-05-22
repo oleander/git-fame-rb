@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
-require File.expand_path('../lib/git_flame/version', __FILE__)
+require File.expand_path('../lib/git_fame/version', __FILE__)
 
 Gem::Specification.new do |gem|
   gem.authors       = ["Linus Oleander"]
@@ -15,15 +15,15 @@ Generates data like:
 - Lines of code by a user
   }
   
-  gem.homepage      = "https://github.com/oleander/git-flame-rb"
+  gem.homepage      = "https://github.com/oleander/git-fame-rb"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
   gem.test_files    = gem.files.grep(%r{^(test|spec|features)/})
-  gem.name          = "git_flame"
+  gem.name          = "git_fame"
   gem.require_paths = ["lib"]
-  gem.version       = GitFlame::VERSION
-  gem.executables = ["git-flame"]
+  gem.version       = GitFame::VERSION
+  gem.executables = ["git-fame"]
 
   gem.add_dependency("progressbar")
   gem.add_dependency("trollop")

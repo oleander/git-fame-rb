@@ -1,6 +1,6 @@
-module GitFlame
+module GitFame
   class Author
-    include GitFlame::Helper
+    include GitFame::Helper
     attr_accessor :name, :raw_files, :raw_commits, :raw_loc
     #
     # @args Hash

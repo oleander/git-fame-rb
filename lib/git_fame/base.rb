@@ -1,6 +1,6 @@
-module GitFlame
+module GitFame
   class Base
-    include GitFlame::Helper
+    include GitFame::Helper
 
     #
     # @args[:repository] String Absolute path to git repository
@@ -102,7 +102,7 @@ module GitFlame
     end
 
     #
-    # @return GitFlame
+    # @return GitFame
     #
     def populate
       @_pop ||= lambda {

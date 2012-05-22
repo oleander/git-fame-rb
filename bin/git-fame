@@ -1,19 +1,19 @@
 #!/usr/bin/env ruby -w
 
-require "git_flame"
+require "git_fame"
 require "trollop"
 
 sort = ["name", "commits", "loc", "files"]
 opts = Trollop::options do
-  version "git-flame #{GitFlame::VERSION} (c) 2012 Linus Oleander"
+  version "git-fame #{GitFame::VERSION} (c) 2012 Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
   opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
   opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
 end
 
-Trollop::die :repository, "is not a git repository" unless GitFlame::Base.git_repository?(opts[:repository])
+Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
-GitFlame::Base.new({
+GitFame::Base.new({
   repository: opts[:repository],
   progressbar: opts[:progressbar] == 1,
   sort: opts[:sort]

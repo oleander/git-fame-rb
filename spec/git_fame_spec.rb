@@ -1,5 +1,5 @@
-describe GitFlame::Base do
-  let(:subject) { GitFlame::Base.new({repository: @repository}) }
+describe GitFame::Base do
+  let(:subject) { GitFame::Base.new({repository: @repository}) }
   describe "#authors" do
     it "should have a list of authors" do
       should have(3).authors
@@ -28,7 +28,7 @@ describe GitFlame::Base do
       end
     end
     describe "format" do
-      let(:author) { GitFlame::Author.new({raw_commits: 12345, raw_files: 6789, raw_loc: 1234})}
+      let(:author) { GitFame::Author.new({raw_commits: 12345, raw_files: 6789, raw_loc: 1234})}
       it "should format #commits" do
         author.commits.should eq("12,345")
       end
@@ -53,17 +53,17 @@ describe GitFlame::Base do
 
   describe "sort" do
     it "should be able to sort #authors by name" do
-      authors = GitFlame::Base.new({repository: @repository, sort: "name"}).authors
+      authors = GitFame::Base.new({repository: @repository, sort: "name"}).authors
       authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by commits" do
-      authors = GitFlame::Base.new({repository: @repository, sort: "commits"}).authors
+      authors = GitFame::Base.new({repository: @repository, sort: "commits"}).authors
       authors.map(&:name).should eq(["Magnus Holm", "Linus Oleander", "7rans"])
     end
 
     it "should be able to sort #authors by files" do
-      authors = GitFlame::Base.new({repository: @repository, sort: "files"}).authors
+      authors = GitFame::Base.new({repository: @repository, sort: "files"}).authors
       authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
   end
@@ -78,19 +78,19 @@ describe GitFlame::Base do
 
   describe ".git_repository?" do
     it "should know if a folder is a git repository [absolute path]" do
-      GitFlame::Base.git_repository?(@repository).should be_true
+      GitFame::Base.git_repository?(@repository).should be_true
     end
 
     it "should know if a folder exists or not [absolute path]" do
-      GitFlame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+      GitFame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").should be_false
     end
 
     it "should know if a folder is a git repository [relative path]" do
-      GitFlame::Base.git_repository?("spec/fixtures/gash").should be_true
+      GitFame::Base.git_repository?("spec/fixtures/gash").should be_true
     end
 
     it "should know if a folder exists or not [relative path]" do
-      GitFlame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+      GitFame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").should be_false
     end
   end
 end

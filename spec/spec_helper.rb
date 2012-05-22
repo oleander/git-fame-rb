@@ -1,5 +1,5 @@
 require "rspec"
-require "git_flame"
+require "git_fame"
 
 RSpec.configure do |config|
   config.mock_with :rspec
