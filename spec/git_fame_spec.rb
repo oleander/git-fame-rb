@@ -8,7 +8,7 @@ describe GitFame::Base do
     describe "author" do
       let(:author) { subject.authors.last }
       it "should have a bunch of commits" do
-        author.raw_commits.should eq(22)
+        author.raw_commits.should eq(23)
       end
 
       it "should respond to name" do
@@ -16,7 +16,7 @@ describe GitFame::Base do
       end
 
       it "should have a number of locs" do
-        author.raw_loc.should eq(137)
+        author.raw_loc.should eq(136)
       end
 
       it "should have a number of files" do
@@ -24,7 +24,7 @@ describe GitFame::Base do
       end
 
       it "should have some percentage" do
-        author.percent.should eq("12.7 / 31.9 / 43.8")
+        author.percent.should eq("12.6 / 32.9 / 43.8")
       end
     end
     describe "format" do
@@ -46,8 +46,8 @@ describe GitFame::Base do
   describe "total" do
     it "should respond to #loc, #commits and #files" do
       subject.files.should eq(16)
-      subject.commits.should eq(69)
-      subject.loc.should eq(1083)
+      subject.commits.should eq(70)
+      subject.loc.should eq(1082)
     end
   end
 
