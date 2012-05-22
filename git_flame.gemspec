@@ -6,13 +6,13 @@ Gem::Specification.new do |gem|
   gem.email         = ["linus@oleander.nu"]
   gem.description   = %q{Generates some awesome stats from git-blame}
   gem.summary       = %q{
-    Generates some awesome stats from git-blame
-    
-    A Ruby wrapper for git-blame.
-    Generates data like:
-    - Number of files changed by a user
-    - Number of commits by user
-    - Lines of code by a user
+Generates some awesome stats from git-blame
+
+A Ruby wrapper for git-blame.
+Generates data like:
+- Number of files changed by a user
+- Number of commits by user
+- Lines of code by a user
   }
   
   gem.homepage      = "https://github.com/oleander/git-flame-rb"
@@ -26,9 +26,8 @@ Gem::Specification.new do |gem|
   gem.executables = ["git-flame"]
 
   gem.add_dependency("progressbar")
-  gem.add_dependency("optparse")
+  gem.add_dependency("trollop")
   gem.add_dependency("hirb")
-  gem.add_dependency("action_view")
   gem.add_dependency("mimer_plus")
   
   gem.add_development_dependency("rspec")

@@ -1,6 +1,6 @@
 module GitFlame
   class Base
-    include ActionView::Helpers::NumberHelper
+    include GitFlame::Helper
 
     #
     # @args[:repository] String Absolute path to git repository

@@ -1,9 +1,28 @@
 #!/usr/bin/env ruby -w
 
 require "git_flame"
+require "trollop"
 
+sort = ["name", "commits", "loc", "files"]
+opts = Trollop::options do
+  version "git-flame #{GitFlame::VERSION} (c) 2012 Linus Oleander"
+  banner <<-EOS
+Generates some awesome stats from git-blame
+
+Usage:
+       git flame [options]
+where [options] are:
+EOS
+
+  opt :repository, "What git repository should be used? Must be an absolute path", default: "."
+  opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
+  opt :progressbar, "Show progressbar during the calculation", default: 1, type: Fixnum
+end
+
+Trollop::die :repository, "does not exists" unless Dir.exists?(opts[:repository])
+Trollop::die :sort, "must be one of #{sort.join(", ")}" unless sort.include?(opts[:sort])
 GitFlame::Base.new({
-  repository: Dir.pwd,
-  progressbar: true,
-  sort: "loc"
+  repository: opts[:repository],
+  progressbar: opts[:progressbar] == 1,
+  sort: opts[:sort]
 }).pretty_puts

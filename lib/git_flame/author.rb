@@ -1,6 +1,6 @@
 module GitFlame
   class Author
-    include ActionView::Helpers::NumberHelper
+    include GitFlame::Helper
     attr_accessor :name, :raw_files, :raw_commits, :raw_loc
     #
     # @args Hash
