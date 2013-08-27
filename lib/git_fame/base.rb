@@ -111,7 +111,7 @@ module GitFame
           progressbar.inc
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             begin
-              execute("git blame '#{file}'").scan(/\((.+?)\s+\d{4}-\d{2}-\d{2}/).each do |author|
+              execute("git blame '#{file}' --line-porcelain").scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
               end
@@ -122,7 +122,6 @@ module GitFame
         execute("git shortlog -se").split("\n").map do |l| 
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
-
           # Has this user been updated before?
           if user.raw_commits.zero?
             update(u, {
