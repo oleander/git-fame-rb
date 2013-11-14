@@ -5,11 +5,16 @@ module GitFame
     #
     # @args[:repository] String Absolute path to git repository
     # @args[:sort] String What should #authors be sorted by?
+    # @args[:bytype] Boolean Should counts be grouped by file extension?
+    # @args[:exclude] String Comma-separated list of paths in the repo which should be excluded
     #
     def initialize(args)
       @sort = "loc"
       @progressbar = false
+      @bytype = false
+      @exclude = ""
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
+      convert_exclude_paths_to_array
       @authors = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
     end
@@ -23,7 +28,10 @@ module GitFame
       puts "\nTotal number of files: #{number_with_delimiter(files)}"
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
-      table(authors, fields: [:name, :loc, :commits, :files, :percent])
+
+      fields = [:name, :loc, :commits, :files, :percent]
+      fields << populate.instance_variable_get("@file_extensions").uniq.sort if @bytype
+      table(authors, fields: fields.flatten)
     end
 
     #
@@ -31,6 +39,13 @@ module GitFame
     #
     def files
       populate.instance_variable_get("@files").count
+    end
+
+    #
+    # @return Array list of repo files processed
+    #
+    def file_list
+      populate.instance_variable_get("@files")
     end
 
     #
@@ -52,9 +67,9 @@ module GitFame
     #
     def authors
       authors = populate.instance_variable_get("@authors").values
-      @sort ? authors.sort_by do |author| 
+      @sort ? authors.sort_by do |author|
         if @sort == "name"
-          author.send(@sort) 
+          author.send(@sort)
         else
           -1 * author.send("raw_#{@sort}")
         end
@@ -106,35 +121,43 @@ module GitFame
     def populate
       @_pop ||= lambda {
         @files = execute("git ls-files").split("\n")
+        @file_extensions = []
+        remove_excluded_files
         progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)
         @files.each do |file|
           progressbar.inc
+          if @bytype
+            file_extension = File.extname(file).sub(/\A\./,"")
+            file_extension = "unknown" if file_extension.empty?
+          end
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
+            @file_extensions << file_extension # only count extensions that aren't binary!
             begin
               execute("git blame '#{file}' --line-porcelain").scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
+                fetch(author.first).file_type_counts[file_extension] += 1 if @bytype
               end
             rescue ArgumentError; end # Encoding error
           end
         end
 
-        execute("git shortlog -se").split("\n").map do |l| 
+        execute("git shortlog -se").split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?
           if user.raw_commits.zero?
             update(u, {
-              raw_commits: commits.to_i, 
-              raw_files: @file_authors[u].keys.count, 
+              raw_commits: commits.to_i,
+              raw_files: @file_authors[u].keys.count,
               files_list: @file_authors[u].keys
             })
           else
             # Calculate the number of files edited by users
             files = (user.files_list + @file_authors[u].keys).uniq
             update(u, {
-              raw_commits: commits.to_i + user.raw_commits, 
-              raw_files: files.count, 
+              raw_commits: commits.to_i + user.raw_commits,
+              raw_files: files.count,
               files_list: files
             })
           end
@@ -145,5 +168,24 @@ module GitFame
       }.call
       return self
     end
+
+    #
+    # Converts @exclude argument to an array and removes leading slash
+    #
+    def convert_exclude_paths_to_array
+      @exclude = @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
+    end
+
+    #
+    # Removes files matching paths in @exclude from @files instance variable
+    #
+    def remove_excluded_files
+      return if @exclude.empty?
+      @files = @files.map do |path|
+        next if  path =~ /\A(#{@exclude.join("|")})/
+        path
+      end.compact
+    end
+
   end
 end
