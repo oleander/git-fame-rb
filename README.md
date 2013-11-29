@@ -1,6 +1,6 @@
 # GitFame
 
-Who did what in your project?
+Pretty-print collaborators sorted by contributions.
 
 ## Output
 
