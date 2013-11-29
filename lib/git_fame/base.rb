@@ -9,6 +9,7 @@ module GitFame
     def initialize(args)
       @sort = "loc"
       @progressbar = false
+      @whitespace = false
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
       @authors = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
@@ -107,11 +108,12 @@ module GitFame
       @_pop ||= lambda {
         @files = execute("git ls-files").split("\n")
         progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)
+        blame_opts = @whitespace ? "-w" : ""
         @files.each do |file|
           progressbar.inc
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             begin
-              execute("git blame '#{file}' --line-porcelain").scan(/^author (.+)$/).each do |author|
+              execute("git blame '#{file}' #{blame_opts} --line-porcelain").scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
               end
