@@ -1,7 +1,7 @@
 module GitFame
   class Author
     include GitFame::Helper
-    attr_accessor :name, :raw_files, :raw_commits, :raw_loc, :files_list
+    attr_accessor :name, :raw_files, :raw_commits, :raw_loc, :files_list, :file_type_counts
     #
     # @args Hash
     #
@@ -9,6 +9,7 @@ module GitFame
       @raw_loc = 0
       @raw_commits = 0
       @raw_files = 0
+      @file_type_counts = Hash.new(0)
       args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
     end
 
@@ -26,5 +27,13 @@ module GitFame
         number_with_delimiter(send("raw_#{method}"))
       end
     end
+
+    #
+    # Intended to catch file type counts
+    #
+    def method_missing(m, *args, &block)
+      file_type_counts[m.to_s]
+    end
+
   end
 end
