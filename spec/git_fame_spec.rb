@@ -68,6 +68,22 @@ describe GitFame::Base do
     end
   end
 
+  describe "#command_line_arguments" do
+    let(:subject) { GitFame::Base.new({repository: @repository, exclude: "lib", bytype: true }) }
+    it "should exclude the lib folder" do
+      subject.file_list.include?("lib/gash.rb").should be_false
+    end
+
+    let(:author) { subject.authors.first }
+    it "should break out counts by file type" do
+      author.file_type_counts["rdoc"].should eq(23)
+    end
+
+    it "should output zero for file types the author hasn't touched" do
+      author.file_type_counts["derp"].should eq(0)
+    end
+  end
+
   describe "#pretty_print" do
     it "should print" do
       lambda {

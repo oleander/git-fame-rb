@@ -10,6 +10,8 @@ opts = Trollop::options do
   opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
   opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
   opt :whitespace, "Ignore whitespace changes", default: false
+  opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
+  opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
 end
 
 Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
@@ -19,4 +21,6 @@ GitFame::Base.new({
   progressbar: opts[:progressbar] == 1,
   sort: opts[:sort],
   whitespace: opts[:whitespace]
+  bytype: opts[:bytype],
+  exclude: opts[:exclude]
 }).pretty_puts

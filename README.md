@@ -1,6 +1,6 @@
 # GitFame
 
-Who did what in your project?
+Pretty-print collaborators sorted by contributions.
 
 ## Output
 
@@ -44,10 +44,12 @@ Run `git fame` to generate output as above.
 
 #### Options
 
+- `git fame --bytype` Should a breakout of line counts by file type be output? Default is 'false'
+- `git fame --exclude=paths/to/files,paths/to/other/files` Comma separated paths to exclude from the counts. Default is none.
 - `git fame --order=loc` Order table by `loc`. Available options are: `loc`, `commits` and `files`. Default is `loc`.
-- `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 - `git fame --progressbar=1` Should a progressbar be visible during the calculation? Default is `1`.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. Default is `false`.
+- `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 
 ### Class
 
@@ -59,13 +61,17 @@ Want to work with the data before printing it?
 - **sort** (String) What should #authors be sorted by? Available options are: `loc`, `commits` and `files`. Default is `loc`.
 - **progressbar** (Boolean) Should a progressbar be shown during the calculation? Default is `false`.
 - **whitespace** (Boolean) Ignore whitespace changes when blaming files. Default is `false`.
+- **bytype** (Boolean) Should a breakout of line counts by file type be output? Default is 'false'
+- **exclude** (String) Comma separated paths to exclude from the counts. Default is none.
 
 ``` ruby
 repository = GitFame::Base.new({
-  sort: "loc", 
+  sort: "loc",
   repository: "/tmp/repo",
   progressbar: false,
   whitespace: false
+  bytype: false,
+  exclude: "vendor, public/assets"
 })
 ```
 
@@ -95,6 +101,11 @@ repository = GitFame::Base.new({
   - `author.raw_loc` (Fixnum) Number of lines.
   - `author.raw_commits` (Fixnum) Number of commits.
   - `author.raw_files` (Fixnum) Number of files changed.
+  - `author.file_type_counts` (Array) File types (k) and loc (v)
+
+#### A note about authors found
+
+The list of authors may include what you perceive to be duplicate people. If a git user's configured name or email address change over time, the person will appear multiple times in this list (and your repo's git history).  Git allows you to configure this using the .mailmap feature. See ````git shortlog --help```` for more information.
 
 ## Contributing
 
