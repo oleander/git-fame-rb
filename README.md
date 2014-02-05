@@ -10,7 +10,7 @@ Total number of lines: 63,132
 Total number of commits: 4,330
 
 +------------------------+--------+---------+-------+--------------------+
-| name                   | loc    | commits | files | percent            |
+| name                   | loc    | commits | files | distribution       |
 +------------------------+--------+---------+-------+--------------------+
 | Johan Sørensen         | 22,272 | 1,814   | 414   | 35.3 / 41.9 / 20.2 |
 | Marius Mathiesen       | 10,387 | 502     | 229   | 16.5 / 11.6 / 11.2 |
@@ -97,7 +97,7 @@ repository = GitFame::Base.new({
   - `author.commits` (String) Number of commits.
   - `author.files` (String) Number of files changed.
 - Non formated
-  - `author.percent` (String) Percent of total (loc/commits/files)
+  - `author.distribution` (String) Distribution (in %) between users (loc/commits/files)
   - `author.raw_loc` (Fixnum) Number of lines.
   - `author.raw_commits` (Fixnum) Number of commits.
   - `author.raw_files` (Fixnum) Number of files changed.

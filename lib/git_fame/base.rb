@@ -32,7 +32,7 @@ module GitFame
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
-      fields = [:name, :loc, :commits, :files, :percent]
+      fields = [:name, :loc, :commits, :files, :distribution]
       fields << populate.instance_variable_get("@file_extensions").uniq.sort if @bytype
       table(authors, fields: fields.flatten)
     end

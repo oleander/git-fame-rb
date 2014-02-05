@@ -23,12 +23,19 @@ describe GitFame::Base do
         author.raw_files.should eq(7)
       end
 
-      it "should have some percentage" do
-        author.percent.should eq("12.6 / 32.9 / 43.8")
+      it "should have a distribution" do
+        author.distribution.should eq("12.6 / 32.9 / 43.8")
       end
     end
     describe "format" do
-      let(:author) { GitFame::Author.new({raw_commits: 12345, raw_files: 6789, raw_loc: 1234})}
+      let(:author) do 
+        GitFame::Author.new({
+          raw_commits: 12345, 
+          raw_files: 6789, 
+          raw_loc: 1234
+        })
+      end
+
       it "should format #commits" do
         author.commits.should eq("12,345")
       end

@@ -6,18 +6,20 @@ module GitFame
     # @args Hash
     #
     def initialize(args = {})
-      @raw_loc = 0
-      @raw_commits = 0
-      @raw_files = 0
+      @raw_loc          = 0
+      @raw_commits      = 0
+      @raw_files        = 0
       @file_type_counts = Hash.new(0)
-      args.keys.each { |name| instance_variable_set "@" + name.to_s, args[name] }
+      args.keys.each do |name| 
+        instance_variable_set "@" + name.to_s, args[name]
+      end
     end
 
     #
-    # @return String Percent of total
     # @format loc / commits / files
+    # @return String Distribution (in %) between users
     #
-    def percent
+    def distribution
       "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
         map{ |w| (send("raw_#{w}") / @parent.send(w).to_f) * 100 }
     end
