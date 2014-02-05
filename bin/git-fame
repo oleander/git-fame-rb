@@ -20,7 +20,7 @@ GitFame::Base.new({
   repository: opts[:repository],
   progressbar: opts[:progressbar] == 1,
   sort: opts[:sort],
-  whitespace: opts[:whitespace]
+  whitespace: opts[:whitespace],
   bytype: opts[:bytype],
   exclude: opts[:exclude]
 }).pretty_puts
