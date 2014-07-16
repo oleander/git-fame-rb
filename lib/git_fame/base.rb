@@ -14,6 +14,7 @@ module GitFame
       @whitespace   = false
       @bytype       = false
       @exclude      = ""
+      @include      = ""
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
       args.keys.each do |name| 
@@ -123,7 +124,7 @@ module GitFame
     #
     def populate
       @_pop ||= lambda {
-        @files = execute("git ls-files").split("\n")
+        @files = execute("git ls-files #{@include}").split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)

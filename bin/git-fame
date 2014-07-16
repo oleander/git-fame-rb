@@ -11,6 +11,7 @@ opts = Trollop::options do
   opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
   opt :whitespace, "Ignore whitespace changes", default: false
   opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
+  opt :include, "Paths to include in git ls-files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
 end
 
@@ -22,5 +23,6 @@ GitFame::Base.new({
   sort: opts[:sort],
   whitespace: opts[:whitespace],
   bytype: opts[:bytype],
+  include: opts[:include],
   exclude: opts[:exclude]
 }).pretty_puts
