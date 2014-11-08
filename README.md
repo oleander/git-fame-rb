@@ -63,6 +63,9 @@ Want to work with the data before printing it?
 - **whitespace** (Boolean) Ignore whitespace changes when blaming files. Default is `false`.
 - **bytype** (Boolean) Should a breakout of line counts by file type be output? Default is 'false'
 - **exclude** (String) Comma separated paths to exclude from the counts. Default is none.
+- **include** (String) Comma separated paths to exclude from the counts. Default is `*`.
+- **since** (String) Comma separated paths to exclude from the counts. Default is `1970-01-01`.
+- **until** (String) Comma separated paths to exclude from the counts. Default is `now`.
 
 ``` ruby
 repository = GitFame::Base.new({
@@ -92,11 +95,11 @@ repository = GitFame::Base.new({
 
 `author = repository.authors.first`
 
-- Formated
+- Formatted
   - `author.loc` (String) Number of lines.
   - `author.commits` (String) Number of commits.
   - `author.files` (String) Number of files changed.
-- Non formated
+- Non formatted
   - `author.distribution` (String) Distribution (in %) between users (loc/commits/files)
   - `author.raw_loc` (Fixnum) Number of lines.
   - `author.raw_commits` (Fixnum) Number of commits.
