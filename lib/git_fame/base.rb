@@ -150,7 +150,7 @@ module GitFame
             begin
               blame_cmd = "git blame '#{file}' #{blame_opts} --line-porcelain "
               if @since
-                blame_cmd += " --since=#{@since}"
+                blame_cmd += " --since=#{@since}" # blame doesn't have until flag
               end
               execute(blame_cmd).scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
@@ -165,7 +165,7 @@ module GitFame
           progressbar_authors = SilentProgressbar.new("Authors", @authors.count, @progressbar)
           @authors.each do |name, author|
             progressbar_authors.inc
-            lines_stat_cmd = "git log --author='#{name}' --after=#{@since || '1970'} --before=#{@until || 'now'} --pretty=tformat: --numstat | " + %q[gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf "%s %s %s\n",add,subs,loc }']
+            lines_stat_cmd = "git log --author='#{name}' --after=#{@since || '1970'} --before=#{@until || 'now'} --pretty=tformat: --numstat #{@include.join(' ')} | " + %q[gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf "%s %s %s\n",add,subs,loc }']
             added, deleted, total = execute(lines_stat_cmd).scan(/\d+/).map{|s| s.to_i}
             author.raw_added = added || 0
             author.raw_deleted = deleted || 0
@@ -225,7 +225,7 @@ module GitFame
     def remove_excluded_files
       return if @exclude.empty?
       @files = @files.map do |path|
-        next if  path =~ /\A(#{@exclude.join("|")})/
+        next if  path =~ /\A(#{@exclude.join('|')})/
         path
       end.compact
     end

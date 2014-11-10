@@ -24,7 +24,10 @@ module GitFame
     #
     def distribution
       "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
-        map{ |w| (send("raw_#{w}") / @parent.send(w).to_f) * 100 }
+        map{ |w|
+          k = @parent.send(w).to_f
+          k < 1E-6 ? 0 : (send("raw_#{w}") / k) * 100
+         }
     end
 
     [:commits, :files, :loc, :added, :deleted, :total].each do |method|
