@@ -73,6 +73,20 @@ module GitFame
     end
 
     #
+    # @return Fixnum Total number of lines added
+    #
+    def added
+      populate.authors.inject(0){ |result, author| author.raw_added + result }
+    end
+
+    #
+    # @return Fixnum Total number of lines added
+    #
+    def deleted
+      populate.authors.inject(0){ |result, author| author.raw_deleted + result }
+    end
+
+    #
     # @return Array<Author> A list of authors
     #
     def authors
