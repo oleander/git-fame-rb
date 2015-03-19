@@ -9,16 +9,20 @@ module GitFame
     # @args[:exclude] String Comma-separated list of paths in the repo which should be excluded
     #
     def initialize(args)
-      @sort         = "loc"
+      @sort         = 'loc'
       @progressbar  = false
       @whitespace   = false
       @bytype       = false
-      @exclude      = ""
+      @exclude      = ''
+      @include      = ''
+      @since        = '1970-01-01'
+      @until        = 'now'
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
       args.keys.each do |name| 
-        instance_variable_set "@" + name.to_s, args[name]
+        instance_variable_set '@' + name.to_s, args[name]
       end
+      convert_include_paths_to_array
       convert_exclude_paths_to_array
     end
 
@@ -33,6 +37,9 @@ module GitFame
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
       fields = [:name, :loc, :commits, :files, :distribution]
+      if @since or @until
+        fields << :added << :deleted << :total
+      end
       fields << populate.instance_variable_get("@file_extensions").uniq.sort if @bytype
       table(authors, fields: fields.flatten)
     end
@@ -66,6 +73,20 @@ module GitFame
     end
 
     #
+    # @return Fixnum Total number of lines added
+    #
+    def added
+      populate.authors.inject(0){ |result, author| author.raw_added + result }
+    end
+
+    #
+    # @return Fixnum Total number of lines added
+    #
+    def deleted
+      populate.authors.inject(0){ |result, author| author.raw_deleted + result }
+    end
+
+    #
     # @return Array<Author> A list of authors
     #
     def authors
@@ -79,7 +100,7 @@ module GitFame
       end : authors
     end
 
-    #
+    #f
     # @return Boolean Is the given @dir a git repository?
     # @dir Path (relative or absolute) to git repository
     #
@@ -123,13 +144,17 @@ module GitFame
     #
     def populate
       @_pop ||= lambda {
-        @files = execute("git ls-files").split("\n")
+        if @include.empty?
+          @files = execute("git ls-files").split("\n")
+        else
+          @files = execute("git ls-files " + @include.join(" ")).split("\n")
+        end
         @file_extensions = []
         remove_excluded_files
-        progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)
+        progressbar_blame = SilentProgressbar.new("Blame", @files.count, @progressbar)
         blame_opts = @whitespace ? "-w" : ""
         @files.each do |file|
-          progressbar.inc
+          progressbar_blame.inc
           if @bytype
             file_extension = File.extname(file).sub(/\A\./,"")
             file_extension = "unknown" if file_extension.empty?
@@ -137,7 +162,11 @@ module GitFame
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             @file_extensions << file_extension # only count extensions that aren't binary!
             begin
-              execute("git blame '#{file}' #{blame_opts} --line-porcelain").scan(/^author (.+)$/).each do |author|
+              blame_cmd = "git blame '#{file}' #{blame_opts} --line-porcelain "
+              if @since
+                blame_cmd += " --since=#{@since}" # blame doesn't have until flag
+              end
+              execute(blame_cmd).scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
                 fetch(author.first).file_type_counts[file_extension] += 1 if @bytype
@@ -146,7 +175,27 @@ module GitFame
           end
         end
 
-        execute("git shortlog -se").split("\n").map do |l|
+        if @since or @until
+          progressbar_authors = SilentProgressbar.new("Authors", @authors.count, @progressbar)
+          @authors.each do |name, author|
+            progressbar_authors.inc
+            lines_stat_cmd = "git log --author='#{name}' --after=#{@since || '1970'} --before=#{@until || 'now'} --pretty=tformat: --numstat #{@include.join(' ')} | " + %q[gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf "%s %s %s\n",add,subs,loc }']
+            added, deleted, total = execute(lines_stat_cmd).scan(/\d+/).map{|s| s.to_i}
+            author.raw_added = added || 0
+            author.raw_deleted = deleted || 0
+            author.raw_total = total || 0
+          end
+          progressbar_authors.finish
+        end
+
+        shortlog_cmd = "git shortlog -se "
+        if @since
+          shortlog_cmd += ' --since=' + @since
+        end
+        if @until
+          shortlog_cmd += ' --until=' + @until
+        end
+        execute(shortlog_cmd).split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?
@@ -167,7 +216,7 @@ module GitFame
           end
         end
 
-        progressbar.finish
+        progressbar_blame.finish
 
       }.call
       return self
@@ -180,13 +229,17 @@ module GitFame
       @exclude = @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
     end
 
+    def convert_include_paths_to_array
+      @include = @include.split(",").map{|path| path.strip.sub(/\A\//, "") }
+    end
+
     #
     # Removes files matching paths in @exclude from @files instance variable
     #
     def remove_excluded_files
       return if @exclude.empty?
       @files = @files.map do |path|
-        next if  path =~ /\A(#{@exclude.join("|")})/
+        next if  path =~ /\A(#{@exclude.join('|')})/
         path
       end.compact
     end

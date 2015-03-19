@@ -46,10 +46,13 @@ Run `git fame` to generate output as above.
 
 - `git fame --bytype` Should a breakout of line counts by file type be output? Default is 'false'
 - `git fame --exclude=paths/to/files,paths/to/other/files` Comma separated paths to exclude from the counts. Default is none.
+- `git fame --include=paths/to/files,paths/to/other/files` Comma separated paths to include to the counts. Default is none.
 - `git fame --order=loc` Order table by `loc`. Available options are: `loc`, `commits` and `files`. Default is `loc`.
 - `git fame --progressbar=1` Should a progressbar be visible during the calculation? Default is `1`.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. Default is `false`.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
+- `git fame --since=git-time` Time to count from. Default is start of project or `1970-01-01`.
+- `git fame --until=git-time` Time to count until. Default is `now`.
 
 ### Class
 
@@ -63,6 +66,9 @@ Want to work with the data before printing it?
 - **whitespace** (Boolean) Ignore whitespace changes when blaming files. Default is `false`.
 - **bytype** (Boolean) Should a breakout of line counts by file type be output? Default is 'false'
 - **exclude** (String) Comma separated paths to exclude from the counts. Default is none.
+- **include** (String) Comma separated paths to include to the counts. All not mentioned are excluded. Default is `*`.
+- **since** (String) Time to count from. Default is `1970-01-01`.
+- **until** (String) Time to count until. Default is `now`.
 
 ``` ruby
 repository = GitFame::Base.new({
@@ -92,11 +98,11 @@ repository = GitFame::Base.new({
 
 `author = repository.authors.first`
 
-- Formated
+- Formatted
   - `author.loc` (String) Number of lines.
   - `author.commits` (String) Number of commits.
   - `author.files` (String) Number of files changed.
-- Non formated
+- Non formatted
   - `author.distribution` (String) Distribution (in %) between users (loc/commits/files)
   - `author.raw_loc` (Fixnum) Number of lines.
   - `author.raw_commits` (Fixnum) Number of commits.
