@@ -163,8 +163,8 @@ module GitFame
             @file_extensions << file_extension # only count extensions that aren't binary!
             begin
               blame_cmd = "git blame '#{file}' #{blame_opts} --line-porcelain "
-              if @since
-                blame_cmd += " --since=#{@since}" # blame doesn't have until flag
+              if @until
+                blame_cmd += " --since=#{@until}" # blame since-flag has such meaning
               end
               execute(blame_cmd).scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
