@@ -156,7 +156,7 @@ module GitFame
         @files.each do |file|
           progressbar_blame.inc
           if @bytype
-            file_extension = File.extname(file).sub(/\A\./,"")
+            file_extension = File.extname(file)
             file_extension = "unknown" if file_extension.empty?
           end
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
