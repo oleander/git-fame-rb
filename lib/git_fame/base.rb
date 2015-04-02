@@ -91,13 +91,17 @@ module GitFame
     #
     def authors
       authors = populate.instance_variable_get("@authors").values
-      @sort ? authors.sort_by do |author|
-        if @sort == "name"
-          author.send(@sort)
-        else
-          -1 * author.send("raw_#{@sort}")
+      if @sort
+        authors.sort_by do |author|
+          if @sort == "name"
+            author.send(@sort)
+          else
+            -1 * author.send("raw_#{@sort}")
+          end
         end
-      end : authors
+      else
+        authors
+      end
     end
 
     #f
