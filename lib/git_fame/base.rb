@@ -131,16 +131,20 @@ module GitFame
         @files.each do |file|
           progressbar.inc
           if @bytype
-            file_extension = File.extname(file)
+            file_extension = File.extname(file).gsub(/^\./, "")
             file_extension = "unknown" if file_extension.empty?
           end
+
           if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
             @file_extensions << file_extension # only count extensions that aren't binary!
             begin
               execute("git blame '#{file}' #{blame_opts} --line-porcelain").scan(/^author (.+)$/).each do |author|
                 fetch(author.first).raw_loc += 1
                 @file_authors[author.first][file] ||= 1
-                fetch(author.first).file_type_counts[file_extension] += 1 if @bytype
+                if @bytype
+                  fetch(author.first).
+                    file_type_counts[file_extension] += 1
+                end
               end
             rescue ArgumentError; end # Encoding error
           end
