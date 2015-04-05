@@ -30,5 +30,6 @@ Generates data like:
   gem.add_dependency("mimer_plus")
   
   gem.add_development_dependency("rspec")
+  gem.add_development_dependency("rake")
   gem.required_ruby_version = ">= 1.9.2"
 end
