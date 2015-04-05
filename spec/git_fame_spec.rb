@@ -91,26 +91,6 @@ describe GitFame::Base do
     end
   end
 
-  describe "#command_line_arguments #include" do
-    let(:subject) { GitFame::Base.new({repository: @repository, include: "spec"}) }
-    it "should include the spec folder" do
-      subject.file_list.include?("spec/gash_spec.rb").should be_true
-      subject.file_list.include?("lib/gash.rb").should be_false
-    end
-  end
-
-  describe "#command_line_arguments #include, #since, #until" do
-    let(:subject) { GitFame::Base.new({repository: @repository, since: "2011-01", until: "2012-02"}) }
-    let(:author) { subject.authors.first }
-    it "should include only from time period" do
-      subject.added.should eq(571)
-      subject.deleted.should eq(54)
-      subject.files.should eq(16)
-      subject.commits.should eq(30)
-      subject.loc.should eq(1084)
-    end
-  end
-
   describe "#pretty_print" do
     it "should print" do
       lambda {

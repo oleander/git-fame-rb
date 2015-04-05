@@ -1,15 +1,12 @@
 module GitFame
   class Author
     include GitFame::Helper
-    attr_accessor :name, :raw_files, :raw_commits, :raw_loc, :raw_added, :raw_deleted, :raw_total, :files_list, :file_type_counts
+    attr_accessor :name, :raw_files, :raw_commits, :raw_loc, :files_list, :file_type_counts
     #
     # @args Hash
     #
     def initialize(args = {})
       @raw_loc          = 0
-      @raw_added        = 0
-      @raw_deleted      = 0
-      @raw_total        = 0
       @raw_commits      = 0
       @raw_files        = 0
       @file_type_counts = Hash.new(0)
@@ -24,13 +21,10 @@ module GitFame
     #
     def distribution
       "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
-        map{ |w|
-          k = @parent.send(w).to_f
-          k < 1E-6 ? 0 : (send("raw_#{w}") / k) * 100
-         }
+        map{ |w| (send("raw_#{w}") / @parent.send(w).to_f) * 100 }
     end
 
-    [:commits, :files, :loc, :added, :deleted, :total].each do |method|
+    [:commits, :files, :loc].each do |method|
       define_method(method) do
         number_with_delimiter(send("raw_#{method}"))
       end

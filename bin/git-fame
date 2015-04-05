@@ -11,10 +11,7 @@ opts = Trollop::options do
   opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
   opt :whitespace, "Ignore whitespace changes", default: false
   opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
-  opt :include, "Paths to include (comma separated). Default all files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
-  opt :since, "Since time", defaut: "", type: String
-  opt :until, "Until time", defaut: "now", type: String
 end
 
 Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
@@ -25,8 +22,5 @@ GitFame::Base.new({
   sort: opts[:sort],
   whitespace: opts[:whitespace],
   bytype: opts[:bytype],
-  exclude: opts[:exclude],
-  include: opts[:include],
-  since: opts[:since],
-  until: opts[:until]
+  exclude: opts[:exclude]
 }).pretty_puts
