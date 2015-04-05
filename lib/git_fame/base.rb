@@ -1,3 +1,5 @@
+require "string-scrub"
+
 module GitFame
   class Base
     include GitFame::Helper
@@ -97,7 +99,7 @@ module GitFame
     #
     def execute(command)
       Dir.chdir(@repository) do
-        return `#{command}`
+        return `#{command}`.scrub
       end
     end
 

@@ -28,6 +28,7 @@ Generates data like:
   gem.add_dependency("trollop")
   gem.add_dependency("hirb")
   gem.add_dependency("mimer_plus")
+  gem.add_dependency("string-scrub")
   
   gem.add_development_dependency("rspec")
   gem.add_development_dependency("rake")
