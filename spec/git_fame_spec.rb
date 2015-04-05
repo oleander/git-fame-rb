@@ -60,23 +60,42 @@ describe GitFame::Base do
 
   describe "sort" do
     it "should be able to sort #authors by name" do
-      authors = GitFame::Base.new({repository: @repository, sort: "name"}).authors
-      authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
+      authors = GitFame::Base.new({
+        repository: @repository, 
+        sort: "name"
+      }).authors
+      authors.map(&:name).
+        should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by commits" do
-      authors = GitFame::Base.new({repository: @repository, sort: "commits"}).authors
-      authors.map(&:name).should eq(["Magnus Holm", "Linus Oleander", "7rans"])
+      authors = GitFame::Base.new({
+        repository: @repository, 
+        sort: "commits"
+      }).authors
+      authors.map(&:name).
+        should eq(["Magnus Holm", "Linus Oleander", "7rans"])
     end
 
     it "should be able to sort #authors by files" do
-      authors = GitFame::Base.new({repository: @repository, sort: "files"}).authors
-      authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
+      authors = GitFame::Base.new({
+        repository: @repository, 
+        sort: "files"
+      }).authors
+      authors.map(&:name).
+        should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
   end
 
   describe "#command_line_arguments" do
-    let(:subject) { GitFame::Base.new({repository: @repository, exclude: "lib", bytype: true }) }
+    let(:subject) do 
+      GitFame::Base.new({
+        repository: @repository, 
+        exclude: "lib", 
+        bytype: true
+      }) 
+    end
+
     it "should exclude the lib folder" do
       subject.file_list.include?("lib/gash.rb").should be_false
     end
@@ -105,7 +124,8 @@ describe GitFame::Base do
     end
 
     it "should know if a folder exists or not [absolute path]" do
-      GitFame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+      GitFame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").
+        should be_false
     end
 
     it "should know if a folder is a git repository [relative path]" do
@@ -113,7 +133,8 @@ describe GitFame::Base do
     end
 
     it "should know if a folder exists or not [relative path]" do
-      GitFame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").should be_false
+      GitFame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").
+        should be_false
     end
   end
 end

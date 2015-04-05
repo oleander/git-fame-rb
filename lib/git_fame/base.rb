@@ -8,7 +8,8 @@ module GitFame
     # @args[:repository] String Absolute path to git repository
     # @args[:sort] String What should #authors be sorted by?
     # @args[:bytype] Boolean Should counts be grouped by file extension?
-    # @args[:exclude] String Comma-separated list of paths in the repo which should be excluded
+    # @args[:exclude] String Comma-separated list of paths in the repo 
+    #   which should be excluded
     #
     def initialize(args)
       @sort         = "loc"
@@ -21,7 +22,7 @@ module GitFame
       args.keys.each do |name| 
         instance_variable_set "@" + name.to_s, args[name]
       end
-      convert_exclude_paths_to_array
+      @exclude = convert_exclude_paths_to_array
     end
 
     #
@@ -35,7 +36,10 @@ module GitFame
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
       fields = [:name, :loc, :commits, :files, :distribution]
-      fields << populate.instance_variable_get("@file_extensions").uniq.sort if @bytype
+      if @bytype
+        fields << populate.instance_variable_get("@file_extensions").
+          uniq.sort
+      end
       table(authors, fields: fields.flatten)
     end
 
@@ -64,7 +68,8 @@ module GitFame
     # @return Fixnum Total number of lines
     #
     def loc
-      populate.authors.inject(0){ |result, author| author.raw_loc + result }
+      populate.authors.
+        inject(0){ |result, author| author.raw_loc + result }
     end
 
     #
@@ -128,11 +133,15 @@ module GitFame
     # @return GitFame
     #
     def populate
-      @_pop ||= lambda {
+      @_populate ||= begin
         @files = execute("git ls-files").split("\n")
         @file_extensions = []
         remove_excluded_files
-        progressbar = SilentProgressbar.new("Blame", @files.count, @progressbar)
+        progressbar = SilentProgressbar.new(
+          "Blame", 
+          @files.count, 
+          @progressbar
+        )
         blame_opts = @whitespace ? "-w" : ""
         @files.each do |file|
           progressbar.inc
@@ -141,18 +150,27 @@ module GitFame
             file_extension = "unknown" if file_extension.empty?
           end
 
-          if type = Mimer.identify(File.join(@repository, file)) and not type.mime_type.match(/binary/)
-            @file_extensions << file_extension # only count extensions that aren't binary!
-            begin
-              execute("git blame '#{file}' #{blame_opts} --line-porcelain").scan(/^author (.+)$/).each do |author|
-                fetch(author.first).raw_loc += 1
-                @file_authors[author.first][file] ||= 1
-                if @bytype
-                  fetch(author.first).
-                    file_type_counts[file_extension] += 1
-                end
-              end
-            rescue ArgumentError; end # Encoding error
+          unless type = Mimer.identify(File.join(@repository, file))
+            next
+          end
+
+          if type.binary?
+            next
+          end
+
+          # only count extensions that aren't binary
+          @file_extensions << file_extension
+
+          output = execute(
+            "git blame '#{file}' #{blame_opts} --line-porcelain"
+          )
+          output.scan(/^author (.+)$/).each do |author|
+            fetch(author.first).raw_loc += 1
+            @file_authors[author.first][file] ||= 1
+            if @bytype
+              fetch(author.first).
+                file_type_counts[file_extension] += 1
+            end
           end
         end
 
@@ -179,7 +197,7 @@ module GitFame
 
         progressbar.finish
 
-      }.call
+      end
       return self
     end
 
@@ -187,7 +205,7 @@ module GitFame
     # Converts @exclude argument to an array and removes leading slash
     #
     def convert_exclude_paths_to_array
-      @exclude = @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
+      @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
     end
 
     #
@@ -200,6 +218,5 @@ module GitFame
         path
       end.compact
     end
-
   end
 end
