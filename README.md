@@ -122,7 +122,7 @@ The list of authors may include what you perceive to be duplicate people. If a g
 
 ## Requirements
 
-*GitFame* is tested in *OS X 10.7.4* using Ruby *1.9.2*.
+*GitFame* should work on all Unix based operating system with Git installed.
 
 ## License
 
