@@ -8,7 +8,7 @@ module GitFame
     # @args[:repository] String Absolute path to git repository
     # @args[:sort] String What should #authors be sorted by?
     # @args[:bytype] Boolean Should counts be grouped by file extension?
-    # @args[:exclude] String Comma-separated list of paths in the repo 
+    # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     #
     def initialize(args)
@@ -17,9 +17,10 @@ module GitFame
       @whitespace   = false
       @bytype       = false
       @exclude      = ""
+      @include      = ""
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
-      args.keys.each do |name| 
+      args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
       end
       @exclude = convert_exclude_paths_to_array
@@ -134,12 +135,12 @@ module GitFame
     #
     def populate
       @_populate ||= begin
-        @files = execute("git ls-files").split("\n")
+        @files = execute("git ls-files #{@include}").split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new(
-          "Blame", 
-          @files.count, 
+          "Blame",
+          @files.count,
           @progressbar
         )
         blame_opts = @whitespace ? "-w" : ""
