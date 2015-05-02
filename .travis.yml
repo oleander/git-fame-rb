@@ -1,0 +1,6 @@
+language: ruby
+rvm:
+- 2.1.0
+- 1.9.3
+script:
+ - 'rspec spec/git_fame_spec.rb --format documentation'
