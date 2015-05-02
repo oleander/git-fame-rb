@@ -105,7 +105,8 @@ module GitFame
     # @dir Path (relative or absolute) to git repository
     #
     def self.git_repository?(dir)
-      Dir.exists?(File.join(dir, ".git"))
+      Dir.exists?(File.join(dir, ".git")) ||
+          File.exists?(File.join(dir, ".git"))
     end
 
     private
@@ -176,14 +177,16 @@ module GitFame
         end
 
         if @since or @until
-          progressbar_authors = SilentProgressbar.new("Authors", @authors.count, @progressbar)
+          progressbar_authors = SilentProgressbar.new("Authors", @authors.count, active = @progressbar)
           @authors.each do |name, author|
             progressbar_authors.inc
-            lines_stat_cmd = "git log --author='#{name}' --after=#{@since || '1970'} --before=#{@until || 'now'} --pretty=tformat: --numstat #{@include.join(' ')} | " + %q[gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf "%s %s %s\n",add,subs,loc }']
-            added, deleted, total = execute(lines_stat_cmd).scan(/\d+/).map{|s| s.to_i}
-            author.raw_added = added || 0
-            author.raw_deleted = deleted || 0
-            author.raw_total = total || 0
+            lines_stat_cmd = "git log --author='#{name}' --after=#{@since || '1970'} --before=#{@until || 'now'}" +
+                "--pretty=tformat: --numstat #{@include.join(' ')}"
+            execute(lines_stat_cmd).scan(/(\d+)\t(\d+)\t\w+/).each do |added, deleted|
+              author.raw_added += added.to_i || 0
+              author.raw_deleted += deleted.to_i || 0
+            end
+            author.raw_total = author.raw_added - author.raw_deleted
           end
           progressbar_authors.finish
         end
