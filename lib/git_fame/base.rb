@@ -100,7 +100,7 @@ module GitFame
       end : authors
     end
 
-    #f
+    #
     # @return Boolean Is the given @dir a git repository?
     # @dir Path (relative or absolute) to git repository
     #

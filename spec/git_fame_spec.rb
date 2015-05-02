@@ -6,17 +6,18 @@ describe GitFame::Base do
     end
 
     describe "author" do
-      let(:author) { subject.authors.last }
-      it "should have a bunch of commits" do
-        author.raw_commits.should eq(23)
-      end
+      let(:author) { subject.authors.first }
 
       it "should respond to name" do
         author.name.should eq("Linus Oleander")
       end
 
+      it "should have a bunch of commits" do
+        author.raw_commits.should eq(23)
+      end
+
       it "should have a number of locs" do
-        author.raw_loc.should eq(136)
+        author.raw_loc.should eq(1082)
       end
 
       it "should have a number of files" do
@@ -71,7 +72,7 @@ describe GitFame::Base do
 
     it "should be able to sort #authors by files" do
       authors = GitFame::Base.new({repository: @repository, sort: "files"}).authors
-      authors.map(&:name).should eq(["7rans", "Linus Oleander", "Magnus Holm"])
+      authors.map(&:name).should eq(["Linus Oleander", "7rans", "Magnus Holm"])
     end
   end
 
@@ -103,11 +104,11 @@ describe GitFame::Base do
     let(:subject) { GitFame::Base.new({repository: @repository, since: "2011-01", until: "2012-02"}) }
     let(:author) { subject.authors.first }
     it "should include only from time period" do
-      subject.added.should eq(571)
-      subject.deleted.should eq(54)
+      subject.added.should eq(198)
+      subject.deleted.should eq(16)
       subject.files.should eq(16)
-      subject.commits.should eq(30)
-      subject.loc.should eq(1084)
+      subject.commits.should eq(29)
+      subject.loc.should eq(1082)
     end
   end
 
