@@ -3,4 +3,4 @@ rvm:
 - 2.0.0
 - 1.9.3
 script:
- - 'rspec spec'
+ - 'rspec spec/git_fame_spec.rb --format documentation'
