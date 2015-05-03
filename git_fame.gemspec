@@ -29,8 +29,9 @@ Generates data like:
   gem.add_dependency("hirb")
   gem.add_dependency("mimer_plus")
   gem.add_dependency("string-scrub")
-  
+
   gem.add_development_dependency("rspec")
   gem.add_development_dependency("rake")
+  gem.add_development_dependency("coveralls", require: false)
   gem.required_ruby_version = ">= 1.9.2"
 end
