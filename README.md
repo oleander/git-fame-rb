@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/oleander/git-fame-rb.svg?branch=master)](https://travis-ci.org/oleander/git-fame-rb)
 [![Coverage Status](https://coveralls.io/repos/oleander/git-fame-rb/badge.svg?branch=master&service=github)](https://coveralls.io/github/oleander/git-fame-rb?branch=master)
 
+[![Join the chat at https://gitter.im/oleander/git-fame-rb](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/oleander/git-fame-rb?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Pretty-print collaborators sorted by contributions.
 
 ## Output
