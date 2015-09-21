@@ -32,6 +32,6 @@ Generates data like:
 
   gem.add_development_dependency("rspec")
   gem.add_development_dependency("rake")
-  gem.add_development_dependency("coveralls", require: false)
+  gem.add_development_dependency("coveralls")
   gem.required_ruby_version = ">= 1.9.2"
 end
