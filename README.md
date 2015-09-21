@@ -111,7 +111,7 @@ repository = GitFame::Base.new({
 
 #### A note about authors found
 
-The list of authors may include what you perceive to be duplicate people. If a git user's configured name or email address change over time, the person will appear multiple times in this list (and your repo's git history).  Git allows you to configure this using the .mailmap feature. See ````git shortlog --help```` for more information.
+The list of authors may include duplicate people. If a git user's configured name or email address change over time, the person will appear multiple times in this list (and your repo's git history). Git allows you to configure this using the .mailmap feature. See ````git shortlog --help```` for more information.
 
 ## Contributing
 
@@ -124,7 +124,7 @@ The list of authors may include what you perceive to be duplicate people. If a g
 ## Testing
 
 1. Download fixtures (`spec/fixtures`) using `git submodule update --init`.
-2. Run rspec using `rspec spec`.
+2. Run rspec using `rspec spec/git_fame_spec.rb`.
 
 ## Requirements
 
