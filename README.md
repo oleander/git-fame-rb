@@ -1,5 +1,7 @@
 # GitFame
 
+[![Join the chat at https://gitter.im/oleander/git-fame-rb](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/oleander/git-fame-rb?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Pretty-print collaborators sorted by contributions.
 
 ## Output
