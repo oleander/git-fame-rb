@@ -96,7 +96,8 @@ module GitFame
     # @dir Path (relative or absolute) to git repository
     #
     def self.git_repository?(dir)
-      Dir.exists?(File.join(dir, ".git"))
+      return false unless File.directory?(dir)
+      Dir.chdir(dir) { system "git rev-parse --git-dir > /dev/null 2>&1" }
     end
 
     private
