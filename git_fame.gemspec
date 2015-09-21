@@ -30,7 +30,7 @@ Generates data like:
   gem.add_dependency("mimer_plus")
   gem.add_dependency("string-scrub")
 
-  gem.add_development_dependency("rspec")
+  gem.add_development_dependency("rspec", "2.10.0")
   gem.add_development_dependency("rake")
   gem.add_development_dependency("coveralls")
   gem.required_ruby_version = ">= 1.9.2"
