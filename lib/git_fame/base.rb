@@ -26,6 +26,7 @@ module GitFame
         instance_variable_set "@" + name.to_s, args[name]
       end
       @exclude = convert_exclude_paths_to_array
+      @branch = (@branch.nil? or @branch.empty?) ? "master" : @branch
     end
 
     #
@@ -154,7 +155,8 @@ module GitFame
           raise BranchNotFound.new("Does '#{@branch}' exist?")
         end
 
-        @files = execute("git ls-files #{@branch} #{@include}").split("\n")
+        @files = execute("git ls-tree -r #{@branch} --name-only #{@include}").
+          split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new(
