@@ -1,5 +1,5 @@
 require "string-scrub"
-require "./lib/git_fame/errors"
+require_relative "./errors"
 
 module GitFame
   class Base
