@@ -2,7 +2,7 @@ describe GitFame::Base do
   let(:subject) { GitFame::Base.new({repository: @repository}) }
   describe "#authors" do
     it "should have a list of authors" do
-      should have(3).authors
+      subject.should have(3).authors
     end
 
     describe "author" do
@@ -120,21 +120,21 @@ describe GitFame::Base do
 
   describe ".git_repository?" do
     it "should know if a folder is a git repository [absolute path]" do
-      GitFame::Base.git_repository?(@repository).should be_true
+      GitFame::Base.git_repository?(@repository).should eq(true)
     end
 
     it "should know if a folder exists or not [absolute path]" do
       GitFame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").
-        should be_false
+        should eq(false)
     end
 
     it "should know if a folder is a git repository [relative path]" do
-      GitFame::Base.git_repository?("spec/fixtures/gash").should be_true
+      GitFame::Base.git_repository?("spec/fixtures/gash").should eq(true)
     end
 
     it "should know if a folder exists or not [relative path]" do
       GitFame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").
-        should be_false
+        should eq(false)
     end
   end
 end
