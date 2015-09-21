@@ -18,11 +18,14 @@ module GitFame
       @bytype       = false
       @exclude      = ""
       @include      = ""
+      @since        = "1970-01-01"
+      @until        = "now"
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
       args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
       end
+      @include = convert_include_paths_to_array
       @exclude = convert_exclude_paths_to_array
     end
 
@@ -37,6 +40,9 @@ module GitFame
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
       fields = [:name, :loc, :commits, :files, :distribution]
+      if @since or @until
+        fields << :added << :deleted << :total
+      end
       if @bytype
         fields << populate.instance_variable_get("@file_extensions").
           uniq.sort
@@ -71,6 +77,20 @@ module GitFame
     def loc
       populate.authors.
         inject(0){ |result, author| author.raw_loc + result }
+    end
+
+    #
+    # @return Fixnum Total number of lines added
+    #
+    def added
+      populate.authors.inject(0){ |result, author| author.raw_added + result }
+    end
+
+    #
+    # @return Fixnum Total number of lines deleted
+    #
+    def deleted
+      populate.authors.inject(0){ |result, author| author.raw_deleted + result }
     end
 
     #
@@ -162,7 +182,9 @@ module GitFame
 
           # only count extensions that aren't binary
           @file_extensions << file_extension
-
+          if @until
+            blame_opts += " --since=#{@until}"  # blame since-flag has meaning `until`
+          end
           output = execute(
             "git blame '#{file}' #{blame_opts} --line-porcelain"
           )
@@ -176,7 +198,29 @@ module GitFame
           end
         end
 
-        execute("git shortlog -se").split("\n").map do |l|
+        if @since or @until
+          progressbar_authors = SilentProgressbar.new("Authors", @authors.count, active = @progressbar)
+          @authors.each do |name, author|
+            progressbar_authors.inc
+            lines_stat_cmd = "git log --author='#{name}' --after=#{@since} --before=#{@until}" +
+                "--pretty=tformat: --numstat #{@include.join(' ')}"
+            execute(lines_stat_cmd).scan(/(\d+)\t(\d+)\t\w+/).each do |added, deleted|
+              author.raw_added += added.to_i || 0
+              author.raw_deleted += deleted.to_i || 0
+            end
+            author.raw_total = author.raw_added - author.raw_deleted
+          end
+          progressbar_authors.finish
+        end
+
+        shortlog_cmd = "git shortlog -se "
+        if @since
+          shortlog_cmd += ' --since=' + @since
+        end
+        if @until
+          shortlog_cmd += ' --until=' + @until
+        end
+        execute(shortlog_cmd).split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?
@@ -208,6 +252,10 @@ module GitFame
     #
     def convert_exclude_paths_to_array
       @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
+    end
+
+    def convert_include_paths_to_array
+      @include.split(",").map{|path| path.strip.sub(/\A\//, "") }
     end
 
     #
