@@ -13,6 +13,7 @@ opts = Trollop::options do
   opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
   opt :include, "Paths to include in git ls-files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
+  opt :branch, "Branch to run on", default: "master", type: String
 end
 
 Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
@@ -24,5 +25,6 @@ GitFame::Base.new({
   whitespace: opts[:whitespace],
   bytype: opts[:bytype],
   include: opts[:include],
-  exclude: opts[:exclude]
+  exclude: opts[:exclude],
+  branch: opts[:branch]
 }).pretty_puts

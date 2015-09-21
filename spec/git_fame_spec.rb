@@ -137,4 +137,25 @@ describe GitFame::Base do
         should eq(false)
     end
   end
+
+  describe "branches" do
+    it "should handle existing branches" do
+      authors = GitFame::Base.new({
+        repository: @repository, 
+        branch: "0.1.0"
+      }).authors
+
+      authors.count.should eq(1)
+      authors.first.name.should eq("Magnus Holm")
+    end
+
+    it "should raise an error if branch doesn't exist" do
+      expect {
+        GitFame::Base.new({
+          repository: @repository, 
+          branch: "f67c2bcbfcfa30fccb36f72dca22a817"
+        }).authors
+      }.to raise_error(GitFame::BranchNotFound)
+    end
+  end
 end

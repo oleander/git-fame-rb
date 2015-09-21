@@ -1,4 +1,5 @@
 require "string-scrub"
+require "./lib/git_fame/errors"
 
 module GitFame
   class Base
@@ -10,6 +11,7 @@ module GitFame
     # @args[:bytype] Boolean Should counts be grouped by file extension?
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
+    # @args[:branch] String Branch to run from
     #
     def initialize(args)
       @sort         = "loc"
@@ -97,10 +99,22 @@ module GitFame
     #
     def self.git_repository?(dir)
       return false unless File.directory?(dir)
-      Dir.chdir(dir) { system "git rev-parse --git-dir > /dev/null 2>&1" }
+      Dir.chdir(dir) do
+        system "git rev-parse --git-dir > /dev/null 2>&1"
+      end
     end
 
     private
+
+    #
+    # @return Boolean Does the branch exist?
+    #
+    def branch_exists?
+      Dir.chdir(@repository) do
+        system "git show-ref #{@branch} > /dev/null 2>&1"
+      end
+    end
+
     #
     # @command String Command to be executed inside the @repository path
     #
@@ -136,7 +150,11 @@ module GitFame
     #
     def populate
       @_populate ||= begin
-        @files = execute("git ls-files #{@include}").split("\n")
+        unless branch_exists?
+          raise BranchNotFound.new("Does '#{@branch}' exist?")
+        end
+
+        @files = execute("git ls-files #{@branch} #{@include}").split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new(
@@ -163,8 +181,9 @@ module GitFame
           # only count extensions that aren't binary
           @file_extensions << file_extension
 
+
           output = execute(
-            "git blame '#{file}' #{blame_opts} --line-porcelain"
+            "git blame #{blame_opts} --line-porcelain #{@branch} -- '#{file}'"
           )
           output.scan(/^author (.+)$/).each do |author|
             fetch(author.first).raw_loc += 1
@@ -176,7 +195,7 @@ module GitFame
           end
         end
 
-        execute("git shortlog -se").split("\n").map do |l|
+        execute("git shortlog #{@branch} -se").split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?
