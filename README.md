@@ -54,6 +54,7 @@ Run `git fame` to generate output as above.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. Default is `false`.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 - `git fame --branch=master` Branch to run on. Default is `master`.
+- `git fame --format=output` Output format. Default is `pretty`. Additional: csv.
 
 ### Class
 
@@ -68,6 +69,7 @@ Want to work with the data before printing it?
 - **bytype** (Boolean) Should a breakout of line counts by file type be output? Default is 'false'
 - **exclude** (String) Comma separated paths to exclude from the counts. Default is none.
 - **branch** (String) Branch to run on. Default is `master`.
+- **format** (String) Output format. Default is `pretty`.
 
 ``` ruby
 repository = GitFame::Base.new({
@@ -77,13 +79,18 @@ repository = GitFame::Base.new({
   whitespace: false
   bytype: false,
   exclude: "vendor, public/assets",
-  branch: "master"
+  branch: "master",
+  format: "pretty"
 })
 ```
 
 #### Print table to console
 
 `repository.pretty_puts`
+
+#### Print csv table to console
+
+`repository.csv_puts
 
 ### Statistics
 

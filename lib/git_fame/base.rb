@@ -1,4 +1,5 @@
 require "string-scrub"
+require "csv"
 require_relative "./errors"
 
 module GitFame
@@ -39,12 +40,42 @@ module GitFame
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
+      table(authors, fields: get_columns)
+    end
+
+    #
+    # Generate csv output
+    #
+    def csv
+      fields = get_columns
+
+      csv_string = CSV.generate do |csv|
+        csv << fields
+        authors.each do |a|
+          values = fields.map do |f|
+            a.send(f)
+          end
+          csv << values
+        end
+      end
+
+      csv_string
+    end
+
+    def csv_puts
+      puts csv
+    end
+
+    #
+    # Calculate columns to show
+    #
+    def get_columns
       fields = [:name, :loc, :commits, :files, :distribution]
       if @bytype
         fields << populate.instance_variable_get("@file_extensions").
-          uniq.sort
+            uniq.sort
       end
-      table(authors, fields: fields.flatten)
+      fields.flatten
     end
 
     #

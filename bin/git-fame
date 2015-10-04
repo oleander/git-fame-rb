@@ -14,11 +14,12 @@ opts = Trollop::options do
   opt :include, "Paths to include in git ls-files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
+  opt :format, "Format (pretty/csv)", default: "pretty", type: String
 end
 
 Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
-GitFame::Base.new({
+fame = GitFame::Base.new({
   repository: opts[:repository],
   progressbar: opts[:progressbar] == 1,
   sort: opts[:sort],
@@ -27,4 +28,6 @@ GitFame::Base.new({
   include: opts[:include],
   exclude: opts[:exclude],
   branch: opts[:branch]
-}).pretty_puts
+})
+output_format = opts[:format]
+output_format == "csv" ? fame.csv_puts : fame.pretty_puts

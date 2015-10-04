@@ -118,6 +118,21 @@ describe GitFame::Base do
     end
   end
 
+  describe "#csv_print" do
+    it "should print" do
+      lambda {
+        subject.csv_puts
+      }.should_not raise_error
+    end
+
+    it "should be equal to" do
+      subject.csv.should eq("name,loc,commits,files,distribution\n" \
+                            "Magnus Holm,586,41,4,54.2 / 58.6 / 25.0\n" \
+                            "7rans,360,6,10,33.3 / 8.6 / 62.5\n" \
+                            "Linus Oleander,136,23,7,12.6 / 32.9 / 43.8\n")
+    end
+  end
+
   describe ".git_repository?" do
     it "should know if a folder is a git repository [absolute path]" do
       GitFame::Base.git_repository?(@repository).should eq(true)
