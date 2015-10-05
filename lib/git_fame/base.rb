@@ -31,51 +31,61 @@ module GitFame
     end
 
     #
+    # @return Boolean Is the given @dir a git repository?
+    # @dir Path (relative or absolute) to git repository
+    #
+    def self.git_repository?(dir)
+      return false unless File.directory?(dir)
+      Dir.chdir(dir) do
+        system "git rev-parse --git-dir > /dev/null 2>&1"
+      end
+    end
+
+    #
     # Generates pretty output
     #
     def pretty_puts
       extend Hirb::Console
-      Hirb.enable({pager: false})
+      Hirb.enable({ pager: false })
       puts "\nTotal number of files: #{number_with_delimiter(files)}"
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
-      table(authors, fields: get_columns)
+      table(authors, fields: fields)
+    end
+
+    #
+    # Prints CSV
+    #
+    def csv_puts
+      puts to_csv
     end
 
     #
     # Generate csv output
     #
-    def csv
-      fields = get_columns
-
-      csv_string = CSV.generate do |csv|
+    def to_csv
+      CSV.generate do |csv|
         csv << fields
-        authors.each do |a|
-          values = fields.map do |f|
-            a.send(f)
+        authors.each do |author|
+          csv << fields.map do |f|
+            author.send(f)
           end
-          csv << values
         end
       end
-
-      csv_string
-    end
-
-    def csv_puts
-      puts csv
     end
 
     #
     # Calculate columns to show
     #
-    def get_columns
-      fields = [:name, :loc, :commits, :files, :distribution]
-      if @bytype
-        fields << populate.instance_variable_get("@file_extensions").
-            uniq.sort
+    def fields
+      @_fields ||= begin
+        fields = [:name, :loc, :commits, :files, :distribution]
+        if @bytype
+          fields += populate.instance_variable_get("@file_extensions")
+        end
+        fields.uniq
       end
-      fields.flatten
     end
 
     #
@@ -111,32 +121,21 @@ module GitFame
     # @return Array<Author> A list of authors
     #
     def authors
-      authors = populate.instance_variable_get("@authors").values
-      if @sort
-        authors.sort_by do |author|
-          if @sort == "name"
-            author.send(@sort)
-          else
-            -1 * author.send("raw_#{@sort}")
+      @_authors ||= begin
+        authors = populate.instance_variable_get("@authors").values
+        if @sort
+          authors.sort_by do |author|
+            if @sort == "name"
+              author.send(@sort)
+            else
+              -1 * author.send("raw_#{@sort}")
+            end
           end
+        else
+          authors
         end
-      else
-        authors
       end
     end
-
-    #
-    # @return Boolean Is the given @dir a git repository?
-    # @dir Path (relative or absolute) to git repository
-    #
-    def self.git_repository?(dir)
-      return false unless File.directory?(dir)
-      Dir.chdir(dir) do
-        system "git rev-parse --git-dir > /dev/null 2>&1"
-      end
-    end
-
-    private
 
     #
     # @return Boolean Does the branch exist?
@@ -147,13 +146,13 @@ module GitFame
       end
     end
 
+    private
+
     #
     # @command String Command to be executed inside the @repository path
     #
     def execute(command)
-      Dir.chdir(@repository) do
-        return `#{command}`.scrub
-      end
+      Dir.chdir(@repository) { `#{command}`.scrub }
     end
 
     #
@@ -213,7 +212,6 @@ module GitFame
 
           # only count extensions that aren't binary
           @file_extensions << file_extension
-
 
           output = execute(
             "git blame #{blame_opts} --line-porcelain #{@branch} -- '#{file}'"

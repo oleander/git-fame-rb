@@ -29,5 +29,4 @@ fame = GitFame::Base.new({
   exclude: opts[:exclude],
   branch: opts[:branch]
 })
-output_format = opts[:format]
-output_format == "csv" ? fame.csv_puts : fame.pretty_puts
+opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
