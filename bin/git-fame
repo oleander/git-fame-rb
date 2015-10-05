@@ -5,7 +5,7 @@ require "trollop"
 
 sort = ["name", "commits", "loc", "files"]
 opts = Trollop::options do
-  version "git-fame #{GitFame::VERSION} (c) 2012 Linus Oleander"
+  version "git-fame #{GitFame::VERSION} (c) 2015 Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
   opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
   opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
