@@ -90,7 +90,7 @@ repository = GitFame::Base.new({
 
 #### Print csv table to console
 
-`repository.csv_puts
+`repository.csv_puts`
 
 ### Statistics
 
