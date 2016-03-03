@@ -276,7 +276,7 @@ module GitFame
     def remove_excluded_files
       return if @exclude.empty?
       @files = @files.map do |path|
-        next if  path =~ /\A(#{@exclude.join("|")})/
+        next if path =~ /\A(#{@exclude.join("|")})/
         path
       end.compact
     end
