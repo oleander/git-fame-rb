@@ -13,6 +13,7 @@ opts = Trollop::options do
   opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
   opt :include, "Paths to include in git ls-files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
+  opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
 end
@@ -27,6 +28,7 @@ fame = GitFame::Base.new({
   bytype: opts[:bytype],
   include: opts[:include],
   exclude: opts[:exclude],
+  extensions: opts[:extension],
   branch: opts[:branch]
 })
 opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts

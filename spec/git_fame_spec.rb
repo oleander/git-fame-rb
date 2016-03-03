@@ -92,7 +92,8 @@ describe GitFame::Base do
       GitFame::Base.new({
         repository: @repository, 
         exclude: "lib", 
-        bytype: true
+        bytype: true,
+        extensions: "rb,rdoc"
       }) 
     end
 
@@ -100,7 +101,11 @@ describe GitFame::Base do
       subject.file_list.include?("lib/gash.rb").should be_false
     end
 
-    let(:author) { subject.authors.first }
+    it "should exclude non rb or rdoc files" do
+      subject.file_list.include?("HISTORY").should be_false
+    end
+
+    let(:author) { subject.authors.find { |author| author.name == "7rans" } }
     it "should break out counts by file type" do
       author.file_type_counts["rdoc"].should eq(23)
     end

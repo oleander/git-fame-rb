@@ -19,6 +19,7 @@ module GitFame
       @progressbar  = false
       @whitespace   = false
       @bytype       = false
+      @extensions   = ""
       @exclude      = ""
       @include      = ""
       @authors      = {}
@@ -27,6 +28,7 @@ module GitFame
         instance_variable_set "@" + name.to_s, args[name]
       end
       @exclude = convert_exclude_paths_to_array
+      @extensions = convert_extensions_to_array
       @branch = (@branch.nil? or @branch.empty?) ? "master" : @branch
     end
 
@@ -185,8 +187,9 @@ module GitFame
           raise BranchNotFound.new("Does '#{@branch}' exist?")
         end
 
-        @files = execute("git ls-tree -r #{@branch} --name-only #{@include}").
-          split("\n")
+        command = "git ls-tree -r #{@branch} --name-only #{@include}"
+        command += " | grep \"\\.\\(#{@extensions.join("\\|")}\\)$\"" unless @extensions.empty?
+        @files = execute(command).split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new(
@@ -258,6 +261,13 @@ module GitFame
     #
     def convert_exclude_paths_to_array
       @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
+    end
+
+    #
+    # Converts @extensions argument to an array
+    #
+    def convert_extensions_to_array
+      @extensions.split(",")
     end
 
     #
