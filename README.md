@@ -49,7 +49,7 @@ Run `git fame` to generate output as above.
 
 - `git fame --bytype` Should a breakout of line counts by file type be output? Default is `false`.
 - `git fame --exclude=paths/to/files,paths/to/other/files` Comma separated, realtive paths to exclude from the counts. Note that you should not start the paths with a dot. Default is none.
-- `git fame --order=loc` Order table by `loc`. Available options are: `loc`, `commits` and `files`. Default is `loc`.
+- `git fame --sort=loc` Order table by `loc`. Available options are: `loc`, `commits` and `files`. Default is `loc`.
 - `git fame --progressbar=1` Should a progressbar be visible during the calculation? Default is `1`.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. Default is `false`.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
