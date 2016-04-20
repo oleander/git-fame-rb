@@ -55,6 +55,8 @@ Run `git fame` to generate output as above.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 - `git fame --branch=master` Branch to run on. Default is `master`.
 - `git fame --format=output` Output format. Default is `pretty`. Additional: csv.
+- `git fame --since=2010-01-01` include only commits made since the given date
+= `git fame --until=2016-02-01` include only commits made until the given date
 
 ### Class
 
