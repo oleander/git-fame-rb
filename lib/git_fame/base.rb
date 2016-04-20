@@ -13,6 +13,8 @@ module GitFame
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
+    # @args[:since] date since
+    # @args[:until] date until
     #
     def initialize(args)
       @sort         = "loc"
@@ -24,6 +26,8 @@ module GitFame
       @include      = ""
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
+      @since = '1970-01-01'
+      @until = 'now'
       args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
       end
@@ -229,7 +233,15 @@ module GitFame
           end
         end
 
-        execute("git shortlog #{@branch} -se").split("\n").map do |l|
+        shortlog_cmd = "git shortlog #{@branch} -se "
+        if @since
+          shortlog_cmd += ' --since=' + @since
+        end
+        if @until
+          shortlog_cmd += ' --until=' + @until
+        end
+
+        execute(shortlog_cmd).split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?

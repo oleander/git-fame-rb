@@ -178,4 +178,26 @@ describe GitFame::Base do
       }.to raise_error(GitFame::BranchNotFound)
     end
   end
+
+  describe "since" do
+    it "should ignore all files before since" do
+      since = GitFame::Base.new({ 
+            repository: @repository,
+            since:"2100-01-01"
+      }).authors.last
+      since.raw_commits.should eq(0)
+
+    end
+  end
+
+  describe "until" do
+    it "should ignore all files after until " do
+      since = GitFame::Base.new({
+            repository: @repository,
+            until:"1972-01-01"
+      }).authors.last
+      since.raw_commits.should eq(0)
+
+    end
+  end
 end
