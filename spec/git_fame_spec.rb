@@ -204,38 +204,41 @@ describe GitFame::Base do
   end
 
   describe "since with content" do
-    it "should ignore all files after until " do
-      since = GitFame::Base.new({
+    let (:since) {GitFame::Base.new({
             repository: @repository,
             until:"2012-03-01",
             since:"2012-02-25"
-      })
-      since.pretty_puts
-      since.files.should eq(16)
-      since.commits.should eq(22)
-      since.loc.should eq(135)
-
-      since.should have(1).authors
-
-      describe "author" do
-        let(:author) { since.authors.last }
-        it "should have a bunch of commits" do
-          author.raw_commits.should eq(22)
-        end
-
-        it "should respond to name" do
-          author.name.should eq("Linus Oleander")
-        end
-
-        it "should have a number of locs" do
-          author.raw_loc.should eq(135)
-        end
-
-        it "should have a number of files" do
-          author.raw_files.should eq(6)
-        end
-
+      })}
+    describe "summary" do
+      it "should ignore all files after until " do
+        since.pretty_puts
+        since.files.should eq(16)
+        since.commits.should eq(22)
+        since.loc.should eq(135)
       end
+    end
+
+    describe "author" do
+      it "should have 1 author" do
+        since.should have(1).authors
+      end
+      let(:author) { since.authors.last }
+      it "should have a bunch of commits" do
+        author.raw_commits.should eq(22)
+      end
+
+      it "should respond to name" do
+        author.name.should eq("Linus Oleander")
+      end
+
+      it "should have a number of locs" do
+        author.raw_loc.should eq(135)
+      end
+
+      it "should have a number of files" do
+        author.raw_files.should eq(6)
+      end
+
     end
   end
 end
