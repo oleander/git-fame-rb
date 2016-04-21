@@ -29,6 +29,7 @@ Generates data like:
   gem.add_dependency("hirb")
   gem.add_dependency("mimer_plus")
   gem.add_dependency("string-scrub")
+  gem.add_dependency("date")
 
   gem.add_development_dependency("rspec", "2.10.0")
   gem.add_development_dependency("rake")

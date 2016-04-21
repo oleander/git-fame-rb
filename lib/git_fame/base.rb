@@ -1,6 +1,7 @@
 require "string-scrub"
 require "csv"
 require_relative "./errors"
+require "date"
 
 module GitFame
   class Base
@@ -201,34 +202,43 @@ module GitFame
           @files.count,
           @progressbar
         )
+        since_time = Date.parse(@since).to_time.to_i
+        rev_list = execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}").split("\n")
         blame_opts = @whitespace ? "-w" : ""
-        @files.each do |file|
-          progressbar.inc
-          if @bytype
-            file_extension = File.extname(file).gsub(/^\./, "")
-            file_extension = "unknown" if file_extension.empty?
-          end
-
-          unless type = Mimer.identify(File.join(@repository, file))
-            next
-          end
-
-          if type.binary?
-            next
-          end
-
-          # only count extensions that aren't binary
-          @file_extensions << file_extension
-
-          output = execute(
-            "git blame #{blame_opts} --line-porcelain #{@branch} -- '#{file}'"
-          )
-          output.scan(/^author (.+)$/).each do |author|
-            fetch(author.first).raw_loc += 1
-            @file_authors[author.first][file] ||= 1
+        if !rev_list.nil? && !rev_list.empty?
+          @files.each do |file|
+            progressbar.inc
             if @bytype
-              fetch(author.first).
-                file_type_counts[file_extension] += 1
+              file_extension = File.extname(file).gsub(/^\./, "")
+              file_extension = "unknown" if file_extension.empty?
+            end
+
+            unless type = Mimer.identify(File.join(@repository, file))
+              next
+            end
+
+            if type.binary?
+              next
+            end
+
+            # only count extensions that aren't binary
+            @file_extensions << file_extension
+
+            # a file might not exist in the time frame
+            output = execute(
+              "git blame #{rev_list.last} #{blame_opts} --line-porcelain -- '#{file}'"
+            )
+            output.scan(/^author\s(.+?)(?:^.+?)(?:^author-time)\s(\d+)/m).each do |author_time|
+              author=author_time.first.split("\n")
+              time=author_time.last
+              if time.to_i>since_time
+                fetch(author.first).raw_loc += 1
+                @file_authors[author.first][file] ||= 1
+                if @bytype
+                  fetch(author.first).
+                    file_type_counts[file_extension] += 1
+                end
+              end
             end
           end
         end

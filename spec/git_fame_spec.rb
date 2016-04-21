@@ -184,9 +184,10 @@ describe GitFame::Base do
       since = GitFame::Base.new({ 
             repository: @repository,
             since:"2100-01-01"
-      }).authors.last
-      since.raw_commits.should eq(0)
-
+      })
+      since.files.should eq(16)
+      since.commits.should eq(0)
+      since.loc.should eq(0)
     end
   end
 
@@ -195,9 +196,46 @@ describe GitFame::Base do
       since = GitFame::Base.new({
             repository: @repository,
             until:"1972-01-01"
-      }).authors.last
-      since.raw_commits.should eq(0)
+      })
+      since.files.should eq(16)
+      since.commits.should eq(0)
+      since.loc.should eq(0)
+    end
+  end
 
+  describe "since with content" do
+    it "should ignore all files after until " do
+      since = GitFame::Base.new({
+            repository: @repository,
+            until:"2012-03-01",
+            since:"2012-02-25"
+      })
+      since.pretty_puts
+      since.files.should eq(16)
+      since.commits.should eq(22)
+      since.loc.should eq(135)
+
+      since.should have(1).authors
+
+      describe "author" do
+        let(:author) { since.authors.last }
+        it "should have a bunch of commits" do
+          author.raw_commits.should eq(22)
+        end
+
+        it "should respond to name" do
+          author.name.should eq("Linus Oleander")
+        end
+
+        it "should have a number of locs" do
+          author.raw_loc.should eq(135)
+        end
+
+        it "should have a number of files" do
+          author.raw_files.should eq(6)
+        end
+
+      end
     end
   end
 end
