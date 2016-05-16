@@ -1,4 +1,5 @@
 require "csv"
+require "date"
 require_relative "./errors"
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
@@ -15,6 +16,8 @@ module GitFame
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
+    # @args[:since] date since
+    # @args[:until] date until
     #
     def initialize(args)
       @sort         = "loc"
@@ -26,6 +29,8 @@ module GitFame
       @include      = ""
       @authors      = {}
       @file_authors = Hash.new { |h,k| h[k] = {} }
+      @since = '1970-01-01'
+      @until = 'now'
       args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
       end
@@ -144,7 +149,7 @@ module GitFame
     #
     def branch_exists?
       Dir.chdir(@repository) do
-        system "git show-ref #{@branch} > /dev/null 2>&1"
+        system "git rev-parse --verify #{@branch} > /dev/null 2>&1"
       end
     end
 
@@ -216,39 +221,56 @@ module GitFame
           @files.count,
           @progressbar
         )
+        since_time = Date.parse(@since).to_time.to_i
+        rev_list = execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}").split("\n")
         blame_opts = @whitespace ? "-w" : ""
-        @files.each do |file|
-          progressbar.inc
-          if @bytype
-            file_extension = File.extname(file).gsub(/^\./, "")
-            file_extension = "unknown" if file_extension.empty?
-          end
-
-          unless type = Mimer.identify(File.join(@repository, file))
-            next
-          end
-
-          if type.binary?
-            next
-          end
-
-          # only count extensions that aren't binary
-          @file_extensions << file_extension
-
-          output = execute(
-            "git blame #{blame_opts} --line-porcelain #{@branch} -- '#{file}'"
-          )
-          output.scan(/^author (.+)$/).each do |author|
-            fetch(author.first).raw_loc += 1
-            @file_authors[author.first][file] ||= 1
+        if !rev_list.nil? && !rev_list.empty?
+          @files.each do |file|
+            progressbar.inc
             if @bytype
-              fetch(author.first).
-                file_type_counts[file_extension] += 1
+              file_extension = File.extname(file).gsub(/^\./, "")
+              file_extension = "unknown" if file_extension.empty?
+            end
+
+            unless type = Mimer.identify(File.join(@repository, file))
+              next
+            end
+
+            if type.binary?
+              next
+            end
+
+            # only count extensions that aren't binary
+            @file_extensions << file_extension
+
+            # a file might not exist in the time frame
+            output = execute(
+              "git blame #{rev_list.last} #{blame_opts} --line-porcelain -- '#{file}'"
+            )
+            output.scan(/^author\s(.+?)(?:^.+?)(?:^author-time)\s(\d+)/m).each do |author_time|
+              author=author_time.first.split("\n")
+              time=author_time.last
+              if time.to_i>since_time
+                fetch(author.first).raw_loc += 1
+                @file_authors[author.first][file] ||= 1
+                if @bytype
+                  fetch(author.first).
+                    file_type_counts[file_extension] += 1
+                end
+              end
             end
           end
         end
 
-        execute("git shortlog #{@branch} -se").split("\n").map do |l|
+        shortlog_cmd = "git shortlog #{@branch} -se "
+        if @since
+          shortlog_cmd += ' --since=' + @since
+        end
+        if @until
+          shortlog_cmd += ' --until=' + @until
+        end
+
+        execute(shortlog_cmd).split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?

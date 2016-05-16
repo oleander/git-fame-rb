@@ -16,6 +16,8 @@ opts = Trollop::options do
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
+  opt :since, "Since date for commits report", default: "1970-01-01", type:String
+  opt :until, "Until date for commits report", default:"now", type: String
 end
 
 Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
@@ -29,6 +31,8 @@ fame = GitFame::Base.new({
   include: opts[:include],
   exclude: opts[:exclude],
   extensions: opts[:extension],
-  branch: opts[:branch]
+  branch: opts[:branch],
+  since: opts[:since],
+  until: opts[:until]
 })
 opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
