@@ -22,8 +22,9 @@ module GitFame
     # @return String Distribution (in %) between users
     #
     def distribution
-      "%.1f / %.1f / %.1f" % [:loc, :commits, :files].
-        map{ |w| (send("raw_#{w}") / @parent.send(w).to_f) * 100 }
+      "%s / %s / %s" % [:loc, :commits, :files].map do |field|
+        ("%.1f" % (percent_for_field(field) * 100)).rjust(4, " ")
+      end
     end
     alias_method :"distribution (%)", :distribution
 
@@ -38,6 +39,12 @@ module GitFame
     #
     def method_missing(m, *args, &block)
       file_type_counts[m.to_s]
+    end
+
+    private
+
+    def percent_for_field(field)
+      send("raw_#{field}") / @parent.send(field).to_f
     end
   end
 end
