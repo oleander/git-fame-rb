@@ -4,9 +4,9 @@ require File.expand_path('../lib/git_fame/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Linus Oleander"]
   gem.email         = ["linus@oleander.nu"]
-  gem.description   = %q{Generates some awesome stats from git-blame}
+  gem.description   = %q{Generates awesome stats from git-blame}
   gem.summary       = %q{
-Generates some awesome stats from git-blame
+Generates awesome stats from git-blame
 
 A Ruby wrapper for git-blame.
 Generates data like:
