@@ -32,6 +32,17 @@ module GitFame
       @exclude = convert_exclude_paths_to_array
       @extensions = convert_extensions_to_array
       @branch = (@branch.nil? or @branch.empty?) ? "master" : @branch
+
+      # Fields that should be visible in the final table
+      # Used by #csv_puts, #to_csv and #pretty_puts
+      # Format: [ [:method_on_author, "custom column name"] ]
+      @visible_fields = [
+        :name,
+        :loc,
+        :commits,
+        :files,
+        [:distribution, "distribution (%)"]
+      ]
     end
 
     #
@@ -70,25 +81,12 @@ module GitFame
     #
     def to_csv
       CSV.generate do |csv|
-        csv << fields
+        csv << printable_fields
         authors.each do |author|
           csv << fields.map do |f|
             author.send(f)
           end
         end
-      end
-    end
-
-    #
-    # Calculate columns to show
-    #
-    def fields
-      @_fields ||= begin
-        fields = [:name, :loc, :commits, :files, :distribution]
-        if @bytype
-          fields += populate.instance_variable_get("@file_extensions")
-        end
-        fields.uniq
       end
     end
 
@@ -151,6 +149,25 @@ module GitFame
     end
 
     private
+
+    def printable_fields
+      @_printable_fields ||= raw_fields.map do |field|
+        field.is_a?(Array) ? field.last : field
+      end
+    end
+
+    def raw_fields
+      return @visible_fields unless @bytype
+      @_raw_fields ||= (
+        @visible_fields + populate.instance_variable_get("@file_extensions")
+      ).uniq
+    end
+
+    def fields
+      @_fields ||= raw_fields.map do |field|
+        field.is_a?(Array) ? field.first : field
+      end
+    end
 
     #
     # @command String Command to be executed inside the @repository path
