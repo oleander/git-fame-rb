@@ -1,5 +1,6 @@
 require "csv"
 require_relative "./errors"
+require "open3"
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
@@ -29,9 +30,16 @@ module GitFame
       args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
       end
+
       @exclude = convert_exclude_paths_to_array
       @extensions = convert_extensions_to_array
-      @branch = (@branch.nil? or @branch.empty?) ? "master" : @branch
+
+      # User defined branch must exist
+      if not @branch.nil? and not default_branch_exists?
+        raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+      end
+
+      @branch ||= default_branch
 
       # Fields that should be visible in the final table
       # Used by #csv_puts, #to_csv and #pretty_puts
@@ -43,17 +51,6 @@ module GitFame
         :files,
         [:distribution, "distribution (%)"]
       ]
-    end
-
-    #
-    # @return Boolean Is the given @dir a git repository?
-    # @dir Path (relative or absolute) to git repository
-    #
-    def self.git_repository?(dir)
-      return false unless File.directory?(dir)
-      Dir.chdir(dir) do
-        system "git rev-parse --git-dir > /dev/null 2>&1"
-      end
     end
 
     #
@@ -139,15 +136,6 @@ module GitFame
       end
     end
 
-    #
-    # @return Boolean Does the branch exist?
-    #
-    def branch_exists?
-      Dir.chdir(@repository) do
-        system "git show-ref #{@branch} > /dev/null 2>&1"
-      end
-    end
-
     private
 
     def printable_fields
@@ -172,8 +160,43 @@ module GitFame
     #
     # @command String Command to be executed inside the @repository path
     #
-    def execute(command)
-      Dir.chdir(@repository) { `#{command}`.scrub }
+    def execute(command, silent = false)
+      result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
+        Result.new(out.read, thread.value.success?)
+      end
+
+      return result if result.success? or silent
+      raise cmd_error_message(command, result.data)
+    rescue Errno::ENOENT
+      raise cmd_error_message(command, $!.message)
+    end
+
+    def cmd_error_message(command, message)
+      "Could not run '#{command}' => #{message}"
+    end
+
+    class Result < Struct.new(:data, :success?)
+      def to_s
+        data
+      end
+    end
+
+    # Boolean Does the branch exist?
+    def default_branch_exists?
+      branch_exists?(@branch)
+    end
+
+    def branch_exists?(branch)
+      execute("git show-ref '#{branch}'", true).success?
+    end
+
+    def default_branch
+      return "master" if branch_exists?("master")
+      if (result = execute("git rev-parse HEAD")).success?
+        return result.data
+      end
+
+      raise BranchNotFound.new("No branch found")
     end
 
     #
@@ -202,13 +225,9 @@ module GitFame
     #
     def populate
       @_populate ||= begin
-        unless branch_exists?
-          raise BranchNotFound.new("Does '#{@branch}' exist?")
-        end
-
         command = "git ls-tree -r #{@branch} --name-only #{@include}"
         command += " | grep \"\\.\\(#{@extensions.join("\\|")}\\)$\"" unless @extensions.empty?
-        @files = execute(command).split("\n")
+        @files = execute(command).to_s.split("\n")
         @file_extensions = []
         remove_excluded_files
         progressbar = SilentProgressbar.new(
@@ -237,7 +256,7 @@ module GitFame
 
           output = execute(
             "git blame #{blame_opts} --line-porcelain #{@branch} -- '#{file}'"
-          )
+          ).to_s
           output.scan(/^author (.+)$/).each do |author|
             fetch(author.first).raw_loc += 1
             @file_authors[author.first][file] ||= 1
@@ -248,7 +267,7 @@ module GitFame
           end
         end
 
-        execute("git shortlog #{@branch} -se").split("\n").map do |l|
+        execute("git shortlog #{@branch} -se").to_s.split("\n").map do |l|
           _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
           user = fetch(u)
           # Has this user been updated before?

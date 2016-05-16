@@ -138,26 +138,6 @@ describe GitFame::Base do
     end
   end
 
-  describe ".git_repository?" do
-    it "should know if a folder is a git repository [absolute path]" do
-      GitFame::Base.git_repository?(@repository).should eq(true)
-    end
-
-    it "should know if a folder exists or not [absolute path]" do
-      GitFame::Base.git_repository?("/f67c2bcbfcfa30fccb36f72dca22a817").
-        should eq(false)
-    end
-
-    it "should know if a folder is a git repository [relative path]" do
-      GitFame::Base.git_repository?("spec/fixtures/gash").should eq(true)
-    end
-
-    it "should know if a folder exists or not [relative path]" do
-      GitFame::Base.git_repository?("f67c2bcbfcfa30fccb36f72dca22a817").
-        should eq(false)
-    end
-  end
-
   describe "branches" do
     it "should handle existing branches" do
       authors = GitFame::Base.new({
@@ -173,7 +153,7 @@ describe GitFame::Base do
       expect {
         GitFame::Base.new({
           repository: @repository,
-          branch: "f67c2bcbfcfa30fccb36f72dca22a817"
+          branch: "-----"
         }).authors
       }.to raise_error(GitFame::BranchNotFound)
     end
