@@ -35,7 +35,7 @@ module GitFame
 
       # Fields that should be visible in the final table
       # Used by #csv_puts, #to_csv and #pretty_puts
-      # Format: [ [:method_on_author, "custom column name"] ]
+      # Format: [ [ :method_on_author, "custom column name" ] ]
       @visible_fields = [
         :name,
         :loc,
@@ -66,7 +66,7 @@ module GitFame
       puts "Total number of lines: #{number_with_delimiter(loc)}"
       puts "Total number of commits: #{number_with_delimiter(commits)}\n"
 
-      table(authors, fields: fields)
+      table(authors, fields: printable_fields)
     end
 
     #
@@ -81,7 +81,7 @@ module GitFame
     #
     def to_csv
       CSV.generate do |csv|
-        csv << printable_fields
+        csv << fields
         authors.each do |author|
           csv << fields.map do |f|
             author.send(f)
