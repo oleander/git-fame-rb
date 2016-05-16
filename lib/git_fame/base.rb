@@ -1,6 +1,8 @@
-require "string-scrub"
 require "csv"
 require_relative "./errors"
+if RUBY_VERSION.to_f < 2.1
+  require "string-scrub"
+end
 
 module GitFame
   class Base
