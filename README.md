@@ -131,7 +131,10 @@ The list of authors may include duplicate people. If a git user's configured nam
 ## Testing
 
 1. Download fixtures (`spec/fixtures`) using `git submodule update --init`.
-2. Run rspec using `rspec spec/git_fame_spec.rb`.
+2. Run rspec using `bundle exec rspec`.
+
+Note that `puts` has been disabled to avoid unnecessary output during testing.
+Visit `spec/spec_helper.rb` to enable it again.
 
 ## Requirements
 

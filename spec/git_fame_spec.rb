@@ -1,11 +1,12 @@
 describe GitFame::Base do
-  let(:subject) { GitFame::Base.new({repository: @repository}) }
+  let(:subject) { GitFame::Base.new({repository: repository}) }
   describe "#authors" do
     it "should have a list of authors" do
       subject.should have(3).authors
     end
 
     describe "author" do
+      require "pp"
       let(:author) { subject.authors.last }
       it "should have a bunch of commits" do
         author.raw_commits.should eq(23)
@@ -61,7 +62,7 @@ describe GitFame::Base do
   describe "sort" do
     it "should be able to sort #authors by name" do
       authors = GitFame::Base.new({
-        repository: @repository,
+        repository: repository,
         sort: "name"
       }).authors
       authors.map(&:name).
@@ -70,7 +71,7 @@ describe GitFame::Base do
 
     it "should be able to sort #authors by commits" do
       authors = GitFame::Base.new({
-        repository: @repository,
+        repository: repository,
         sort: "commits"
       }).authors
       authors.map(&:name).
@@ -79,7 +80,7 @@ describe GitFame::Base do
 
     it "should be able to sort #authors by files" do
       authors = GitFame::Base.new({
-        repository: @repository,
+        repository: repository,
         sort: "files"
       }).authors
       authors.map(&:name).
@@ -90,7 +91,7 @@ describe GitFame::Base do
   describe "#command_line_arguments" do
     let(:subject) do
       GitFame::Base.new({
-        repository: @repository,
+        repository: repository,
         exclude: "lib",
         bytype: true,
         extensions: "rb,rdoc"
@@ -98,11 +99,11 @@ describe GitFame::Base do
     end
 
     it "should exclude the lib folder" do
-      subject.file_list.include?("lib/gash.rb").should be_false
+      subject.file_list.include?("lib/gash.rb").should be_falsey
     end
 
     it "should exclude non rb or rdoc files" do
-      subject.file_list.include?("HISTORY").should be_false
+      subject.file_list.include?("HISTORY").should be_falsey
     end
 
     let(:author) { subject.authors.find { |author| author.name == "7rans" } }
@@ -141,7 +142,7 @@ describe GitFame::Base do
   describe "branches" do
     it "should handle existing branches" do
       authors = GitFame::Base.new({
-        repository: @repository,
+        repository: repository,
         branch: "0.1.0"
       }).authors
 
@@ -152,7 +153,7 @@ describe GitFame::Base do
     it "should raise an error if branch doesn't exist" do
       expect {
         GitFame::Base.new({
-          repository: @repository,
+          repository: repository,
           branch: "-----"
         }).authors
       }.to raise_error(GitFame::BranchNotFound)
