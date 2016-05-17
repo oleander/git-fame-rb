@@ -38,7 +38,6 @@ Generates data like:
   gem.add_development_dependency("rspec-collection_matchers")
   gem.add_development_dependency("rake")
   gem.add_development_dependency("coveralls")
-  gem.add_development_dependency("byebug")
 
   gem.required_ruby_version = ">= 1.9.2"
 end
