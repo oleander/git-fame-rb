@@ -1,9 +1,9 @@
 describe "bin/git-fame" do
-  it "help should include the authors name" do
+  it "should include the authors name" do
     run("--help").should include_output("Linus Oleander")
   end
 
-  it "version should include the the current version" do
+  it "should include the the current version" do
     run("--version").should include_output(GitFame::VERSION)
   end
 
@@ -41,5 +41,4 @@ describe "bin/git-fame" do
   it "should sort by loc by default" do
     run("--sort=loc", "--progressbar=0").first.should eq(run("--progressbar=0").first)
   end
-
 end
