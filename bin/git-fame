@@ -18,7 +18,6 @@ opts = Trollop::options do
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
 end
 
-Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
 fame = GitFame::Base.new({
   repository: opts[:repository],
