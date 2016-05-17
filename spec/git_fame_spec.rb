@@ -158,5 +158,17 @@ describe GitFame::Base do
         }).authors
       }.to raise_error(GitFame::BranchNotFound)
     end
+
+    it "should not raise on empty branch (use fallback)" do
+      GitFame::Base.new({
+        repository: repository,
+        branch: ""
+      }).authors.should_not be_empty
+
+      GitFame::Base.new({
+        repository: repository,
+        branch: nil
+      }).authors.should_not be_empty
+    end
   end
 end

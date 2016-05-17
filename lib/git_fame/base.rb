@@ -39,9 +39,13 @@ module GitFame
       @bytype = args.fetch(:bytype, false)
       @branch = args.fetch(:branch, default_branch)
 
-      # User defined branch must exist
-      if not blank?(@branch) and not default_branch_exists?
-        raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+      # Figure out what branch the caller is using
+      if present?(@branch = args[:branch])
+        unless branch_exists?(@branch)
+          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+        end
+      else
+        @branch = default_branch
       end
 
       # Fields that should be visible in the final table
@@ -219,6 +223,10 @@ module GitFame
       value.nil? or value.empty?
     end
 
+    def present?(value)
+      not blank?(value)
+    end
+
     # Includes fields from file extensions
     def raw_fields
       return @visible_fields unless @bytype
@@ -253,11 +261,6 @@ module GitFame
 
     def cmd_error_message(command, message)
       "Could not run '#{command}' => #{message}"
-    end
-
-    # Boolean Does the branch exist?
-    def default_branch_exists?
-      branch_exists?(@branch)
     end
 
     # Does @branch exist in the current git repo?
