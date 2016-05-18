@@ -1,6 +1,10 @@
 require "csv"
 require "date"
 require_relative "./errors"
+require_relative "./result"
+require_relative "./file"
+require "open3"
+
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
@@ -8,6 +12,7 @@ end
 module GitFame
   class Base
     include GitFame::Helper
+    attr_accessor :file_extensions
 
     #
     # @args[:repository] String Absolute path to git repository
@@ -16,27 +21,35 @@ module GitFame
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
-    # @args[:since] date since
-    # @args[:until] date until
     #
     def initialize(args)
-      @sort         = "loc"
-      @progressbar  = false
-      @whitespace   = false
-      @bytype       = false
-      @extensions   = ""
-      @exclude      = ""
-      @include      = ""
-      @authors      = {}
+      @default_settings = {
+        branch: "master",
+        sorting: "loc"
+      }
+      @progressbar  = args.fetch(:progressbar, false)
       @file_authors = Hash.new { |h,k| h[k] = {} }
-      @since = '1970-01-01'
-      @until = 'now'
-      args.keys.each do |name|
-        instance_variable_set "@" + name.to_s, args[name]
+      # Create array out of comma separated list
+      @exclude = args.fetch(:exclude, "").split(",").
+        map{ |path| path.strip.sub(/\A\//, "") }
+      @extensions = args.fetch(:extensions, "").split(",")
+      # Default sorting option is by loc
+      @include = args.fetch(:include, "")
+      @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
+      @repository = args.fetch(:repository)
+      @bytype = args.fetch(:bytype, false)
+      @branch = args.fetch(:branch, default_branch)
+      @since = args.fetch(:since, "1970-02-01")
+      @until = args.fetch(:until,"now")
+
+      # Figure out what branch the caller is using
+      if present?(@branch = args[:branch])
+        unless branch_exists?(@branch)
+          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+        end
+      else
+        @branch = default_branch
       end
-      @exclude = convert_exclude_paths_to_array
-      @extensions = convert_extensions_to_array
-      @branch = (@branch.nil? or @branch.empty?) ? "master" : @branch
 
       # Fields that should be visible in the final table
       # Used by #csv_puts, #to_csv and #pretty_puts
@@ -48,17 +61,10 @@ module GitFame
         :files,
         [:distribution, "distribution (%)"]
       ]
-    end
-
-    #
-    # @return Boolean Is the given @dir a git repository?
-    # @dir Path (relative or absolute) to git repository
-    #
-    def self.git_repository?(dir)
-      return false unless File.directory?(dir)
-      Dir.chdir(dir) do
-        system "git rev-parse --git-dir > /dev/null 2>&1"
-      end
+      @cache = {}
+      @file_extensions = []
+      @wopt = args.fetch(:whitespace, false) ? "-w" : ""
+      @authors = {}
     end
 
     #
@@ -97,95 +103,214 @@ module GitFame
 
     #
     # @return Fixnum Total number of files
+    # TODO: Rename this
     #
     def files
-      populate.instance_variable_get("@files").count
+      file_list.count
     end
 
     #
     # @return Array list of repo files processed
     #
     def file_list
-      populate.instance_variable_get("@files")
+      populate { current_files(last_revision) }
+    end
+
+    #
+    # @return the last revision
+    #
+    def last_revision
+      execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}") do |result|
+        rev_list=result.to_s.split("\n")
+        unless present?(rev_list.last)
+          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist between '#{@since}' and '#{@until}'"
+        end
+        return rev_list.last
+      end
     end
 
     #
     # @return Fixnum Total number of commits
     #
     def commits
-      authors.inject(0){ |result, author| author.raw_commits + result }
+      authors.inject(0) { |result, author| author.raw(:commits) + result }
     end
 
     #
     # @return Fixnum Total number of lines
     #
     def loc
-      populate.authors.
-        inject(0){ |result, author| author.raw_loc + result }
+      authors.inject(0) { |result, author| author.raw(:loc) + result }
     end
 
     #
     # @return Array<Author> A list of authors
     #
     def authors
-      @_authors ||= begin
-        authors = populate.instance_variable_get("@authors").values
-        if @sort
-          authors.sort_by do |author|
-            if @sort == "name"
-              author.send(@sort)
-            else
-              -1 * author.send("raw_#{@sort}")
-            end
+      cache(:authors) do
+        populate do
+          @authors.values.sort_by do |author|
+            @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
           end
-        else
-          authors
         end
-      end
-    end
-
-    #
-    # @return Boolean Does the branch exist?
-    #
-    def branch_exists?
-      Dir.chdir(@repository) do
-        system "git rev-parse --verify #{@branch} > /dev/null 2>&1"
       end
     end
 
     private
 
+    # Populates @authors and @file_extensions with data
+    # Block is called on every call to populate, but
+    # the data is only calculated once
+    def populate(&block)
+      revision = last_revision
+      sincetime =Date.parse(@since).to_time.to_i 
+      cache(:populate) do
+        all_files = current_files(revision)
+        # Display progressbar with the number of files as countdown
+        progressbar = init_progressbar(all_files.count)
+
+        # Extract the blame history from all checked in files
+        all_files.each do |file|
+          progressbar.inc
+
+          # Skip if mimetype can't be decided
+          next unless type = Mimer.identify(File.join(@repository, file.path))
+          # Binary types isn't very usefull to run git-blame on
+          next if type.binary?
+
+          @file_extensions << file.extname
+
+          execute("git blame #{revision} #{@wopt} --line-porcelain  -- '#{file}'") do |result|
+            # Authors from git blame has to be parsed
+            result.to_s.scan(/^author\s(.+?)(?:^.+?)(?:^author-time)\s(\d+)/m).each do |raw_author_time|
+              raw_author = raw_author_time.first.strip
+              # Create or find already existing user
+              author = fetch(raw_author)
+              time = raw_author_time.last.to_i
+
+              if time > sincetime
+                # Get author by name and increase the number of loc by 1
+                author.inc(:loc, 1)
+
+                # Store the files and authors together
+                @file_authors[raw_author][file] ||= 1
+
+                @bytype && author.file_type_counts[file.extname] += 1
+              end
+            end
+          end
+        end
+
+        # Get repository summery and update each author accordingly
+        execute("git shortlog #{@branch} -se --since=#{@since} --until=#{@until}") do |result|
+          result.to_s.split("\n").map do |line|
+            _, commits, raw_author = line.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
+            author = fetch(raw_author)
+            # There might be duplicate authors using git shortlog
+            # (same name, different emails). Update already existing authors
+            if author.raw(:commits).zero?
+              update(raw_author, {
+                raw_commits: commits.to_i,
+                raw_files: @file_authors[raw_author].keys.count,
+                files_list: @file_authors[raw_author].keys
+              })
+            else
+              # Calculate the number of files edited by users
+              files = (author.files_list + @file_authors[raw_author].keys).uniq
+              update(raw_author, {
+                raw_commits: commits.to_i + author.raw(:commits),
+                raw_files: files.count,
+                files_list: files
+              })
+            end
+          end
+        end
+
+        progressbar.finish
+      end
+
+      block.call
+    end
+
+    # Uses the more printable names in @visible_fields
     def printable_fields
-      @_printable_fields ||= raw_fields.map do |field|
-        field.is_a?(Array) ? field.last : field
+      cache(:printable_fields) do
+        raw_fields.map do |field|
+          field.is_a?(Array) ? field.last : field
+        end
       end
     end
 
+    # Check to see if a string is empty (nil or "")
+    def blank?(value)
+      value.nil? or value.empty?
+    end
+
+    def present?(value)
+      not blank?(value)
+    end
+
+    # Includes fields from file extensions
     def raw_fields
       return @visible_fields unless @bytype
-      @_raw_fields ||= (
-        @visible_fields + populate.instance_variable_get("@file_extensions")
-      ).uniq
-    end
-
-    def fields
-      @_fields ||= raw_fields.map do |field|
-        field.is_a?(Array) ? field.first : field
+      cache(:raw_fields) do
+        populate do
+          (@visible_fields + file_extensions).uniq
+        end
       end
     end
 
-    #
-    # @command String Command to be executed inside the @repository path
-    #
-    def execute(command)
-      Dir.chdir(@repository) { `#{command}`.scrub }
+    # Method fields used by #to_csv and #pretty_puts
+    def fields
+      cache(:fields) do
+        raw_fields.map do |field|
+          field.is_a?(Array) ? field.first : field
+        end
+      end
     end
 
-    #
-    # @author String Author
-    # @args Hash Argument that should be set in @return
-    # @return Author
-    #
+    # Command to be executed at @repository
+    # @silent = true wont raise an error on exit code =! 0
+    def execute(command, silent = false, &block)
+      result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
+        Result.new(out.read, thread.value.success?)
+      end
+
+      return block.call(result) if result.success? or silent
+      raise cmd_error_message(command, result.data)
+    rescue Errno::ENOENT
+      raise cmd_error_message(command, $!.message)
+    end
+
+    def cmd_error_message(command, message)
+      "Could not run '#{command}' => #{message}"
+    end
+
+    # Does @branch exist in the current git repo?
+    def branch_exists?(branch)
+      execute("git show-ref '#{branch}'", true) do |result|
+        result.success?
+      end
+    end
+
+    # In those cases the users havent defined a branch
+    # We try to define it for him/her by
+    # 1. check if { @default_settings.fetch(:branch) } exists
+    # 1. look at .git/HEAD (basically)
+    def default_branch
+      if branch_exists?(@default_settings.fetch(:branch))
+        return @default_settings.fetch(:branch)
+      end
+
+      execute("git rev-parse HEAD") do |result|
+        return result.data if result.success?
+      end
+
+      raise BranchNotFound.new("No branch found")
+    end
+
+    # Tries to create an author, unless it already exists in cache
+    # User is always updated with the passed @args
     def update(author, args)
       fetch(author).tap do |found|
         args.keys.each do |key|
@@ -194,132 +319,45 @@ module GitFame
       end
     end
 
-    #
-    # @return Author
-    # @author String
-    #
+    # Fetches user from cache
     def fetch(author)
-      @authors[author] ||= Author.new({name: author, parent: self})
+      @authors[author] ||= Author.new({ name: author, parent: self })
     end
 
-    #
-    # @return GitFame
-    #
-    def populate
-      @_populate ||= begin
-        unless branch_exists?
-          raise BranchNotFound.new("Does '#{@branch}' exist?")
-        end
-
-        since_time = Date.parse(@since).to_time.to_i
-        rev_list = execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}").split("\n")
-        command = "git ls-tree -r #{rev_list.last} --name-only #{@include}"
-        command += " | grep \"\\.\\(#{@extensions.join("\\|")}\\)$\"" unless @extensions.empty?
-        @files = execute(command).split("\n")
-        @file_extensions = []
-        remove_excluded_files
-        progressbar = SilentProgressbar.new(
-          "Blame",
-          @files.count,
-          @progressbar
-        )
-        blame_opts = @whitespace ? "-w" : ""
-        if !rev_list.nil? && !rev_list.empty?
-          @files.each do |file|
-            progressbar.inc
-            if @bytype
-              file_extension = File.extname(file).gsub(/^\./, "")
-              file_extension = "unknown" if file_extension.empty?
+    # List all files in current git directory, excluding
+    # extensions in @extensions defined by the user
+    def current_files(tree_ish)
+      if present?(tree_ish) 
+        cache(:current_files) do
+          execute("git ls-tree -r #{tree_ish} --name-only #{@include}") do |result|
+            files = remove_excluded_files(result.to_s.split("\n")).map do |path|
+              GitFame::FileUnit.new(path)
             end
 
-            unless type = Mimer.identify(File.join(@repository, file))
-              next
-            end
-
-            if type.binary?
-              next
-            end
-
-            # only count extensions that aren't binary
-            @file_extensions << file_extension
-
-            # a file might not exist in the time frame
-            output = execute(
-              "git blame #{rev_list.last} #{blame_opts} --line-porcelain -- '#{file}'"
-            )
-            output.scan(/^author\s(.+?)(?:^.+?)(?:^author-time)\s(\d+)/m).each do |author_time|
-              author=author_time.first.split("\n")
-              time=author_time.last
-              if time.to_i>since_time
-                fetch(author.first).raw_loc += 1
-                @file_authors[author.first][file] ||= 1
-                if @bytype
-                  fetch(author.first).
-                    file_type_counts[file_extension] += 1
-                end
-              end
-            end
+            return files if @extensions.empty?
+            files.select { |file| @extensions.include?(file.extname) }
           end
         end
-
-        shortlog_cmd = "git shortlog #{@branch} -se "
-        if @since
-          shortlog_cmd += ' --since=' + @since
-        end
-        if @until
-          shortlog_cmd += ' --until=' + @until
-        end
-
-        execute(shortlog_cmd).split("\n").map do |l|
-          _, commits, u = l.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-          user = fetch(u)
-          # Has this user been updated before?
-          if user.raw_commits.zero?
-            update(u, {
-              raw_commits: commits.to_i,
-              raw_files: @file_authors[u].keys.count,
-              files_list: @file_authors[u].keys
-            })
-          else
-            # Calculate the number of files edited by users
-            files = (user.files_list + @file_authors[u].keys).uniq
-            update(u, {
-              raw_commits: commits.to_i + user.raw_commits,
-              raw_files: files.count,
-              files_list: files
-            })
-          end
-        end
-
-        progressbar.finish
-
       end
-      return self
     end
 
-    #
-    # Converts @exclude argument to an array and removes leading slash
-    #
-    def convert_exclude_paths_to_array
-      @exclude.split(",").map{|path| path.strip.sub(/\A\//, "") }
+    # The block is only called once for every unique key
+    # Used to ensure methods are only called once
+    def cache(key, &block)
+      @cache[key] ||= block.call
     end
 
-    #
-    # Converts @extensions argument to an array
-    #
-    def convert_extensions_to_array
-      @extensions.split(",")
+    # Removes files excluded by the user
+    # Defined using --exclude
+    def remove_excluded_files(files)
+      return files if @exclude.empty?
+      files.reject do |file|
+        @exclude.any? { |exclude| file.match(exclude) }
+      end
     end
 
-    #
-    # Removes files matching paths in @exclude from @files instance variable
-    #
-    def remove_excluded_files
-      return if @exclude.empty?
-      @files = @files.map do |path|
-        next if path =~ /\A(#{@exclude.join("|")})/
-        path
-      end.compact
+    def init_progressbar(files_count)
+      SilentProgressbar.new("GitBlame", files_count, @progressbar)
     end
   end
 end

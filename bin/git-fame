@@ -1,4 +1,6 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 
 require "git_fame"
 require "trollop"
@@ -20,7 +22,6 @@ opts = Trollop::options do
   opt :until, "Until date for commits report", default:"now", type: String
 end
 
-Trollop::die :repository, "is not a git repository" unless GitFame::Base.git_repository?(opts[:repository])
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
 fame = GitFame::Base.new({
   repository: opts[:repository],

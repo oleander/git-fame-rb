@@ -28,12 +28,10 @@ Generates data like:
   gem.add_dependency("trollop")
   gem.add_dependency("hirb")
   gem.add_dependency("mimer_plus")
+  gem.add_dependency("scrub_rb")
 
-  if RUBY_VERSION.to_f < 2.1
-    gem.add_dependency("scrub_rb")
-  end
-
-  gem.add_development_dependency("rspec", "2.10.0")
+  gem.add_development_dependency("rspec", "~> 3.0")
+  gem.add_development_dependency("rspec-collection_matchers")
   gem.add_development_dependency("rake")
   gem.add_development_dependency("coveralls")
 
