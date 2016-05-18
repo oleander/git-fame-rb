@@ -185,7 +185,7 @@ describe GitFame::Base do
             repository: @repository,
             since:"2100-01-01"
       })
-      since.files.should eq(16)
+      since.files.should eq(0)
       since.commits.should eq(0)
       since.loc.should eq(0)
     end
@@ -197,7 +197,7 @@ describe GitFame::Base do
             repository: @repository,
             until:"1972-01-01"
       })
-      since.files.should eq(16)
+      since.files.should eq(0)
       since.commits.should eq(0)
       since.loc.should eq(0)
     end
@@ -212,7 +212,7 @@ describe GitFame::Base do
     describe "summary" do
       it "should ignore all files after until " do
         since.pretty_puts
-        since.files.should eq(16)
+        since.files.should eq(15)
         since.commits.should eq(22)
         since.loc.should eq(135)
       end
