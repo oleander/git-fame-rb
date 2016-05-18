@@ -211,7 +211,9 @@ module GitFame
           raise BranchNotFound.new("Does '#{@branch}' exist?")
         end
 
-        command = "git ls-tree -r #{@branch} --name-only #{@include}"
+        since_time = Date.parse(@since).to_time.to_i
+        rev_list = execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}").split("\n")
+        command = "git ls-tree -r #{rev_list.last} --name-only #{@include}"
         command += " | grep \"\\.\\(#{@extensions.join("\\|")}\\)$\"" unless @extensions.empty?
         @files = execute(command).split("\n")
         @file_extensions = []
@@ -221,8 +223,6 @@ module GitFame
           @files.count,
           @progressbar
         )
-        since_time = Date.parse(@since).to_time.to_i
-        rev_list = execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}").split("\n")
         blame_opts = @whitespace ? "-w" : ""
         if !rev_list.nil? && !rev_list.empty?
           @files.each do |file|
