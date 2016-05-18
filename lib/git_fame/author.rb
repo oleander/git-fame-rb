@@ -4,6 +4,8 @@ module GitFame
     attr_accessor :name, :raw_files, :raw_commits,
       :raw_loc, :files_list, :file_type_counts
 
+    FIELDS = [:loc, :commits, :files]
+
     #
     # @args Hash
     #
@@ -22,15 +24,15 @@ module GitFame
     # @return String Distribution (in %) between users
     #
     def distribution
-      "%s / %s / %s" % [:loc, :commits, :files].map do |field|
+      "%s / %s / %s" % FIELDS.map do |field|
         ("%.1f" % (percent_for_field(field) * 100)).rjust(4, " ")
       end
     end
     alias_method :"distribution (%)", :distribution
 
-    [:commits, :files, :loc].each do |method|
+    FIELDS.each do |method|
       define_method(method) do
-        number_with_delimiter(send("raw_#{method}"))
+        number_with_delimiter(raw(method))
       end
     end
 
@@ -41,10 +43,22 @@ module GitFame
       file_type_counts[m.to_s]
     end
 
+    def raw(method)
+      unless FIELDS.include?(method.to_sym)
+        raise "can't access raw '#{method}' on author"
+      end
+
+      send("raw_#{method}")
+    end
+
+    def inc(method, amount)
+      send("raw_#{method}=", raw(method) + amount)
+    end
+
     private
 
     def percent_for_field(field)
-      send("raw_#{field}") / @parent.send(field).to_f
+      raw(field) / @parent.send(field).to_f
     end
   end
 end
