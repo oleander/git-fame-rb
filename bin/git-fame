@@ -18,6 +18,8 @@ opts = Trollop::options do
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
+  opt :after, "after date for commits report", default: "1970-01-01", type:String
+  opt :before, "before date for commits report", default:"now", type: String
 end
 
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
@@ -30,6 +32,8 @@ fame = GitFame::Base.new({
   include: opts[:include],
   exclude: opts[:exclude],
   extensions: opts[:extension],
-  branch: opts[:branch]
+  branch: opts[:branch],
+  after: opts[:after],
+  before: opts[:before]
 })
 opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts

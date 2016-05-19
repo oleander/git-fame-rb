@@ -38,5 +38,5 @@ RSpec.configure do |config|
   end
 
   # Remove this line to allow Kernel#puts
-  config.before { allow($stdout).to receive(:puts) }
+  # config.before { allow($stdout).to receive(:puts) }
 end
