@@ -1,15 +1,20 @@
 describe GitFame::Base do
-  let(:subject) { GitFame::Base.new({repository: repository}) }
+  let(:subject) { GitFame::Base.new({ repository: repository }) }
+
   describe "#authors" do
     it "should have a list of authors" do
       subject.should have(3).authors
     end
 
     describe "author" do
-      require "pp"
-      let(:author) { subject.authors.last }
+      let(:author) do
+        subject.authors.find do |author|
+          author.name.include?("Linus")
+        end
+      end
+
       it "should have a bunch of commits" do
-        author.raw_commits.should eq(23)
+        author.raw_commits.should eq(17)
       end
 
       it "should respond to name" do
@@ -17,17 +22,18 @@ describe GitFame::Base do
       end
 
       it "should have a number of locs" do
-        author.raw_loc.should eq(136)
+        author.raw(:loc).should eq(136)
       end
 
       it "should have a number of files" do
-        author.raw_files.should eq(7)
+        author.raw(:files).should eq(7)
       end
 
       it "should have a distribution" do
-        author.distribution.should eq("12.6 / 32.9 / 43.8")
+        author.distribution.should eq("15.2 / 27.4 / 38.9")
       end
     end
+
     describe "format" do
       let(:author) do
         GitFame::Author.new({
@@ -53,9 +59,9 @@ describe GitFame::Base do
 
   describe "total" do
     it "should respond to #loc, #commits and #files" do
-      subject.files.should eq(16)
-      subject.commits.should eq(70)
-      subject.loc.should eq(1082)
+      subject.files.should eq(18)
+      subject.commits.should eq(62)
+      subject.loc.should eq(897)
     end
   end
 
@@ -132,10 +138,12 @@ describe GitFame::Base do
     end
 
     it "should be equal to" do
-      subject.to_csv.should eq("name,loc,commits,files,distribution\n" \
-                            "Magnus Holm,586,41,4,54.2 / 58.6 / 25.0\n" \
-                            "7rans,360,6,10,33.3 /  8.6 / 62.5\n" \
-                            "Linus Oleander,136,23,7,12.6 / 32.9 / 43.8\n")
+      subject.to_csv.should eq([
+        "name,loc,commits,files,distribution\n",
+        "Magnus Holm,401,40,4,44.7 / 64.5 / 22.2\n",
+        "7rans,360,5,10,40.1 /  8.1 / 55.6\n",
+        "Linus Oleander,136,17,7,15.2 / 27.4 / 38.9\n"
+      ].join)
     end
   end
 
@@ -156,7 +164,7 @@ describe GitFame::Base do
           repository: repository,
           branch: "-----"
         }).authors
-      }.to raise_error(GitFame::BranchNotFound)
+      }.to raise_error(GitFame::Error)
     end
 
     it "should not raise on empty branch (use fallback)" do
@@ -172,60 +180,77 @@ describe GitFame::Base do
     end
   end
 
-  describe "since" do
-    it "should raise error if nothing in time " do
-      expect { GitFame::Base.new({ 
-            repository: repository,
-            since:"2100-01-01"
-      }).authors}.to raise_error(GitFame::BranchNotFound)
+  describe "after" do
+    it "shouldn't find anything if 'after' too far in future" do
+      after = GitFame::Base.new({
+        repository: repository,
+        after: "2100-01-01"
+      })
+
+      after.files.should eq(0)
+      after.commits.should eq(0)
+      after.loc.should eq(0)
     end
   end
 
-  describe "until" do
-    it "should ignore all files after until " do
-      expect { GitFame::Base.new({
-            repository: repository,
-            until:"1972-01-01"
-      }).authors}.to raise_error(GitFame::BranchNotFound)
+  describe "before" do
+    it "shouldn't find anything if 'before' is to far back in history" do
+      after = GitFame::Base.new({
+        repository: repository,
+        before: "1972-01-01"
+      })
+
+      after.files.should eq(0)
+      after.commits.should eq(0)
+      after.loc.should eq(0)
     end
   end
 
-  describe "since with content" do
-    let (:since) {GitFame::Base.new({
-            repository: repository,
-            until:"2012-03-01",
-            since:"2012-02-25"
-      })}
+  describe "after with content" do
+    let (:after) do
+      GitFame::Base.new({
+        repository: repository,
+        after: "2008-09-01",
+        before: "2008-09-03"
+      })
+    end
+
     describe "summary" do
-      it "should ignore all files after until " do
-        since.pretty_puts
-        since.files.should eq(15)
-        since.commits.should eq(22)
-        since.loc.should eq(135)
+      it "should ignore all files after before" do
+        after.files.should eq(1)
+        after.commits.should eq(2)
+        after.loc.should eq(12)
       end
     end
 
     describe "author" do
-      it "should have 3 author" do
-        since.should have(3).authors
+      let(:author) do
+        after.authors.first
       end
-      let(:author) { since.authors.first }
+
+      it "should have 3 author" do
+        after.should have(1).authors
+      end
+
       it "should have a bunch of commits" do
-        author.raw_commits.should eq(22)
+        author.raw(:commits).should eq(2)
       end
 
       it "should respond to name" do
-        author.name.should eq("Linus Oleander")
+        author.name.should eq("Magnus Holm")
       end
 
       it "should have a number of locs" do
-        author.raw_loc.should eq(135)
+        author.raw(:loc).should eq(12)
       end
 
       it "should have a number of files" do
-        author.raw_files.should eq(6)
+        author.raw(:files).should eq(1)
       end
 
+      it "should have two authors" do
+        after.should have(1).authors
+      end
     end
   end
 end

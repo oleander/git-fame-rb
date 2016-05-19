@@ -1,12 +1,22 @@
 require "csv"
 require "date"
 require_relative "./errors"
+require "pp" # TODO: Remove
 require_relative "./result"
 require_relative "./file"
 require "open3"
 
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
+end
+
+# TODO: Move this
+module GitFame
+  class Error < StandardError
+  end
+
+  class NothingFound < StandardError
+  end
 end
 
 module GitFame
@@ -21,6 +31,8 @@ module GitFame
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
+    # @args[:after] date after
+    # @args[:before] date before
     #
     def initialize(args)
       @default_settings = {
@@ -34,7 +46,7 @@ module GitFame
         map{ |path| path.strip.sub(/\A\//, "") }
       @extensions = args.fetch(:extensions, "").split(",")
       # Default sorting option is by loc
-      @include = args.fetch(:include, "")
+      @include = args.fetch(:include, "").split(",")
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
       @repository = args.fetch(:repository)
       @bytype = args.fetch(:bytype, false)
@@ -45,11 +57,15 @@ module GitFame
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
         unless branch_exists?(@branch)
-          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+          raise Error, "Branch '#{@branch}' does not exist"
         end
       else
         @branch = default_branch
       end
+
+      # TODO: Validate
+      @after = args.fetch(:after, nil)
+      @before = args.fetch(:before, nil)
 
       # Fields that should be visible in the final table
       # Used by #csv_puts, #to_csv and #pretty_puts
@@ -113,20 +129,7 @@ module GitFame
     # @return Array list of repo files processed
     #
     def file_list
-      populate { current_files(last_revision) }
-    end
-
-    #
-    # @return the last revision
-    #
-    def last_revision
-      execute("git rev-list -1 --since=#{@since} --until=#{@until} --first-parent #{@branch}") do |result|
-        rev_list=result.to_s.split("\n")
-        unless present?(rev_list.last)
-          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist between '#{@since}' and '#{@until}'"
-        end
-        return rev_list.last
-      end
+      populate { current_files }
     end
 
     #
@@ -158,19 +161,16 @@ module GitFame
 
     private
 
-    # Populates @authors and @file_extensions with data
+    # Populates @authors and with data
     # Block is called on every call to populate, but
     # the data is only calculated once
     def populate(&block)
-      revision = last_revision
-      sincetime =Date.parse(@since).to_time.to_i 
       cache(:populate) do
-        all_files = current_files(revision)
         # Display progressbar with the number of files as countdown
-        progressbar = init_progressbar(all_files.count)
+        progressbar = init_progressbar(current_files.count)
 
         # Extract the blame history from all checked in files
-        all_files.each do |file|
+        current_files.each do |file|
           progressbar.inc
 
           # Skip if mimetype can't be decided
@@ -178,31 +178,28 @@ module GitFame
           # Binary types isn't very usefull to run git-blame on
           next if type.binary?
 
-          @file_extensions << file.extname
+          store_file_extension(file)
 
-          execute("git blame #{revision} #{@wopt} --line-porcelain  -- '#{file}'") do |result|
-            # Authors from git blame has to be parsed
-            result.to_s.scan(/^author\s(.+?)(?:^.+?)(?:^author-time)\s(\d+)/m).each do |raw_author_time|
-              raw_author = raw_author_time.first.strip
+          execute("git blame -l #{commit_range} #{@wopt} --no-merges --first-parent -- '#{file}'") do |result|
+            result.to_s.scan(/(.+)\s+\((.+)\s+\d{4}-\d{2}-\d{2}/).each do |commit, raw_author|
+              # This line is not inside the defined commit boundary
+              # Indicated by ^<hash>
+              next if commit[0] == "^"
               # Create or find already existing user
               author = fetch(raw_author)
-              time = raw_author_time.last.to_i
 
-              if time > sincetime
-                # Get author by name and increase the number of loc by 1
-                author.inc(:loc, 1)
+              # Get author by name and increase the number of loc by 1
+              author.inc(:loc, 1)
 
-                # Store the files and authors together
-                @file_authors[raw_author][file] ||= 1
-
-                @bytype && author.file_type_counts[file.extname] += 1
-              end
+              # Store the files and authors together
+              associate_file_with_author(author, file)
             end
           end
         end
 
+        # puts "git shortlog #{commit_range} -se"
         # Get repository summery and update each author accordingly
-        execute("git shortlog #{@branch} -se --since=#{@since} --until=#{@until}") do |result|
+        execute("git shortlog #{commit_range} --no-merges --first-parent -se") do |result|
           result.to_s.split("\n").map do |line|
             _, commits, raw_author = line.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
             author = fetch(raw_author)
@@ -211,12 +208,12 @@ module GitFame
             if author.raw(:commits).zero?
               update(raw_author, {
                 raw_commits: commits.to_i,
-                raw_files: @file_authors[raw_author].keys.count,
-                files_list: @file_authors[raw_author].keys
+                raw_files: files_from_author(author).count,
+                files_list: files_from_author(author)
               })
             else
               # Calculate the number of files edited by users
-              files = (author.files_list + @file_authors[raw_author].keys).uniq
+              files = (author.files_list + files_from_author(author)).uniq
               update(raw_author, {
                 raw_commits: commits.to_i + author.raw(:commits),
                 raw_files: files.count,
@@ -230,6 +227,8 @@ module GitFame
       end
 
       block.call
+    rescue NothingFound
+      block.call
     end
 
     # Uses the more printable names in @visible_fields
@@ -241,9 +240,25 @@ module GitFame
       end
     end
 
+    def associate_file_with_author(author, file)
+      @file_authors[author][file] ||= 1
+      if @bytype
+        author.file_type_counts[file.extname] += 1
+      end
+    end
+
+    # TODO: Shouldn't this be unique?
+    def store_file_extension(file)
+      @file_extensions << file.extname
+    end
+
     # Check to see if a string is empty (nil or "")
     def blank?(value)
       value.nil? or value.empty?
+    end
+
+    def files_from_author(author)
+      @file_authors[author].keys
     end
 
     def present?(value)
@@ -273,13 +288,16 @@ module GitFame
     # @silent = true wont raise an error on exit code =! 0
     def execute(command, silent = false, &block)
       result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-        Result.new(out.read, thread.value.success?)
+        Result.new(out.read.scrub.strip, thread.value.success?)
       end
 
-      return block.call(result) if result.success? or silent
-      raise cmd_error_message(command, result.data)
+      if result.success? or silent
+        return result unless block
+        return block.call(result)
+      end
+      raise Error, cmd_error_message(command, result.data)
     rescue Errno::ENOENT
-      raise cmd_error_message(command, $!.message)
+      raise Error, cmd_error_message(command, $!.message)
     end
 
     def cmd_error_message(command, message)
@@ -302,11 +320,11 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git rev-parse HEAD") do |result|
-        return result.data if result.success?
+      execute("git rev-parse HEAD | head -1") do |result|
+        return result.data.split(" ")[0] if result.success?
       end
 
-      raise BranchNotFound.new("No branch found")
+      raise Error, "No branch found. Define one using --branch=<branch>"
     end
 
     # Tries to create an author, unless it already exists in cache
@@ -321,23 +339,58 @@ module GitFame
 
     # Fetches user from cache
     def fetch(author)
-      @authors[author] ||= Author.new({ name: author, parent: self })
+      name = author.strip
+      @authors[name] ||= Author.new({ name: name, parent: self })
     end
 
     # List all files in current git directory, excluding
     # extensions in @extensions defined by the user
-    def current_files(tree_ish)
-      if present?(tree_ish) 
-        cache(:current_files) do
-          execute("git ls-tree -r #{tree_ish} --name-only #{@include}") do |result|
-            files = remove_excluded_files(result.to_s.split("\n")).map do |path|
-              GitFame::FileUnit.new(path)
-            end
+    def current_files
+      cache(:current_files) do
+        execute("git log #{commit_range} --pretty=format: --no-merges --first-parent --name-status | cut -f2- | sort -u") do |result|
+          filter_files(result, true)
+        end
+      end
+    rescue NothingFound
+      []
+    end
 
-            return files if @extensions.empty?
-            files.select { |file| @extensions.include?(file.extname) }
+    def filter_files(result, filter = false)
+      raw_files = result.to_s.split("\n")
+      files = remove_excluded_files(raw_files)
+      files = keep_included_files(files)
+      files = files.map { |file| GitFame::FileUnit.new(file) }
+      return files if @extensions.empty?
+      files.select { |file| @extensions.include?(file.extname) }
+    end
+
+    def commit_range
+      cache(:commit_range) do
+        return @branch if blank?(@after) and blank?(@before)
+
+        unless blank?(@after)
+          commit1 = execute("git rev-list --after='#{@after}' --first-parent '#{@branch}' --reverse --no-merges | head -1").to_s
+          if blank?(commit1)
+            raise NothingFound, "Could not find commit close to after=#{@after}"
           end
         end
+
+        unless blank?(@before)
+          commit2 = execute("git rev-list --before='#{@before}' --first-parent --no-merges '#{@branch}' | head -1").to_s
+          if blank?(commit2)
+            raise NothingFound, "Could not find commit close to before=#{@before}"
+          end
+        end
+
+        if @after and @before
+          return [commit1, commit2].join("..")
+        end
+
+        if @before
+          return commit2
+        end
+
+        return [commit1, @branch].join("..")
       end
     end
 
@@ -353,6 +406,13 @@ module GitFame
       return files if @exclude.empty?
       files.reject do |file|
         @exclude.any? { |exclude| file.match(exclude) }
+      end
+    end
+
+    def keep_included_files(files)
+      return files if @include.empty?
+      files.select do |file|
+        @include.any? { |exclude| file.match(exclude) }
       end
     end
 

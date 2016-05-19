@@ -5,7 +5,7 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 require "git_fame"
 require "trollop"
 
-sort = ["name", "commits", "loc", "files"]
+sort = ["name", "commits", "loc"]
 opts = Trollop::options do
   version "git-fame #{GitFame::VERSION} (c) 2012-#{Date.today.year} Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
@@ -18,8 +18,8 @@ opts = Trollop::options do
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
-  opt :since, "Since date for commits report", default: "1970-01-01", type:String
-  opt :until, "Until date for commits report", default:"now", type: String
+  opt :after, "after date for commits report", default: "1970-01-01", type:String
+  opt :before, "before date for commits report", default:"now", type: String
 end
 
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
@@ -33,7 +33,8 @@ fame = GitFame::Base.new({
   exclude: opts[:exclude],
   extensions: opts[:extension],
   branch: opts[:branch],
-  since: opts[:since],
-  until: opts[:until]
+  after: opts[:after],
+  before: opts[:before]
 })
+
 opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts

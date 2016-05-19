@@ -19,7 +19,6 @@ describe "bin/git-fame" do
     "--sort=name",
     "--sort=commits",
     "--sort=loc",
-    "--sort=files",
     "--progressbar=0",
     "--progressbar=1",
     "--whitespace",
@@ -30,8 +29,8 @@ describe "bin/git-fame" do
     "--branch=master",
     "--format=csv",
     "--format=pretty",
-    "--until=now",
-    "--since=1980-01-01",
+    "--before=now",
+    "--after=1980-01-01",
     "--version",
     "--help"
   ].each do |option|
