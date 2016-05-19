@@ -250,7 +250,7 @@ module GitFame
     # @silent = true wont raise an error on exit code =! 0
     def execute(command, silent = false, &block)
       result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-        Result.new(out.read, thread.value.success?)
+        Result.new(out.read.scrub.strip, thread.value.success?)
       end
 
       return block.call(result) if result.success? or silent
