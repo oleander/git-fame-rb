@@ -29,7 +29,7 @@ describe "bin/git-fame" do
     "--branch=master",
     "--format=csv",
     "--format=pretty",
-    "--before=now",
+    "--before=2010-01-01",
     "--after=1980-01-01",
     "--version",
     "--help"
@@ -41,5 +41,17 @@ describe "bin/git-fame" do
 
   it "should sort by loc by default" do
     run("--sort=loc", "--progressbar=0").first.should eq(run("--progressbar=0").first)
+  end
+
+  it "should fail on invalid before date" do
+    res = run("--before='---'")
+    res.should_not be_a_succees
+    res.first.should eq("Error: '---' is not a valid date\n")
+  end
+
+  it "should fail on invalid after date" do
+    res = run("--after='---'")
+    res.should_not be_a_succees
+    res.first.should eq("Error: '---' is not a valid date\n")
   end
 end

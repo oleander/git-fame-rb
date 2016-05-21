@@ -27,7 +27,6 @@ Generates data like:
   gem.add_dependency("progressbar")
   gem.add_dependency("trollop")
   gem.add_dependency("hirb")
-  gem.add_dependency("mimer_plus")
   gem.add_dependency("scrub_rb")
 
   gem.add_development_dependency("rspec", "~> 3.0")

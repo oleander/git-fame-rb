@@ -1,22 +1,14 @@
 require "csv"
-require "date"
-require_relative "./errors"
-require "pp" # TODO: Remove
+require "time"
+require "open3"
+
+require_relative "./blame_parser"
 require_relative "./result"
 require_relative "./file"
-require "open3"
+require_relative "./errors"
 
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
-end
-
-# TODO: Move this
-module GitFame
-  class Error < StandardError
-  end
-
-  class NothingFound < StandardError
-  end
 end
 
 module GitFame
@@ -51,8 +43,6 @@ module GitFame
       @repository = args.fetch(:repository)
       @bytype = args.fetch(:bytype, false)
       @branch = args.fetch(:branch, default_branch)
-      @since = args.fetch(:since, "1970-02-01")
-      @until = args.fetch(:until,"now")
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
@@ -63,9 +53,13 @@ module GitFame
         @branch = default_branch
       end
 
-      # TODO: Validate
       @after = args.fetch(:after, nil)
       @before = args.fetch(:before, nil)
+      [@after, @before].each do |date|
+        if date and not valid_date?(date)
+          raise Error, "#{date} is not a valid date"
+        end
+      end
 
       # Fields that should be visible in the final table
       # Used by #csv_puts, #to_csv and #pretty_puts
@@ -169,27 +163,21 @@ module GitFame
         # Display progressbar with the number of files as countdown
         progressbar = init_progressbar(current_files.count)
 
+
         # Extract the blame history from all checked in files
         current_files.each do |file|
           progressbar.inc
-
-          # Skip if mimetype can't be decided
-          next unless type = Mimer.identify(File.join(@repository, file.path))
-          # Binary types isn't very usefull to run git-blame on
-          next if type.binary?
-
           store_file_extension(file)
 
-          execute("git blame -l #{commit_range} #{@wopt} --no-merges --first-parent -- '#{file}'") do |result|
-            result.to_s.scan(/(.+)\s+\((.+)\s+\d{4}-\d{2}-\d{2}/).each do |commit, raw_author|
-              # This line is not inside the defined commit boundary
-              # Indicated by ^<hash>
-              next if commit[0] == "^"
+          execute("git blame #{default_params} #{commit_range} #{@wopt} --porcelain -- '#{file}'") do |result|
+            BlameParser.new(result.to_s).parse.each do |row|
+              next if row[:boundary]
+
               # Create or find already existing user
-              author = fetch(raw_author)
+              author = author_by_email(get(row, :author, :mail), get(row, :author, :name))
 
               # Get author by name and increase the number of loc by 1
-              author.inc(:loc, 1)
+              author.inc(:loc, get(row, :num_lines))
 
               # Store the files and authors together
               associate_file_with_author(author, file)
@@ -197,29 +185,20 @@ module GitFame
           end
         end
 
-        # puts "git shortlog #{commit_range} -se"
         # Get repository summery and update each author accordingly
-        execute("git shortlog #{commit_range} --no-merges --first-parent -se") do |result|
+
+        execute("git shortlog #{commit_range} #{default_params} -se") do |result|
           result.to_s.split("\n").map do |line|
-            _, commits, raw_author = line.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-            author = fetch(raw_author)
-            # There might be duplicate authors using git shortlog
-            # (same name, different emails). Update already existing authors
-            if author.raw(:commits).zero?
-              update(raw_author, {
-                raw_commits: commits.to_i,
-                raw_files: files_from_author(author).count,
-                files_list: files_from_author(author)
-              })
-            else
-              # Calculate the number of files edited by users
-              files = (author.files_list + files_from_author(author)).uniq
-              update(raw_author, {
-                raw_commits: commits.to_i + author.raw(:commits),
-                raw_files: files.count,
-                files_list: files
-              })
-            end
+            _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
+            author = author_by_email(email)
+
+            author.name = name
+
+            author.update({
+              raw_commits: commits.to_i,
+              raw_files: files_from_author(author).count,
+              files_list: files_from_author(author)
+            })
           end
         end
 
@@ -227,8 +206,10 @@ module GitFame
       end
 
       block.call
-    rescue NothingFound
-      block.call
+    end
+
+    def get(hash, *keys)
+      keys.inject(hash) { |h, key| h.fetch(key) }
     end
 
     # Uses the more printable names in @visible_fields
@@ -263,6 +244,10 @@ module GitFame
 
     def present?(value)
       not blank?(value)
+    end
+
+    def valid_date?(date)
+      !! date.match(/\d{4}-\d{2}-\d{2}/)
     end
 
     # Includes fields from file extensions
@@ -320,42 +305,39 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git rev-parse HEAD | head -1") do |result|
+      execute("git rev-parse HEAD #{default_params} | head -1") do |result|
         return result.data.split(" ")[0] if result.success?
       end
 
       raise Error, "No branch found. Define one using --branch=<branch>"
     end
 
-    # Tries to create an author, unless it already exists in cache
-    # User is always updated with the passed @args
-    def update(author, args)
-      fetch(author).tap do |found|
-        args.keys.each do |key|
-          found.send("#{key}=", args[key])
-        end
-      end
-    end
-
-    # Fetches user from cache
-    def fetch(author)
-      name = author.strip
-      @authors[name] ||= Author.new({ name: name, parent: self })
+    def author_by_email(email, name = nil)
+      @authors[email.strip] ||= Author.new({ parent: self, name: name })
     end
 
     # List all files in current git directory, excluding
     # extensions in @extensions defined by the user
     def current_files
       cache(:current_files) do
-        execute("git log #{commit_range} --pretty=format: --no-merges --first-parent --name-status | cut -f2- | sort -u") do |result|
-          filter_files(result, true)
+        # TODO: Fix this
+        if commit_range.include?("..")
+          execute("git diff --name-only #{default_params} #{commit_range}") do |result|
+            filter_files(result)
+          end
+        else
+          execute("git ls-tree -r #{commit_range} | grep blob | cut -f2-") do |result|
+            filter_files(result)
+          end
         end
       end
-    rescue NothingFound
-      []
     end
 
-    def filter_files(result, filter = false)
+    def default_params
+      "--no-merges --first-parent"
+    end
+
+    def filter_files(result)
       raw_files = result.to_s.split("\n")
       files = remove_excluded_files(raw_files)
       files = keep_included_files(files)
@@ -368,30 +350,93 @@ module GitFame
       cache(:commit_range) do
         return @branch if blank?(@after) and blank?(@before)
 
-        unless blank?(@after)
-          commit1 = execute("git rev-list --after='#{@after}' --first-parent '#{@branch}' --reverse --no-merges | head -1").to_s
-          if blank?(commit1)
-            raise NothingFound, "Could not find commit close to after=#{@after}"
+        if present?(@after) and present?(@before)
+          if end_date < start_date
+            raise Error, "after=#{@after} can't be greater then before=#{@before}"
+          end
+
+          if end_date > end_commit_date and start_date > end_commit_date
+            raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
+          end
+
+          if end_date < start_commit_date and start_date < start_commit_date
+            raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date}"
+          end
+        elsif present?(@after)
+          if start_date > end_commit_date
+            raise Error, "after=#{@after} is set too high, highest is #{end_commit_date}"
+          end
+        elsif present?(@before)
+          if end_date < start_commit_date
+            raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
           end
         end
 
-        unless blank?(@before)
-          commit2 = execute("git rev-list --before='#{@before}' --first-parent --no-merges '#{@branch}' | head -1").to_s
-          if blank?(commit2)
-            raise NothingFound, "Could not find commit close to before=#{@before}"
+        if present?(@before)
+          if end_date > end_commit_date
+            commit2 = @branch
+          else
+            # Try finding a commit that day
+            commit2 = execute("git rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+
+            # Otherwise, look for the closest commit
+            if blank?(commit2)
+              commit2 = execute("git rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+            end
+          end
+        end
+
+        if present?(@after)
+          if start_date < start_commit_date
+            next present?(commit2) ? commit2 : @branch
+          end
+
+          commit1 = execute("git rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+
+          # No commit found this early
+          # If NO end date is choosen, just use current branch
+          # Otherwise use specified (@before) as end date
+          if blank?(commit1)
+            next @branch unless @before
+            next commit2
           end
         end
 
         if @after and @before
-          return [commit1, commit2].join("..")
+          # Nothing found in date span
+          if commit1 == commit2
+            raise Error, "There are no commits between #{@before} and #{@after}"
+          end
+          next [commit1, commit2].join("..")
         end
 
-        if @before
-          return commit2
-        end
-
-        return [commit1, @branch].join("..")
+        next commit2 if @before
+        next [commit1, @branch].join("..")
       end
+    end
+
+    def end_of_yesterday(time)
+      (Time.parse(time) - 86400).strftime("%F 23:59:59")
+    end
+
+    def start_commit_date
+      cache(:first_commit_date) do
+        Time.parse(execute("git log --pretty=format:'%cd' --date=short #{default_params} #{@branch} | tail -1").to_s)
+      end
+    end
+
+    def end_commit_date
+      cache(:last_commit_date) do
+        Time.parse(execute("git log --pretty=format:'%cd' --date=short #{default_params} #{@branch} | head -1").to_s)
+      end
+    end
+
+    def end_date
+      Time.parse(@before)
+    end
+
+    def start_date
+      Time.parse(@after)
     end
 
     # The block is only called once for every unique key

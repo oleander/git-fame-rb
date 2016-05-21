@@ -1,4 +1,6 @@
 module GitFame
-  class BranchNotFound < StandardError
+  class Error < StandardError
+  end
+  class NothingFound < StandardError
   end
 end

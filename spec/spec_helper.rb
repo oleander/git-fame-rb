@@ -4,6 +4,7 @@ require "coveralls"
 require "rspec/collection_matchers"
 require_relative "./support/startup"
 require "rspec/expectations"
+require "pp"
 
 Coveralls.wear!
 
@@ -38,5 +39,5 @@ RSpec.configure do |config|
   end
 
   # Remove this line to allow Kernel#puts
-  config.before { allow($stdout).to receive(:puts) }
+  # config.before { allow($stdout).to receive(:puts) }
 end

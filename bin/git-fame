@@ -18,23 +18,28 @@ opts = Trollop::options do
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
-  opt :after, "after date for commits report", default: "1970-01-01", type:String
-  opt :before, "before date for commits report", default:"now", type: String
+  opt :after, "after date for commits report", type: String
+  opt :before, "before date for commits report", type: String
 end
 
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
-fame = GitFame::Base.new({
-  repository: opts[:repository],
-  progressbar: opts[:progressbar] == 1,
-  sort: opts[:sort],
-  whitespace: opts[:whitespace],
-  bytype: opts[:bytype],
-  include: opts[:include],
-  exclude: opts[:exclude],
-  extensions: opts[:extension],
-  branch: opts[:branch],
-  after: opts[:after],
-  before: opts[:before]
-})
+
+begin
+  fame = GitFame::Base.new({
+    repository: opts[:repository],
+    progressbar: opts[:progressbar] == 1,
+    sort: opts[:sort],
+    whitespace: opts[:whitespace],
+    bytype: opts[:bytype],
+    include: opts[:include],
+    exclude: opts[:exclude],
+    extensions: opts[:extension],
+    branch: opts[:branch],
+    after: opts[:after],
+    before: opts[:before]
+  })
+rescue GitFame::Error
+  abort "Error: #{$!.message}"
+end
 
 opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
