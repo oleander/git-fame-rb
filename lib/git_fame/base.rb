@@ -43,7 +43,7 @@ module GitFame
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
       @repository = args.fetch(:repository)
       @bytype = args.fetch(:bytype, false)
-      @branch = args.fetch(:branch, default_branch)
+      @branch = args.fetch(:branch, nil)
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
@@ -72,10 +72,10 @@ module GitFame
         :files,
         [:distribution, "distribution (%)"]
       ]
-      @cache = {}
       @file_extensions = []
       @wopt = args.fetch(:whitespace, false) ? "-w" : ""
       @authors = {}
+      @cache = {}
     end
 
     #
@@ -277,6 +277,8 @@ module GitFame
         Result.new(out.read.scrub.strip, thread.value.success?)
       end
 
+      warn command
+
       if result.success? or silent
         return result unless block
         return block.call(result)
@@ -309,7 +311,6 @@ module GitFame
       execute("git rev-parse HEAD | head -1") do |result|
         return result.data.split(" ")[0] if result.success?
       end
-
       raise Error, "No branch found. Define one using --branch=<branch>"
     end
 

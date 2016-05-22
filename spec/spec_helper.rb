@@ -35,6 +35,9 @@ RSpec.configure do |config|
   config.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
   config.fail_fast = false
   config.before(:all) do
+    warn "Current environment"
+    warn `git --version`
+    warn `grep --version`
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
 
