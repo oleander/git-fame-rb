@@ -3,7 +3,6 @@ require "git_fame"
 require "coveralls"
 require "rspec/collection_matchers"
 require "rspec/expectations"
-require "active_support/time"
 require "pp"
 require_relative "./support/startup"
 
@@ -41,12 +40,8 @@ RSpec.configure do |config|
   end
   config.fail_fast = false
 
-  config.before(:each) do
-    zone = ActiveSupport::TimeZone.new("Stockholm")
-    Time.stub(:now){ Time.new.in_time_zone(zone) }
-  end
-
   config.before(:all) do
+    ENV["TZ"] = "GMT-2"
     warn "-----------"
     warn "Current environment"
     warn "\t#{`git --version`}"

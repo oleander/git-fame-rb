@@ -423,13 +423,13 @@ module GitFame
 
     def start_commit_date
       cache(:first_commit_date) do
-        Time.parse(execute("git log --pretty=format:'%cd' --date=short #{default_params} #{@branch} | tail -1").to_s)
+        Time.parse(execute("git log --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
       end
     end
 
     def end_commit_date
       cache(:last_commit_date) do
-        Time.parse(execute("git log --pretty=format:'%cd' --date=short #{default_params} #{@branch} | head -1").to_s)
+        Time.parse(execute("git log --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
       end
     end
 
