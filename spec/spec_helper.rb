@@ -38,7 +38,7 @@ RSpec.configure do |config|
     warn "Current environment"
     warn `git --version`
     warn `grep --version`
-    Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
+    # Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
 
   # Remove this line to allow Kernel#puts
