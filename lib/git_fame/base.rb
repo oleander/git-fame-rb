@@ -277,9 +277,8 @@ module GitFame
         Result.new(out.read.scrub.strip, thread.value.success?)
       end
 
-      warn command
-
       if result.success? or silent
+        warn command
         return result unless block
         return block.call(result)
       end
@@ -379,7 +378,9 @@ module GitFame
         # git log --pretty=format:'%cd' --date=short --no-merges --first-parent master | head -1
         # git log --pretty=format:'%cd' --date=short --no-merges --first-parent master | tail -1
         # git rev-list --before='2012-05-23 23:59:59' --after='2012-05-23 00:00:01' --no-merges --first-parent 'master' | head -1
+
         # git rev-list --before='2012-05-23' --no-merges --first-parent 'master' | head -1
+
         # git rev-list --before='2012-05-22 23:59:59' --no-merges --first-parent 'master' | head -1
         #
 
