@@ -19,8 +19,7 @@ describe "bin/git-fame" do
     "--sort=name",
     "--sort=commits",
     "--sort=loc",
-    "--progressbar=0",
-    "--progressbar=1",
+    "--hide-progressbar",
     "--whitespace",
     "--bytype",
     "--include=hello",
@@ -32,7 +31,8 @@ describe "bin/git-fame" do
     "--before=2010-01-01",
     "--after=1980-01-01",
     "--version",
-    "--help"
+    "--help",
+    "--verbose"
   ].each do |option|
     it "should support #{option}" do
       run(option).should be_a_succees

@@ -42,13 +42,14 @@ From a git repository run `git fame`.
 - `git fame --exclude=path1,path2` Comma separated, relative paths to exclude.
 - `git fame --include=path1,path2` Comma separated, relative paths to include.
 - `git fame --sort=loc` Order table by `loc`. Available options are: `loc` and `commits`. Default is `loc`.
-- `git fame --progressbar=1` Should a progressbar be visible during the calculation? Default is `1`.
+- `git fame --hide-progressbar` Hide progressbar.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. [More about git blame and whitespace](https://coderwall.com/p/x8xbnq/git-don-t-blame-people-for-changing-whitespaces-or-moving-code). Default is `false`.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 - `git fame --branch=master` Branch to run on. Default is what `HEAD` points to.
 - `git fame --format=output` Output format. Default is `pretty`. Additional: `csv`.
-- `git fame --after=2010-01-01` include commits created after the given date.
-- `git fame --before=2016-02-01` include commits created before the given date.
+- `git fame --after=2010-01-01` Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included.
+- `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
+- `git fame --verbose` Print shell commands used by `git-fame`.
 
 #### By type
 
@@ -70,26 +71,6 @@ Total number of commits: 133
 | Andrew Fecheyr | 1   | 2       | 1     |  0.1 /  1.5 /  4.2 | 0       | 0   | 0   | 0       | 1   |
 +----------------+-----+---------+-------+--------------------+---------+-----+-----+---------+-----+
 ```
-
-#### Date format
-
-Git fame´s `--before` and `--after` options takes the following date formats.
-[Source](http://stackoverflow.com/a/19742762/560073).
-
-- rfc2822: `Mon, 3 Jul 2006 17:18:43 +0200`
-- iso8601: `2006-07-03 17:18:43 +0200`
-- local: `Mon Jul 3 15:18:43 2006`
-- short: `2006-07-03` (not in 1.9.1, works in 2.3.0)
-- relative: see [commit 34dc6e7][3]:
-
-        5.seconds.ago,
-        2.years.3.months.ago,
-        '6am yesterday'
-
-- raw: see [commit 7dff9b3][4] (git 1.6.2, March 2009)  
- internal raw git format - seconds since epoch plus timezone  
-(put another way: '`date +"%s %z"`' format)
-- default: `Mon Jul 3 17:18:43 2006 +0200`
 
 ### Programmatically
 

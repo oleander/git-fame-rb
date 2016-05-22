@@ -49,9 +49,8 @@ RSpec.configure do |config|
   config.before(:all) do
     warn "-----------"
     warn "Current environment"
-    warn `git --version`
-    warn `grep --version`
-    warn `head --version`
+    warn "\t#{`git --version`}"
+    warn "\t#{`grep --version`}"
     warn "-----------"
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end

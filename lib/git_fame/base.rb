@@ -56,6 +56,7 @@ module GitFame
 
       @after = args.fetch(:after, nil)
       @before = args.fetch(:before, nil)
+      @verbose = args.fetch(:verbose, false)
       [@after, @before].each do |date|
         if date and not valid_date?(date)
           raise Error, "#{date} is not a valid date"
@@ -278,7 +279,7 @@ module GitFame
       end
 
       if result.success? or silent
-        warn command
+        warn command if @verbose
         return result unless block
         return block.call(result)
       end
