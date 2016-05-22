@@ -336,7 +336,7 @@ module GitFame
     end
 
     def default_params
-      "--no-merges --first-parent"
+      "--no-merges --first-parent --date=local"
     end
 
     def filter_files(result)
@@ -373,18 +373,6 @@ module GitFame
             raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
           end
         end
-
-
-        # git show-ref 'master'
-        # git log --pretty=format:'%cd' --date=short --no-merges --first-parent master | head -1
-        # git log --pretty=format:'%cd' --date=short --no-merges --first-parent master | tail -1
-        # git rev-list --before='2012-05-23 23:59:59' --after='2012-05-23 00:00:01' --no-merges --first-parent 'master' | head -1
-
-        # git rev-list --before='2012-05-23' --no-merges --first-parent 'master' | head -1
-
-        # git rev-list --before='2012-05-22 23:59:59' --no-merges --first-parent 'master' | head -1
-        #
-
 
         if present?(@before)
           if end_date > end_commit_date
@@ -446,11 +434,11 @@ module GitFame
     end
 
     def end_date
-      Time.parse(@before)
+      Time.parse("#{@before} 23:59:59")
     end
 
     def start_date
-      Time.parse(@after)
+      Time.parse("#{@after} 00:00:01")
     end
 
     # The block is only called once for every unique key
