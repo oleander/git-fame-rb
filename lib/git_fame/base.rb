@@ -11,6 +11,7 @@ if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
 
+
 module GitFame
   class Base
     include GitFame::Helper
@@ -305,7 +306,7 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git rev-parse HEAD #{default_params} | head -1") do |result|
+      execute("git rev-parse HEAD | head -1") do |result|
         return result.data.split(" ")[0] if result.success?
       end
 
