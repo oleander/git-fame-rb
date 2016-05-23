@@ -18,5 +18,4 @@ before_install:
   - sudo add-apt-repository ppa:git-core/ppa -y
   - sudo apt-get update -q
   - sudo apt-get install git -y
-before_install:
   - gem install bundler
