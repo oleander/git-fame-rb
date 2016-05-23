@@ -15,7 +15,8 @@ notifications:
     on_failure: change  # options: [always|never|change] default: always
     on_start: false     # default: false
 before_install:
-  - add-apt-repository ppa:git-core/ppa -y
-  - apt-get update -q
-  - apt-get install git -y
-sudo: false
+  - sudo add-apt-repository ppa:git-core/ppa -y
+  - sudo apt-get update -q
+  - sudo apt-get install git -y
+before_install:
+  - gem install bundler
