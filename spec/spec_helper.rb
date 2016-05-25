@@ -29,6 +29,9 @@ RSpec::Matchers.define :include_output do |expected|
 end
 
 RSpec.configure do |config|
+  # Set to false to allow Kernel#puts
+  suppress_stdout = true
+
   config.include GitFame::Startup
   config.mock_with :rspec
   config.order = "random"
@@ -39,7 +42,6 @@ RSpec.configure do |config|
     mocks.syntax = :should
   end
   config.fail_fast = false
-
   config.before(:all) do
     ENV["TZ"] = "GMT-2"
     warn "-----------"
@@ -47,9 +49,12 @@ RSpec.configure do |config|
     warn "\t#{`git --version`.strip}"
     warn "\t#{`grep --version`.strip}"
     warn "-----------"
+    warn "NOTE: Messages to STDOUT has been suppressed. See spec/spec_helper.rb"
+    warn "-----------"
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
 
-  # Remove this line to allow Kernel#puts
-  # config.before { allow($stdout).to receive(:puts) }
+  if suppress_stdout
+    config.before do; $stdout.stub(:puts); end
+  end
 end
