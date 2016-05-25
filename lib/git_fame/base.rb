@@ -86,10 +86,11 @@ module GitFame
     def pretty_puts
       extend Hirb::Console
       Hirb.enable({ pager: false })
-      puts "\nTotal number of files: #{number_with_delimiter(files)}"
-      puts "Total number of lines: #{number_with_delimiter(loc)}"
-      puts "Total number of commits: #{number_with_delimiter(commits)}\n"
-
+      puts "\nStatistics based on #{commit_range.to_s(true)}"
+      puts "Active files: #{number_with_delimiter(files)}"
+      puts "Active lines: #{number_with_delimiter(loc)}"
+      puts "Total commits: #{number_with_delimiter(commits)}\n"
+      puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} has been ignored\n\n"
       table(authors, fields: printable_fields)
     end
 
@@ -213,12 +214,15 @@ module GitFame
       block.call
     end
 
-    # Ignore mime types found in default_settings[:ignore_types]
+
+    def ignore_types
+      @default_settings.fetch(:ignore_types)
+    end
+
+    # Ignore mime types found in {ignore_types}
     def check_file?(file)
       type = mime_type_for_file(file)
-      ! @default_settings.fetch(:ignore_types).any? do |ignored|
-        type.include?(ignored)
-      end
+      ! ignore_types.any? { |ignored| type.include?(ignored) }
     end
 
     # Return mime type for file (form: x/y)
@@ -365,7 +369,7 @@ module GitFame
     end
 
     def commit_range
-      CommitRange.new(current_range)
+      CommitRange.new(current_range, @branch)
     end
 
     def current_range

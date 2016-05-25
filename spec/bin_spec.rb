@@ -43,15 +43,41 @@ describe "bin/git-fame" do
     run("--sort=loc", "--progressbar=0").first.should eq(run("--progressbar=0").first)
   end
 
-  it "should fail on invalid before date" do
-    res = run("--before='---'")
-    res.should_not be_a_succees
-    res.first.should eq("Error: '---' is not a valid date\n")
-  end
+  context "dates" do
+    it "should fail on invalid before date" do
+      res = run("--before='---'")
+      res.should_not be_a_succees
+      res.first.should eq("Error: '---' is not a valid date\n")
+    end
 
-  it "should fail on invalid after date" do
-    res = run("--after='---'")
-    res.should_not be_a_succees
-    res.first.should eq("Error: '---' is not a valid date\n")
+    it "should fail on invalid after date" do
+      res = run("--after='---'")
+      res.should_not be_a_succees
+      res.should include_output("Error: '---' is not a valid date\n")
+    end
+
+    it "should not print stack trace on invalid dates (--after)" do
+      res = run("--after='---'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on invalid dates (--before)" do
+      res = run("--before='---'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on out of span (--before)" do
+      res = run("--before='1910-01-01'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on out of span (--after)" do
+      res = run("--after='2100-01-01'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
   end
 end

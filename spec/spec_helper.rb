@@ -43,18 +43,23 @@ RSpec.configure do |config|
   end
   config.fail_fast = false
   config.before(:all) do
-    ENV["TZ"] = "GMT-2"
-    warn "-----------"
-    warn "Current environment"
-    warn "\t#{`git --version`.strip}"
-    warn "\t#{`grep --version`.strip}"
-    warn "-----------"
-    warn "NOTE: Messages to STDOUT has been suppressed. See spec/spec_helper.rb"
-    warn "-----------"
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
-
-  if suppress_stdout
-    config.before do; $stdout.stub(:puts); end
+  config.before(:suite) do
+    ENV["TZ"] = "GMT-2"
+    warn "-----------"
+    warn "Current environment:"
+    warn "\t#{`git --version`.strip}"
+    warn "\t#{`grep --version`.strip}"
+    warn "Spec notes:"
+    if suppress_stdout
+      warn "\tMessages to STDOUT has been suppressed. See spec/spec_helper.rb"
+    end
+    warn "\tRequires git 2.x for specs to pass"
+    warn "\tTime zone during testing is set to #{ENV["TZ"]}"
+    warn "-----------"
+  end
+  config.before(:each) do
+    $stdout.stub(:puts) if suppress_stdout
   end
 end

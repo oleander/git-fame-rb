@@ -40,8 +40,8 @@ begin
     before: opts[:before],
     verbose: opts[:verbose]
   })
+
+  opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
 rescue GitFame::Error => e
   abort "Error: #{e.message}"
 end
-
-opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
