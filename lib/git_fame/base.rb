@@ -30,7 +30,8 @@ module GitFame
     def initialize(args)
       @default_settings = {
         branch: "master",
-        sorting: "loc"
+        sorting: "loc",
+        ignore_types: ["image", "binary"]
       }
       @progressbar  = args.fetch(:progressbar, false)
       @file_authors = Hash.new { |h,k| h[k] = {} }
@@ -165,13 +166,16 @@ module GitFame
         # Display progressbar with the number of files as countdown
         progressbar = init_progressbar(current_files.count)
 
-
         # Extract the blame history from all checked in files
         current_files.each do |file|
           progressbar.inc
+          next unless check_file?(file)
           store_file_extension(file)
 
-          execute("git blame #{default_params} #{commit_range} #{@wopt} --porcelain -- '#{file}'") do |result|
+          # -w ignore whitespaces (defined in @wopt)
+          # -M detect moved or copied lines.
+          # -p procelain mode (parsed by BlameParser)
+          execute("git blame -p -M #{default_params} #{commit_range} #{@wopt} -- '#{file}'") do |result|
             BlameParser.new(result.to_s).parse.each do |row|
               next if row[:boundary]
 
@@ -188,7 +192,6 @@ module GitFame
         end
 
         # Get repository summery and update each author accordingly
-
         execute("git shortlog #{commit_range} #{default_params} -se") do |result|
           result.to_s.split("\n").map do |line|
             _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
@@ -208,6 +211,20 @@ module GitFame
       end
 
       block.call
+    end
+
+    # Ignore mime types found in default_settings[:ignore_types]
+    def check_file?(file)
+      type = mime_type_for_file(file)
+      ! @default_settings.fetch(:ignore_types).any? do |ignored|
+        type.include?(ignored)
+      end
+    end
+
+    # Return mime type for file (form: x/y)
+    def mime_type_for_file(file)
+      execute("file --mime-typ '#{file}'").to_s.
+        match(/.+: (.+?)$/).to_a[1]
     end
 
     def get(hash, *keys)
@@ -349,8 +366,17 @@ module GitFame
     end
 
     def commit_range
-      cache(:commit_range) do
-        return @branch if blank?(@after) and blank?(@before)
+      cache(:commit_range_l) do
+        a = i_commit_range
+
+        next a if a.is_a?(String)
+        a.join("..")
+      end
+    end
+
+    def i_commit_range
+      cache(:i_commit_range) do
+        next @branch if blank?(@after) and blank?(@before)
 
         if present?(@after) and present?(@before)
           if end_date < start_date
@@ -409,11 +435,11 @@ module GitFame
           if commit1 == commit2
             raise Error, "There are no commits between #{@before} and #{@after}"
           end
-          next [commit1, commit2].join("..")
+          next [commit1, commit2]
         end
 
         next commit2 if @before
-        next [commit1, @branch].join("..")
+        next [commit1, @branch]
       end
     end
 
