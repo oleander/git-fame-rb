@@ -6,11 +6,11 @@ require_relative "./blame_parser"
 require_relative "./result"
 require_relative "./file"
 require_relative "./errors"
+require_relative "./commit_range"
 
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
-
 
 module GitFame
   class Base
@@ -175,7 +175,7 @@ module GitFame
           # -w ignore whitespaces (defined in @wopt)
           # -M detect moved or copied lines.
           # -p procelain mode (parsed by BlameParser)
-          execute("git blame -p -M #{default_params} #{commit_range} #{@wopt} -- '#{file}'") do |result|
+          execute("git blame -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
             BlameParser.new(result.to_s).parse.each do |row|
               next if row[:boundary]
 
@@ -192,7 +192,7 @@ module GitFame
         end
 
         # Get repository summery and update each author accordingly
-        execute("git shortlog #{commit_range} #{default_params} -se") do |result|
+        execute("git shortlog #{commit_range.to_s} #{default_params} -se") do |result|
           result.to_s.split("\n").map do |line|
             _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
             author = author_by_email(email)
@@ -339,13 +339,12 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       cache(:current_files) do
-        # TODO: Fix this
-        if commit_range.include?("..")
-          execute("git diff --name-only #{default_params} #{commit_range}") do |result|
+        if commit_range.is_range?
+          execute("git diff --name-only #{default_params} #{commit_range.to_s}") do |result|
             filter_files(result)
           end
         else
-          execute("git ls-tree -r #{commit_range} | grep blob | cut -f2-") do |result|
+          execute("git ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
             filter_files(result)
           end
         end
@@ -366,16 +365,11 @@ module GitFame
     end
 
     def commit_range
-      cache(:commit_range_l) do
-        a = i_commit_range
-
-        next a if a.is_a?(String)
-        a.join("..")
-      end
+      CommitRange.new(current_range)
     end
 
-    def i_commit_range
-      cache(:i_commit_range) do
+    def current_range
+      cache(:current_range) do
         next @branch if blank?(@after) and blank?(@before)
 
         if present?(@after) and present?(@before)
