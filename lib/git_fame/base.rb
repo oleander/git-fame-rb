@@ -139,9 +139,8 @@ module GitFame
     #
     # @return Array list of repo files processed
     #
-    def file_list
-      populate.current_files
-    end
+    # TODO: Rename
+    def file_list; current_files; end
 
     #
     # @return Fixnum Total number of commits
@@ -166,60 +165,57 @@ module GitFame
       end
     end
 
-    # private
+    protected
 
     # Populates @authors and with data
     # Block is called on every call to populate, but
     # the data is only calculated once
     def populate
-      tap do
-        # Display progressbar with the number of files as countdown
-        progressbar = init_progressbar(current_files.count)
+      # Display progressbar with the number of files as countdown
+      progressbar = init_progressbar(current_files.count)
 
-        # Extract the blame history from all checked in files
+      # Extract the blame history from all checked in files
+      current_files.each do |file|
+        progressbar.increment
+        next unless check_file?(file)
+        store_file_extension(file)
 
-        current_files.each do |file|
-          progressbar.increment
-          next unless check_file?(file)
-          store_file_extension(file)
+        # -w ignore whitespaces (defined in @wopt)
+        # -M detect moved or copied lines.
+        # -p procelain mode (parsed by BlameParser)
+        execute("git blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+          BlameParser.new(result.to_s).parse.each do |row|
+            next if row[:boundary]
 
-          # -w ignore whitespaces (defined in @wopt)
-          # -M detect moved or copied lines.
-          # -p procelain mode (parsed by BlameParser)
-          execute("git blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
-            BlameParser.new(result.to_s).parse.each do |row|
-              next if row[:boundary]
+            # Create or find already existing user
+            author = author_by_email(get(row, :author, :mail), get(row, :author, :name))
 
-              # Create or find already existing user
-              author = author_by_email(get(row, :author, :mail), get(row, :author, :name))
+            # Get author by name and increase the number of loc by 1
+            author.inc(:loc, get(row, :num_lines))
 
-              # Get author by name and increase the number of loc by 1
-              author.inc(:loc, get(row, :num_lines))
-
-              # Store the files and authors together
-              associate_file_with_author(author, file)
-            end
+            # Store the files and authors together
+            associate_file_with_author(author, file)
           end
         end
-
-        # Get repository summery and update each author accordingly
-        execute("git shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
-          result.to_s.split("\n").map do |line|
-            _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
-            author = author_by_email(email)
-
-            author.name = name
-
-            author.update({
-              raw_commits: commits.to_i,
-              raw_files: files_from_author(author).count,
-              files_list: files_from_author(author)
-            })
-          end
-        end
-
-        progressbar.finish
       end
+
+      # Get repository summery and update each author accordingly
+      execute("git shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
+        result.to_s.split("\n").map do |line|
+          _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
+          author = author_by_email(email)
+
+          author.name = name
+
+          author.update({
+            raw_commits: commits.to_i,
+            raw_files: files_from_author(author).count,
+            files_list: files_from_author(author)
+          })
+        end
+      end
+
+      progressbar.finish
     end
 
     def ignore_types
@@ -244,14 +240,11 @@ module GitFame
     end
 
     # Uses the more printable names in @visible_fields
-    # TODO: Cache this
     def printable_fields
       raw_fields.map do |field|
         field.is_a?(Array) ? field.last : field
       end
     end
-
-    memoize :printable_fields
 
     def associate_file_with_author(author, file)
       @file_authors[author][file] ||= 1
@@ -283,14 +276,10 @@ module GitFame
     end
 
     # Includes fields from file extensions
-    # TODO: Cache
     def raw_fields
       return @visible_fields unless @by_type
-      populate
       (@visible_fields + file_extensions).uniq
     end
-
-    memoize :raw_fields
 
     # Method fields used by #to_csv and #pretty_puts
     def fields
@@ -299,15 +288,10 @@ module GitFame
       end
     end
 
-    memoize :fields
-
-
     # Command to be executed at @repository
     # @silent = true wont raise an error on exit code =! 0
     def execute(command, silent = false, &block)
-      result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-        Result.new(out.read.scrub.strip, thread.value.success?)
-      end
+      result = run(command)
 
       if result.success? or silent
         warn command if @verbose
@@ -319,7 +303,11 @@ module GitFame
       raise Error, cmd_error_message(command, $!.message)
     end
 
-    # memoize :execute
+    def run(command)
+      Open3.popen2e(command, chdir: @repository) do |_, out, thread|
+        Result.new(out.read.scrub.strip, thread.value.success?)
+      end
+    end
 
     def cmd_error_message(command, message)
       "Could not run '#{command}' => #{message}"
@@ -364,8 +352,6 @@ module GitFame
         end
       end
     end
-
-    # memoize :current_files
 
     def default_params
       "--no-merges --first-parent --date=local"
@@ -463,13 +449,9 @@ module GitFame
       Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
     end
 
-    memoize :start_commit_date
-
     def end_commit_date
       Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
     end
-
-    memoize :end_commit_date
 
     def end_date
       Time.parse("#{@before} 23:59:59")
@@ -477,13 +459,6 @@ module GitFame
 
     def start_date
       Time.parse("#{@after} 00:00:01")
-    end
-
-    # The block is only called once for every unique key
-    # Used to ensure methods are only called once
-    def cache(key, &block)
-      raise "not in use"
-      @cache[key] ||= block.call
     end
 
     # Removes files excluded by the user
@@ -503,11 +478,15 @@ module GitFame
     end
 
     def init_progressbar(files_count)
-      SilentProgressbar.new("GitBlame", files_count, @progressbar)
+      SilentProgressbar.new("GitBlame", files_count, (@progressbar and not @verbose))
     end
 
-    memoize :populate
-    memoize :current_range
-
+    # TODO: Are all these needed?
+    memoize :populate, :run
+    memoize :current_range, :current_files
+    memoize :printable_fields, :files_from_author
+    memoize :raw_fields, :fields
+    memoize :end_commit_date
+    memoize :start_commit_date
   end
 end
