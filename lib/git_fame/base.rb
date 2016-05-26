@@ -26,7 +26,6 @@ module GitFame
   class Base
     include GitFame::Helper
     extend Memoist
-    attr_accessor :file_extensions
 
     #
     # @args[:repository] String Absolute path to git repository
@@ -85,7 +84,6 @@ module GitFame
         :files,
         [:distribution, "distribution (%)"]
       ]
-      @file_extensions = []
       @wopt = args.fetch(:whitespace, false) ? "-w" : ""
       @authors = {}
       @cache = {}
@@ -136,14 +134,14 @@ module GitFame
     # TODO: Rename this
     #
     def files
-      file_list.count
+      used_files.count
     end
 
     #
     # @return Array list of repo files processed
     #
     # TODO: Rename
-    def file_list; current_files; end
+    def file_list; used_files; end
 
     #
     # @return Fixnum Total number of commits
@@ -180,8 +178,9 @@ module GitFame
       # Extract the blame history from all checked in files
       current_files.each do |file|
         progressbar.increment
+
+        # Skip this file if non wanted type
         next unless check_file?(file)
-        store_file_extension(file)
 
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
@@ -190,8 +189,11 @@ module GitFame
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
 
-            # Create or find already existing user
-            author = author_by_email(get(row, :author, :mail), get(row, :author, :name))
+            email = get(row, :author, :mail)
+            name = get(row, :author, :name)
+
+            # Create or find user
+            author = author_by_email(email, name)
 
             # Get author by name and increase the number of loc by 1
             author.inc(:loc, get(row, :num_lines))
@@ -250,15 +252,18 @@ module GitFame
     end
 
     def associate_file_with_author(author, file)
-      @file_authors[author][file] ||= 1
       if @by_type
         author.file_type_counts[file.extname] += 1
       end
+      @file_authors[author][file] ||= 1
     end
 
-    # TODO: Shouldn't this be unique?
-    def store_file_extension(file)
-      @file_extensions << file.extname
+    def used_files
+      @file_authors.values.map(&:keys).flatten.uniq
+    end
+
+    def file_extensions
+      used_files.map(&:extname)
     end
 
     # Check to see if a string is empty (nil or "")
@@ -493,5 +498,6 @@ module GitFame
     memoize :raw_fields, :fields
     memoize :end_commit_date
     memoize :start_commit_date
+    memoize :file_extensions, :used_files
   end
 end
