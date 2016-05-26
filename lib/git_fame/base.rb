@@ -1,30 +1,47 @@
 require "csv"
-require_relative "./errors"
-require_relative "./result"
-require_relative "./file"
+require "time"
 require "open3"
+require "hirb"
+require "memoist"
+require "timeout"
 
+# String#scrib is build in to Ruby 2.1+
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
 
+require "git_fame/helper"
+require "git_fame/author"
+require "git_fame/silent_progressbar"
+require "git_fame/blame_parser"
+require "git_fame/result"
+require "git_fame/file"
+require "git_fame/errors"
+require "git_fame/commit_range"
+
 module GitFame
+  SORT = ["name", "commits", "loc", "files"]
+  CMD_TIMEOUT = 10
+
   class Base
     include GitFame::Helper
-    attr_accessor :file_extensions
+    extend Memoist
 
     #
     # @args[:repository] String Absolute path to git repository
     # @args[:sort] String What should #authors be sorted by?
-    # @args[:bytype] Boolean Should counts be grouped by file extension?
+    # @args[:by_type] Boolean Should counts be grouped by file extension?
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
+    # @args[:after] date after
+    # @args[:before] date before
     #
     def initialize(args)
       @default_settings = {
         branch: "master",
-        sorting: "loc"
+        sorting: "loc",
+        ignore_types: ["image", "binary"]
       }
       @progressbar  = args.fetch(:progressbar, false)
       @file_authors = Hash.new { |h,k| h[k] = {} }
@@ -33,19 +50,28 @@ module GitFame
         map{ |path| path.strip.sub(/\A\//, "") }
       @extensions = args.fetch(:extensions, "").split(",")
       # Default sorting option is by loc
-      @include = args.fetch(:include, "")
+      @include = args.fetch(:include, "").split(",")
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
       @repository = args.fetch(:repository)
-      @bytype = args.fetch(:bytype, false)
-      @branch = args.fetch(:branch, default_branch)
+      @by_type = args.fetch(:by_type, false)
+      @branch = args.fetch(:branch, nil)
+      @everything = args.fetch(:everything, false)
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
         unless branch_exists?(@branch)
-          raise GitFame::BranchNotFound, "Branch '#{@branch}' does not exist"
+          raise Error, "Branch '#{@branch}' does not exist"
         end
       else
         @branch = default_branch
+      end
+
+      @after = args.fetch(:after, nil)
+      @before = args.fetch(:before, nil)
+      [@after, @before].each do |date|
+        if date and not valid_date?(date)
+          raise Error, "#{date} is not a valid date"
+        end
       end
 
       # Fields that should be visible in the final table
@@ -58,10 +84,12 @@ module GitFame
         :files,
         [:distribution, "distribution (%)"]
       ]
-      @cache = {}
-      @file_extensions = []
       @wopt = args.fetch(:whitespace, false) ? "-w" : ""
       @authors = {}
+      @cache = {}
+      @verbose = args.fetch(:verbose, false)
+
+      populate
     end
 
     #
@@ -70,10 +98,13 @@ module GitFame
     def pretty_puts
       extend Hirb::Console
       Hirb.enable({ pager: false })
-      puts "\nTotal number of files: #{number_with_delimiter(files)}"
-      puts "Total number of lines: #{number_with_delimiter(loc)}"
-      puts "Total number of commits: #{number_with_delimiter(commits)}\n"
-
+      puts "\nStatistics based on #{commit_range.to_s(true)}"
+      puts "Active files: #{number_with_delimiter(files)}"
+      puts "Active lines: #{number_with_delimiter(loc)}"
+      puts "Total commits: #{number_with_delimiter(commits)}\n"
+      unless @everything
+        puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} has been ignored\n\n"
+      end
       table(authors, fields: printable_fields)
     end
 
@@ -103,15 +134,14 @@ module GitFame
     # TODO: Rename this
     #
     def files
-      file_list.count
+      used_files.count
     end
 
     #
     # @return Array list of repo files processed
     #
-    def file_list
-      populate { current_files }
-    end
+    # TODO: Rename
+    def file_list; used_files; end
 
     #
     # @return Fixnum Total number of commits
@@ -131,91 +161,109 @@ module GitFame
     # @return Array<Author> A list of authors
     #
     def authors
-      cache(:authors) do
-        populate do
-          @authors.values.sort_by do |author|
-            @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
-          end
-        end
+      @authors.values.sort_by do |author|
+        @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
       end
     end
 
-    private
+    protected
 
-    # Populates @authors and @file_extensions with data
+    # Populates @authors and with data
     # Block is called on every call to populate, but
     # the data is only calculated once
-    def populate(&block)
-      cache(:populate) do
-        # Display progressbar with the number of files as countdown
-        progressbar = init_progressbar(current_files.count)
+    def populate
+      # Display progressbar with the number of files as countdown
+      progressbar = init_progressbar(current_files.count)
 
-        # Extract the blame history from all checked in files
-        current_files.each do |file|
-          progressbar.inc
+      # Extract the blame history from all checked in files
+      current_files.each do |file|
+        progressbar.increment
 
-          # Skip if mimetype can't be decided
-          next unless type = Mimer.identify(File.join(@repository, file.path))
-          # Binary types isn't very usefull to run git-blame on
-          next if type.binary?
+        # Skip this file if non wanted type
+        next unless check_file?(file)
 
-          @file_extensions << file.extname
+        # -w ignore whitespaces (defined in @wopt)
+        # -M detect moved or copied lines.
+        # -p procelain mode (parsed by BlameParser)
+        execute("git blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+          BlameParser.new(result.to_s).parse.each do |row|
+            next if row[:boundary]
 
-          execute("git blame #{@wopt} --line-porcelain #{@branch} -- '#{file}'") do |result|
-            # Authors from git blame has to be parsed
-            result.to_s.scan(/^author (.+)$/).each do |raw_author, _|
-              # Create or find already existing user
-              author = fetch(raw_author)
+            email = get(row, :author, :mail)
+            name = get(row, :author, :name)
 
-              # Get author by name and increase the number of loc by 1
-              author.inc(:loc, 1)
+            # Create or find user
+            author = author_by_email(email, name)
 
-              # Store the files and authors together
-              @file_authors[raw_author][file] ||= 1
+            # Get author by name and increase the number of loc by 1
+            author.inc(:loc, get(row, :num_lines))
 
-              @bytype && author.file_type_counts[file.extname] += 1
-            end
+            # Store the files and authors together
+            associate_file_with_author(author, file)
           end
         end
-
-        # Get repository summery and update each author accordingly
-        execute("git shortlog #{@branch} -se") do |result|
-          result.to_s.split("\n").map do |line|
-            _, commits, raw_author = line.match(%r{^\s*(\d+)\s+(.+?)\s+<.+?>}).to_a
-            author = fetch(raw_author)
-            # There might be duplicate authors using git shortlog
-            # (same name, different emails). Update already existing authors
-            if author.raw(:commits).zero?
-              update(raw_author, {
-                raw_commits: commits.to_i,
-                raw_files: @file_authors[raw_author].keys.count,
-                files_list: @file_authors[raw_author].keys
-              })
-            else
-              # Calculate the number of files edited by users
-              files = (author.files_list + @file_authors[raw_author].keys).uniq
-              update(raw_author, {
-                raw_commits: commits.to_i + author.raw(:commits),
-                raw_files: files.count,
-                files_list: files
-              })
-            end
-          end
-        end
-
-        progressbar.finish
       end
 
-      block.call
+      # Get repository summery and update each author accordingly
+      execute("git shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
+        result.to_s.split("\n").map do |line|
+          _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
+          author = author_by_email(email)
+
+          author.name = name
+
+          author.update({
+            raw_commits: commits.to_i,
+            raw_files: files_from_author(author).count,
+            files_list: files_from_author(author)
+          })
+        end
+      end
+
+      progressbar.finish
+    end
+
+    def ignore_types
+      @default_settings.fetch(:ignore_types)
+    end
+
+    # Ignore mime types found in {ignore_types}
+    def check_file?(file)
+      return true if @everything
+      type = mime_type_for_file(file)
+      ! ignore_types.any? { |ignored| type.include?(ignored) }
+    end
+
+    # Return mime type for file (form: x/y)
+    def mime_type_for_file(file)
+      execute("git show #{commit_range.range.last}:'#{file}' | file --mime-type -").to_s.
+        match(/.+: (.+?)$/).to_a[1]
+    end
+
+    def get(hash, *keys)
+      keys.inject(hash) { |h, key| h.fetch(key) }
     end
 
     # Uses the more printable names in @visible_fields
     def printable_fields
-      cache(:printable_fields) do
-        raw_fields.map do |field|
-          field.is_a?(Array) ? field.last : field
-        end
+      raw_fields.map do |field|
+        field.is_a?(Array) ? field.last : field
       end
+    end
+
+    def associate_file_with_author(author, file)
+      if @by_type
+        author.file_type_counts[file.extname] += 1
+      end
+      @file_authors[author][file] ||= 1
+    end
+
+    def used_files
+      @file_authors.values.map(&:keys).flatten.uniq
+    end
+
+    def file_extensions
+      used_files.map(&:extname)
     end
 
     # Check to see if a string is empty (nil or "")
@@ -223,40 +271,52 @@ module GitFame
       value.nil? or value.empty?
     end
 
+    def files_from_author(author)
+      @file_authors[author].keys
+    end
+
     def present?(value)
       not blank?(value)
     end
 
+    def valid_date?(date)
+      !! date.match(/\d{4}-\d{2}-\d{2}/)
+    end
+
     # Includes fields from file extensions
     def raw_fields
-      return @visible_fields unless @bytype
-      cache(:raw_fields) do
-        populate do
-          (@visible_fields + file_extensions).uniq
-        end
-      end
+      return @visible_fields unless @by_type
+      (@visible_fields + file_extensions).uniq
     end
 
     # Method fields used by #to_csv and #pretty_puts
     def fields
-      cache(:fields) do
-        raw_fields.map do |field|
-          field.is_a?(Array) ? field.first : field
-        end
+      raw_fields.map do |field|
+        field.is_a?(Array) ? field.first : field
       end
     end
 
     # Command to be executed at @repository
     # @silent = true wont raise an error on exit code =! 0
     def execute(command, silent = false, &block)
-      result = Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-        Result.new(out.read.scrub.strip, thread.value.success?)
-      end
+      result = run(command)
 
-      return block.call(result) if result.success? or silent
-      raise cmd_error_message(command, result.data)
+      if result.success? or silent
+        warn command if @verbose
+        return result unless block
+        return block.call(result)
+      end
+      raise Error, cmd_error_message(command, result.data)
     rescue Errno::ENOENT
-      raise cmd_error_message(command, $!.message)
+      raise Error, cmd_error_message(command, $!.message)
+    end
+
+    def run(command)
+      Timeout.timeout(CMD_TIMEOUT) do
+        Open3.popen2e(command, chdir: @repository) do |_, out, thread|
+          Result.new(out.read.scrub.strip, thread.value.success?)
+        end
+      end
     end
 
     def cmd_error_message(command, message)
@@ -279,47 +339,136 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git rev-parse HEAD") do |result|
-        return result.data if result.success?
+      execute("git rev-parse HEAD | head -1") do |result|
+        return result.data.split(" ")[0] if result.success?
       end
-
-      raise BranchNotFound.new("No branch found")
+      raise Error, "No branch found. Define one using --branch=<branch>"
     end
 
-    # Tries to create an author, unless it already exists in cache
-    # User is always updated with the passed @args
-    def update(author, args)
-      fetch(author).tap do |found|
-        args.keys.each do |key|
-          found.send("#{key}=", args[key])
-        end
-      end
-    end
-
-    # Fetches user from cache
-    def fetch(author)
-      @authors[author] ||= Author.new({ name: author, parent: self })
+    def author_by_email(email, name = nil)
+      @authors[email.strip] ||= Author.new({ parent: self, name: name })
     end
 
     # List all files in current git directory, excluding
     # extensions in @extensions defined by the user
     def current_files
-      cache(:current_files) do
-        execute("git ls-tree -r #{@branch} --name-only #{@include}") do |result|
-          files = remove_excluded_files(result.to_s.split("\n")).map do |path|
-            GitFame::FileUnit.new(path)
-          end
-
-          return files if @extensions.empty?
-          files.select { |file| @extensions.include?(file.extname) }
+      if commit_range.is_range?
+        execute("git diff --name-only #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+          filter_files(result)
+        end
+      else
+        execute("git ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
+          filter_files(result)
         end
       end
     end
 
-    # The block is only called once for every unique key
-    # Used to ensure methods are only called once
-    def cache(key, &block)
-      @cache[key] ||= block.call
+    def default_params
+      "--no-merges --first-parent --date=local"
+    end
+
+    def encoding_opt
+      "--encoding=UTF-8"
+    end
+
+    def filter_files(result)
+      raw_files = result.to_s.split("\n")
+      files = remove_excluded_files(raw_files)
+      files = keep_included_files(files)
+      files = files.map { |file| GitFame::FileUnit.new(file) }
+      return files if @extensions.empty?
+      files.select { |file| @extensions.include?(file.extname) }
+    end
+
+    def commit_range
+      CommitRange.new(current_range, @branch)
+    end
+
+    def current_range
+      return @branch if blank?(@after) and blank?(@before)
+
+      if present?(@after) and present?(@before)
+        if end_date < start_date
+          raise Error, "after=#{@after} can't be greater then before=#{@before}"
+        end
+
+        if end_date > end_commit_date and start_date > end_commit_date
+          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
+        end
+
+        if end_date < start_commit_date and start_date < start_commit_date
+          raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date}"
+        end
+      elsif present?(@after)
+        if start_date > end_commit_date
+          raise Error, "after=#{@after} is set too high, highest is #{end_commit_date}"
+        end
+      elsif present?(@before)
+        if end_date < start_commit_date
+          raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
+        end
+      end
+
+      if present?(@before)
+        if end_date > end_commit_date
+          commit2 = @branch
+        else
+          # Try finding a commit that day
+          commit2 = execute("git rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+
+          # Otherwise, look for the closest commit
+          if blank?(commit2)
+            commit2 = execute("git rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+          end
+        end
+      end
+
+      if present?(@after)
+        if start_date < start_commit_date
+          return present?(commit2) ? commit2 : @branch
+        end
+
+        commit1 = execute("git rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+
+        # No commit found this early
+        # If NO end date is choosen, just use current branch
+        # Otherwise use specified (@before) as end date
+        if blank?(commit1)
+          return @branch unless @before
+          return commit2
+        end
+      end
+
+      if @after and @before
+        # Nothing found in date span
+        if commit1 == commit2
+          raise Error, "There are no commits between #{@before} and #{@after}"
+        end
+        return [commit1, commit2]
+      end
+
+      return commit2 if @before
+      [commit1, @branch]
+    end
+
+    def end_of_yesterday(time)
+      (Time.parse(time) - 86400).strftime("%F 23:59:59")
+    end
+
+    def start_commit_date
+      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
+    end
+
+    def end_commit_date
+      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
+    end
+
+    def end_date
+      Time.parse("#{@before} 23:59:59")
+    end
+
+    def start_date
+      Time.parse("#{@after} 00:00:01")
     end
 
     # Removes files excluded by the user
@@ -327,12 +476,28 @@ module GitFame
     def remove_excluded_files(files)
       return files if @exclude.empty?
       files.reject do |file|
-        @exclude.any? { |exclude| file.match(exclude) }
+        @exclude.any? { |exclude| File.fnmatch(exclude, file) }
+      end
+    end
+
+    def keep_included_files(files)
+      return files if @include.empty?
+      files.select do |file|
+        @include.any? { |include| File.fnmatch(include, file) }
       end
     end
 
     def init_progressbar(files_count)
-      SilentProgressbar.new("GitBlame", files_count, @progressbar)
+      SilentProgressbar.new("GitBlame", files_count, (@progressbar and not @verbose))
     end
+
+    # TODO: Are all these needed?
+    memoize :populate, :run
+    memoize :current_range, :current_files
+    memoize :printable_fields, :files_from_author
+    memoize :raw_fields, :fields
+    memoize :end_commit_date
+    memoize :start_commit_date
+    memoize :file_extensions, :used_files
   end
 end

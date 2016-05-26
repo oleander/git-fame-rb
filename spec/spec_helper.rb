@@ -2,8 +2,9 @@ require "rspec"
 require "git_fame"
 require "coveralls"
 require "rspec/collection_matchers"
-require_relative "./support/startup"
 require "rspec/expectations"
+require "pp"
+require_relative "./support/startup"
 
 Coveralls.wear!
 
@@ -28,15 +29,37 @@ RSpec::Matchers.define :include_output do |expected|
 end
 
 RSpec.configure do |config|
+  # Set to false to allow Kernel#puts
+  suppress_stdout = true
+
   config.include GitFame::Startup
   config.mock_with :rspec
   config.order = "random"
-  config.expect_with(:rspec) { |c| c.syntax = [:should, :expect] }
+  config.expect_with(:rspec) do |c|
+    c.syntax = [:should, :expect]
+  end
+  config.mock_with :rspec do |mocks|
+    mocks.syntax = :should
+  end
   config.fail_fast = false
   config.before(:all) do
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
-
-  # Remove this line to allow Kernel#puts
-  config.before { allow($stdout).to receive(:puts) }
+  config.before(:suite) do
+    ENV["TZ"] = "GMT-2"
+    warn "-----------"
+    warn "Current environment:"
+    warn "\t#{`git --version`.strip}"
+    warn "\t#{`grep --version`.strip}"
+    warn "Spec notes:"
+    if suppress_stdout
+      warn "\tMessages to STDOUT has been suppressed. See spec/spec_helper.rb"
+    end
+    warn "\tRequires git 2.x for specs to pass"
+    warn "\tTime zone during testing is set to #{ENV["TZ"]}"
+    warn "-----------"
+  end
+  config.before(:each) do
+    $stdout.stub(:puts) if suppress_stdout
+  end
 end

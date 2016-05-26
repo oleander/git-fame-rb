@@ -1,5 +1,7 @@
 --color
--Ilib
--Ispec
+-I lib
+-I spec
 --require spec_helper
 --exclude-pattern spec/fixtures/**/*_spec.rb
+--tty
+--format documentation

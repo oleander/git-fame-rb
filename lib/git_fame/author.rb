@@ -36,6 +36,12 @@ module GitFame
       end
     end
 
+    def update(params)
+      params.keys.each do |key|
+        send("#{key}=", params[key])
+      end
+    end
+
     #
     # Intended to catch file type counts
     #

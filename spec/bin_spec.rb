@@ -19,19 +19,21 @@ describe "bin/git-fame" do
     "--sort=name",
     "--sort=commits",
     "--sort=loc",
-    "--sort=files",
-    "--progressbar=0",
-    "--progressbar=1",
+    "--hide-progressbar",
     "--whitespace",
-    "--bytype",
+    "--by-type",
     "--include=hello",
     "--exclude=hello",
     "--extension=rb,ln",
     "--branch=master",
     "--format=csv",
     "--format=pretty",
+    "--before=2010-01-01",
+    "--after=1980-01-01",
     "--version",
-    "--help"
+    "--help",
+    "--verbose",
+    "--everything"
   ].each do |option|
     it "should support #{option}" do
       run(option).should be_a_succees
@@ -40,5 +42,62 @@ describe "bin/git-fame" do
 
   it "should sort by loc by default" do
     run("--sort=loc", "--progressbar=0").first.should eq(run("--progressbar=0").first)
+  end
+
+  context "dates" do
+    it "should fail on invalid before date" do
+      res = run("--before='---'")
+      res.should_not be_a_succees
+      res.first.should eq("Error: '---' is not a valid date\n")
+    end
+
+    it "should fail on invalid after date" do
+      res = run("--after='---'")
+      res.should_not be_a_succees
+      res.should include_output("Error: '---' is not a valid date\n")
+    end
+
+    it "should not print stack trace on invalid dates (--after)" do
+      res = run("--after='---'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on invalid dates (--before)" do
+      res = run("--before='---'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on out of span (--before)" do
+      res = run("--before='1910-01-01'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+
+    it "should not print stack trace on out of span (--after)" do
+      res = run("--after='2100-01-01'")
+      res.should_not be_a_succees
+      res.should_not include_output("GitFame::Error")
+    end
+  end
+
+  context "sort" do
+    it "should fail on non existing option" do
+      run("--sort=-----").should_not be_a_succees
+    end
+
+    results = []
+    GitFame::SORT.each do |option|
+      it "should be able to sort by #{option}" do
+        out = run("--sort=#{option}")
+        out.should be_a_succees
+        results.push(out.first)
+      end
+    end
+
+    it "#{GitFame::SORT.join(", ")} should not output the same thing" do
+      results.uniq.sort.should eq(results.sort)
+    end
   end
 end

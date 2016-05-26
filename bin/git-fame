@@ -5,31 +5,46 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 require "git_fame"
 require "trollop"
 
-sort = ["name", "commits", "loc", "files"]
 opts = Trollop::options do
   version "git-fame #{GitFame::VERSION} (c) 2012-#{Date.today.year} Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
-  opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
-  opt :progressbar, "Show progressbar during calculation", default: 1, type: Integer
+  opt :sort, "What should the printed table be sorted by? #{GitFame::SORT.join(", ")}", default: "loc", type: String
+  opt :"hide-progressbar", "Hide progressbar", default: false
   opt :whitespace, "Ignore whitespace changes", default: false
-  opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
-  opt :include, "Paths to include in git ls-files", default: "", type: String
-  opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
+  opt :"by-type", "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
+  opt :include, "Comma separated, glob file path to include. I.e path/*.rb", default: "", type: String
+  opt :exclude, "Comma separated, glob file path to exclude. I.e any/**/path/*", default: "", type: String
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
+  opt :after, "Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
+  opt :before, "Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
+  opt :verbose, "Print shell commands used by git-fame", default: false
+  opt :everything, "Images and binaries are ignored by default. Include them as well", default: false
 end
 
-Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
-fame = GitFame::Base.new({
-  repository: opts[:repository],
-  progressbar: opts[:progressbar] == 1,
-  sort: opts[:sort],
-  whitespace: opts[:whitespace],
-  bytype: opts[:bytype],
-  include: opts[:include],
-  exclude: opts[:exclude],
-  extensions: opts[:extension],
-  branch: opts[:branch]
-})
-opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
+unless GitFame::SORT.include?(opts[:sort])
+  Trollop::die :sort, "must be one of the following; #{GitFame::SORT.join(", ")}"
+end
+
+begin
+  fame = GitFame::Base.new({
+    repository: opts[:repository],
+    progressbar: ! opts[:"hide-progressbar"],
+    sort: opts[:sort],
+    whitespace: opts[:whitespace],
+    by_type: opts[:"by-type"],
+    include: opts[:include],
+    exclude: opts[:exclude],
+    extensions: opts[:extension],
+    branch: opts[:branch],
+    after: opts[:after],
+    before: opts[:before],
+    verbose: opts[:verbose],
+    everything: opts[:everything]
+  })
+
+  opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
+rescue GitFame::Error => e
+  abort "Error: #{e.message}"
+end
