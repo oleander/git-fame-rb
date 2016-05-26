@@ -71,8 +71,8 @@ describe GitFame::Base do
         repository: repository,
         sort: "name"
       }).authors
-      authors.map(&:name).sort.
-        should eq(["7rans", "Linus Oleander", "Linus Oleander", "Magnus Holm"].sort)
+      authors.map(&:name).
+        should eq(["7rans", "Linus Oleander", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by commits" do
@@ -80,8 +80,9 @@ describe GitFame::Base do
         repository: repository,
         sort: "commits"
       }).authors
-      authors.map(&:name).sort.
-        should eq(["Magnus Holm", "Linus Oleander", "Linus Oleander", "7rans"].sort)
+
+      authors.map(&:name).
+        should eq(["Magnus Holm", "Linus Oleander", "7rans", "Linus Oleander"])
     end
 
     it "should be able to sort #authors by files" do
@@ -89,8 +90,17 @@ describe GitFame::Base do
         repository: repository,
         sort: "files"
       }).authors
-      authors.map(&:name).sort.
-        should eq(["7rans", "Linus Oleander", "Linus Oleander", "Magnus Holm"].sort)
+      authors.map(&:name).
+        should eq(["7rans", "Linus Oleander", "Magnus Holm", "Linus Oleander"])
+    end
+
+    it "should be able to sort #authors by loc" do
+      authors = GitFame::Base.new({
+        repository: repository,
+        sort: "loc"
+      }).authors
+      authors.map(&:name).
+        should eq(["Magnus Holm", "7rans", "Linus Oleander", "Linus Oleander"])
     end
   end
 

@@ -13,6 +13,7 @@ if RUBY_VERSION.to_f < 2.1
 end
 
 module GitFame
+  SORT = ["name", "commits", "loc", "files"]
   class Base
     include GitFame::Helper
     attr_accessor :file_extensions

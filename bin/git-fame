@@ -5,11 +5,10 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 require "git_fame"
 require "trollop"
 
-sort = ["name", "commits", "loc"]
 opts = Trollop::options do
   version "git-fame #{GitFame::VERSION} (c) 2012-#{Date.today.year} Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
-  opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
+  opt :sort, "What should the printed table be sorted by? #{GitFame::SORT.join(", ")}", default: "loc", type: String
   opt :"hide-progressbar", "Hide progressbar", default: false
   opt :whitespace, "Ignore whitespace changes", default: false
   opt :"by-type", "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
@@ -24,7 +23,9 @@ opts = Trollop::options do
   opt :everything, "Images and binaries are ignored by default. Include them as well", default: false
 end
 
-Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
+unless GitFame::SORT.include?(opts[:sort])
+  Trollop::die :sort, "must be one of the following; #{GitFame::SORT.join(", ")}"
+end
 
 begin
   fame = GitFame::Base.new({

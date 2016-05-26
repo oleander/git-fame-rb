@@ -81,4 +81,23 @@ describe "bin/git-fame" do
       res.should_not include_output("GitFame::Error")
     end
   end
+
+  context "sort" do
+    it "should fail on non existing option" do
+      run("--sort=-----").should_not be_a_succees
+    end
+
+    results = []
+    GitFame::SORT.each do |option|
+      it "should be able to sort by #{option}" do
+        out = run("--sort=#{option}")
+        out.should be_a_succees
+        results.push(out.first)
+      end
+    end
+
+    it "#{GitFame::SORT.join(",")} should not print the samething" do
+      results.uniq.sort.should eq(results.sort)
+    end
+  end
 end
