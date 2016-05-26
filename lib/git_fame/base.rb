@@ -3,6 +3,7 @@ require "time"
 require "open3"
 require "hirb"
 require "memoist"
+require "timeout"
 
 # String#scrib is build in to Ruby 2.1+
 if RUBY_VERSION.to_f < 2.1
@@ -20,6 +21,8 @@ require "git_fame/commit_range"
 
 module GitFame
   SORT = ["name", "commits", "loc", "files"]
+  CMD_TIMEOUT = 10
+
   class Base
     include GitFame::Helper
     extend Memoist
@@ -304,8 +307,10 @@ module GitFame
     end
 
     def run(command)
-      Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-        Result.new(out.read.scrub.strip, thread.value.success?)
+      Timeout.timeout(CMD_TIMEOUT) do
+        Open3.popen2e(command, chdir: @repository) do |_, out, thread|
+          Result.new(out.read.scrub.strip, thread.value.success?)
+        end
       end
     end
 
