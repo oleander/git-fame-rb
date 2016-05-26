@@ -30,7 +30,7 @@ end
 
 RSpec.configure do |config|
   # Set to false to allow Kernel#puts
-  suppress_stdout = false
+  suppress_stdout = true
 
   config.include GitFame::Startup
   config.mock_with :rspec
