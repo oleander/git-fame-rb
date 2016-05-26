@@ -28,7 +28,8 @@ Generates data like:
   gem.add_dependency("trollop", "~> 2.1.2")
   gem.add_dependency("hirb", "~> 0.7.3")
   gem.add_dependency("scrub_rb", "~> 1.0.1")
-  gem.add_dependency("memoist")
+  gem.add_dependency("memoist", "~> 0.14.0")
+  gem.add_dependency("method_profiler", "~> 2.0.1")
 
   gem.add_development_dependency("rspec", "~> 3.4.0")
   gem.add_development_dependency("rspec-collection_matchers", "~> 1.1.2")
