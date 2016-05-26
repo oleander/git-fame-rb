@@ -12,7 +12,7 @@ opts = Trollop::options do
   opt :sort, "What should the printed table be sorted by? #{sort.join(", ")}", default: "loc", type: String
   opt :"hide-progressbar", "Hide progressbar", default: false
   opt :whitespace, "Ignore whitespace changes", default: false
-  opt :bytype, "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
+  opt :"by-type", "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
   opt :include, "Paths to include in git ls-files", default: "", type: String
   opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
@@ -32,7 +32,7 @@ begin
     progressbar: ! opts[:"hide-progressbar"],
     sort: opts[:sort],
     whitespace: opts[:whitespace],
-    bytype: opts[:bytype],
+    by_type: opts[:"by-type"],
     include: opts[:include],
     exclude: opts[:exclude],
     extensions: opts[:extension],

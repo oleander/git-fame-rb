@@ -21,7 +21,7 @@ describe "bin/git-fame" do
     "--sort=loc",
     "--hide-progressbar",
     "--whitespace",
-    "--bytype",
+    "--by-type",
     "--include=hello",
     "--exclude=hello",
     "--extension=rb,ln",

@@ -20,7 +20,7 @@ module GitFame
     #
     # @args[:repository] String Absolute path to git repository
     # @args[:sort] String What should #authors be sorted by?
-    # @args[:bytype] Boolean Should counts be grouped by file extension?
+    # @args[:by_type] Boolean Should counts be grouped by file extension?
     # @args[:exclude] String Comma-separated list of paths in the repo
     #   which should be excluded
     # @args[:branch] String Branch to run from
@@ -43,7 +43,7 @@ module GitFame
       @include = args.fetch(:include, "").split(",")
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
       @repository = args.fetch(:repository)
-      @bytype = args.fetch(:bytype, false)
+      @by_type = args.fetch(:by_type, false)
       @branch = args.fetch(:branch, nil)
       @everything = args.fetch(:everything, false)
 
@@ -249,7 +249,7 @@ module GitFame
 
     def associate_file_with_author(author, file)
       @file_authors[author][file] ||= 1
-      if @bytype
+      if @by_type
         author.file_type_counts[file.extname] += 1
       end
     end
@@ -278,7 +278,7 @@ module GitFame
 
     # Includes fields from file extensions
     def raw_fields
-      return @visible_fields unless @bytype
+      return @visible_fields unless @by_type
       cache(:raw_fields) do
         populate do
           (@visible_fields + file_extensions).uniq

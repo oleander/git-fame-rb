@@ -94,12 +94,12 @@ describe GitFame::Base do
     end
   end
 
-  describe "#command_line_arguments" do
+  describe "types" do
     let(:subject) do
       GitFame::Base.new({
         repository: repository,
         exclude: "lib",
-        bytype: true,
+        by_type: true,
         extensions: "rb,rdoc"
       })
     end
