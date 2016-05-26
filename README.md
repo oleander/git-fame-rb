@@ -38,7 +38,7 @@ From a git repository run `git fame`.
 
 #### Options
 
-- `git fame --bytype` Includes file types. See the *bytype* section below for more info. Default is `false`.
+- `git fame --bytype` Includes file types. See the *bytype* section below for more info.
 - `git fame --exclude=path1,path2` Comma separated, relative paths to exclude.
 - `git fame --include=path1,path2` Comma separated, relative paths to include.
 - `git fame --sort=loc` Order table by `loc`. Available options are: `loc` and `commits`. Default is `loc`.
@@ -50,6 +50,7 @@ From a git repository run `git fame`.
 - `git fame --after=2010-01-01` Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --verbose` Print shell commands used by `git-fame`.
+- `git fame --everything` Images and binaries are ignored by default. Include them as well.
 
 #### By type
 

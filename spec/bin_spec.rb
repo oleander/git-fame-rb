@@ -32,7 +32,8 @@ describe "bin/git-fame" do
     "--after=1980-01-01",
     "--version",
     "--help",
-    "--verbose"
+    "--verbose",
+    "--everything"
   ].each do |option|
     it "should support #{option}" do
       run(option).should be_a_succees

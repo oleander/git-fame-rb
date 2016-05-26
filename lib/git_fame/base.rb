@@ -45,6 +45,7 @@ module GitFame
       @repository = args.fetch(:repository)
       @bytype = args.fetch(:bytype, false)
       @branch = args.fetch(:branch, nil)
+      @everything = args.fetch(:everything, false)
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
@@ -57,7 +58,6 @@ module GitFame
 
       @after = args.fetch(:after, nil)
       @before = args.fetch(:before, nil)
-      @verbose = args.fetch(:verbose, false)
       [@after, @before].each do |date|
         if date and not valid_date?(date)
           raise Error, "#{date} is not a valid date"
@@ -78,6 +78,7 @@ module GitFame
       @wopt = args.fetch(:whitespace, false) ? "-w" : ""
       @authors = {}
       @cache = {}
+      @verbose = args.fetch(:verbose, false)
     end
 
     #
@@ -90,7 +91,9 @@ module GitFame
       puts "Active files: #{number_with_delimiter(files)}"
       puts "Active lines: #{number_with_delimiter(loc)}"
       puts "Total commits: #{number_with_delimiter(commits)}\n"
-      puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} has been ignored\n\n"
+      unless @everything
+        puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} has been ignored\n\n"
+      end
       table(authors, fields: printable_fields)
     end
 
@@ -214,13 +217,13 @@ module GitFame
       block.call
     end
 
-
     def ignore_types
       @default_settings.fetch(:ignore_types)
     end
 
     # Ignore mime types found in {ignore_types}
     def check_file?(file)
+      return true if @everything
       type = mime_type_for_file(file)
       ! ignore_types.any? { |ignored| type.include?(ignored) }
     end

@@ -21,6 +21,7 @@ opts = Trollop::options do
   opt :after, "Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :before, "Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :verbose, "Print shell commands used by git-fame", default: false
+  opt :everything, "Images and binaries are ignored by default. Include them as well", default: false
 end
 
 Trollop::die :sort, "must be one of the following; #{sort.join(", ")}" unless sort.include?(opts[:sort])
@@ -38,7 +39,8 @@ begin
     branch: opts[:branch],
     after: opts[:after],
     before: opts[:before],
-    verbose: opts[:verbose]
+    verbose: opts[:verbose],
+    everything: opts[:everything]
   })
 
   opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
