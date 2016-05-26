@@ -39,8 +39,8 @@ From a git repository run `git fame`.
 #### Options
 
 - `git fame --by-type` Group line counts by file extension (i.e. .rb, .erb, .yml). See the *by type* section below.
-- `git fame --exclude=path1,path2` Comma separated, relative paths to exclude.
-- `git fame --include=path1,path2` Comma separated, relative paths to include.
+- `git fame --exclude=path1/*,path2/*` Comma separated, [glob](https://en.wikipedia.org/wiki/Glob_(programming)) file path to exclude.
+- `git fame --include=path1/*,path2/*` Comma separated, [glob](https://en.wikipedia.org/wiki/Glob_(programming)) file path to include.
 - `git fame --sort=loc` Order table by `loc`. Available options are: `loc`, `files` and `commits`. Default is `loc`.
 - `git fame --hide-progressbar` Hide progressbar.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. [More about git blame and whitespace](https://coderwall.com/p/x8xbnq/git-don-t-blame-people-for-changing-whitespaces-or-moving-code).

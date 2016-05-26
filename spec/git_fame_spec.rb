@@ -104,25 +104,41 @@ describe GitFame::Base do
     end
   end
 
+  describe "exclude" do
+    let(:subject) do
+      GitFame::Base.new({
+        repository: repository,
+        exclude: "lib/*"
+      })
+    end
+
+    it "should exclude the lib folder" do
+      subject.file_list.map(&:path).should_not include("lib/gash.rb")
+    end
+
+    it "should exclude non rb or rdoc files" do
+      subject.file_list.map(&:path).should include("HISTORY")
+    end
+
+    it "should exclude non matching paths" do
+      subject.file_list.map(&:path).should include("spec/gash_spec.rb")
+    end
+  end
+
   describe "types" do
     let(:subject) do
       GitFame::Base.new({
         repository: repository,
-        exclude: "lib",
         by_type: true,
         extensions: "rb,rdoc"
       })
     end
 
-    it "should exclude the lib folder" do
-      subject.file_list.include?("lib/gash.rb").should be_falsey
+    let(:author) do 
+      subject.authors.find do |author| 
+        author.name == "7rans"
+      end
     end
-
-    it "should exclude non rb or rdoc files" do
-      subject.file_list.include?("HISTORY").should be_falsey
-    end
-
-    let(:author) { subject.authors.find { |author| author.name == "7rans" } }
 
     it "should break out counts by file type" do
       author.file_type_counts["rdoc"].should eq(1)
@@ -130,6 +146,43 @@ describe GitFame::Base do
 
     it "should output zero for file types the author hasn't touched" do
       author.file_type_counts["derp"].should eq(0)
+    end
+  end
+
+  describe "include" do
+    let(:subject) do
+      GitFame::Base.new({
+        repository: repository,
+        include: "lib/*,spec/*"
+      })
+    end
+
+    it "should exclude the lib folder" do
+      subject.file_list.map(&:path).should include("lib/gash.rb")
+    end
+
+    it "should exclude non rb or rdoc files" do
+      subject.file_list.map(&:path).should_not include("HISTORY")
+    end
+
+    it "should exclude non matching paths" do
+      subject.file_list.map(&:path).should include("spec/gash_spec.rb")
+    end
+  end
+
+  context "glob" do
+    it "should exclude" do
+      GitFame::Base.new({
+        repository: repository,
+        exclude: "lib/*.rb"
+      }).file_list.map(&:path).should_not include("lib/gash.rb")
+    end
+
+    it "should include" do
+      GitFame::Base.new({
+        repository: repository,
+        include: "lib/*.rb"
+      }).file_list.map(&:path).should include("lib/gash.rb")
     end
   end
 

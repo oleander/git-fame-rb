@@ -12,8 +12,8 @@ opts = Trollop::options do
   opt :"hide-progressbar", "Hide progressbar", default: false
   opt :whitespace, "Ignore whitespace changes", default: false
   opt :"by-type", "Group line counts by file extension (i.e. .rb, .erb, .yml)", default: false
-  opt :include, "Paths to include in git ls-files", default: "", type: String
-  opt :exclude, "Paths to exclude (comma separated)", default: "", type: String
+  opt :include, "Comma separated, glob file path to include. I.e path/*.rb", default: "", type: String
+  opt :exclude, "Comma separated, glob file path to exclude. I.e any/**/path/*", default: "", type: String
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "master", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String

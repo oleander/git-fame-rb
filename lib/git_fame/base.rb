@@ -466,14 +466,14 @@ module GitFame
     def remove_excluded_files(files)
       return files if @exclude.empty?
       files.reject do |file|
-        @exclude.any? { |exclude| file.match(exclude) }
+        @exclude.any? { |exclude| File.fnmatch(exclude, file) }
       end
     end
 
     def keep_included_files(files)
       return files if @include.empty?
       files.select do |file|
-        @include.any? { |exclude| file.match(exclude) }
+        @include.any? { |include| File.fnmatch(include, file) }
       end
     end
 
