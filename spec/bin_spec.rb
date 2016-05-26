@@ -96,7 +96,7 @@ describe "bin/git-fame" do
       end
     end
 
-    it "#{GitFame::SORT.join(",")} should not print the samething" do
+    it "#{GitFame::SORT.join(", ")} should not output the same thing" do
       results.uniq.sort.should eq(results.sort)
     end
   end

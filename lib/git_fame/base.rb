@@ -180,7 +180,7 @@ module GitFame
           # -w ignore whitespaces (defined in @wopt)
           # -M detect moved or copied lines.
           # -p procelain mode (parsed by BlameParser)
-          execute("git blame -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+          execute("git blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
             BlameParser.new(result.to_s).parse.each do |row|
               next if row[:boundary]
 
@@ -197,7 +197,7 @@ module GitFame
         end
 
         # Get repository summery and update each author accordingly
-        execute("git shortlog #{commit_range.to_s} #{default_params} -se") do |result|
+        execute("git shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
           result.to_s.split("\n").map do |line|
             _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
             author = author_by_email(email)
@@ -348,7 +348,7 @@ module GitFame
     def current_files
       cache(:current_files) do
         if commit_range.is_range?
-          execute("git diff --name-only #{default_params} #{commit_range.to_s}") do |result|
+          execute("git diff --name-only #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
             filter_files(result)
           end
         else
@@ -361,6 +361,10 @@ module GitFame
 
     def default_params
       "--no-merges --first-parent --date=local"
+    end
+
+    def encoding_opt
+      "--encoding=UTF-8"
     end
 
     def filter_files(result)
@@ -451,13 +455,13 @@ module GitFame
 
     def start_commit_date
       cache(:first_commit_date) do
-        Time.parse(execute("git log --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
+        Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
       end
     end
 
     def end_commit_date
       cache(:last_commit_date) do
-        Time.parse(execute("git log --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
+        Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
       end
     end
 
