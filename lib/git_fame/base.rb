@@ -1,21 +1,28 @@
 require "csv"
 require "time"
 require "open3"
+require "hirb"
+require "memoist"
 
-require_relative "./blame_parser"
-require_relative "./result"
-require_relative "./file"
-require_relative "./errors"
-require_relative "./commit_range"
-
+# String#scrib is build in to Ruby 2.1+
 if RUBY_VERSION.to_f < 2.1
   require "scrub_rb"
 end
+
+require "git_fame/helper"
+require "git_fame/author"
+require "git_fame/silent_progressbar"
+require "git_fame/blame_parser"
+require "git_fame/result"
+require "git_fame/file"
+require "git_fame/errors"
+require "git_fame/commit_range"
 
 module GitFame
   SORT = ["name", "commits", "loc", "files"]
   class Base
     include GitFame::Helper
+    extend Memoist
     attr_accessor :file_extensions
 
     #
@@ -80,6 +87,8 @@ module GitFame
       @authors = {}
       @cache = {}
       @verbose = args.fetch(:verbose, false)
+
+      populate
     end
 
     #
@@ -131,7 +140,7 @@ module GitFame
     # @return Array list of repo files processed
     #
     def file_list
-      populate { current_files }
+      populate.current_files
     end
 
     #
@@ -152,28 +161,25 @@ module GitFame
     # @return Array<Author> A list of authors
     #
     def authors
-      cache(:authors) do
-        populate do
-          @authors.values.sort_by do |author|
-            @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
-          end
-        end
+      @authors.values.sort_by do |author|
+        @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
       end
     end
 
-    private
+    # private
 
     # Populates @authors and with data
     # Block is called on every call to populate, but
     # the data is only calculated once
-    def populate(&block)
-      cache(:populate) do
+    def populate
+      tap do
         # Display progressbar with the number of files as countdown
         progressbar = init_progressbar(current_files.count)
 
         # Extract the blame history from all checked in files
+
         current_files.each do |file|
-          progressbar.inc
+          progressbar.increment
           next unless check_file?(file)
           store_file_extension(file)
 
@@ -214,8 +220,6 @@ module GitFame
 
         progressbar.finish
       end
-
-      block.call
     end
 
     def ignore_types
@@ -240,13 +244,14 @@ module GitFame
     end
 
     # Uses the more printable names in @visible_fields
+    # TODO: Cache this
     def printable_fields
-      cache(:printable_fields) do
-        raw_fields.map do |field|
-          field.is_a?(Array) ? field.last : field
-        end
+      raw_fields.map do |field|
+        field.is_a?(Array) ? field.last : field
       end
     end
+
+    memoize :printable_fields
 
     def associate_file_with_author(author, file)
       @file_authors[author][file] ||= 1
@@ -278,23 +283,24 @@ module GitFame
     end
 
     # Includes fields from file extensions
+    # TODO: Cache
     def raw_fields
       return @visible_fields unless @by_type
-      cache(:raw_fields) do
-        populate do
-          (@visible_fields + file_extensions).uniq
-        end
-      end
+      populate
+      (@visible_fields + file_extensions).uniq
     end
+
+    memoize :raw_fields
 
     # Method fields used by #to_csv and #pretty_puts
     def fields
-      cache(:fields) do
-        raw_fields.map do |field|
-          field.is_a?(Array) ? field.first : field
-        end
+      raw_fields.map do |field|
+        field.is_a?(Array) ? field.first : field
       end
     end
+
+    memoize :fields
+
 
     # Command to be executed at @repository
     # @silent = true wont raise an error on exit code =! 0
@@ -312,6 +318,8 @@ module GitFame
     rescue Errno::ENOENT
       raise Error, cmd_error_message(command, $!.message)
     end
+
+    # memoize :execute
 
     def cmd_error_message(command, message)
       "Could not run '#{command}' => #{message}"
@@ -346,18 +354,18 @@ module GitFame
     # List all files in current git directory, excluding
     # extensions in @extensions defined by the user
     def current_files
-      cache(:current_files) do
-        if commit_range.is_range?
-          execute("git diff --name-only #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
-            filter_files(result)
-          end
-        else
-          execute("git ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
-            filter_files(result)
-          end
+      if commit_range.is_range?
+        execute("git diff --name-only #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+          filter_files(result)
+        end
+      else
+        execute("git ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
+          filter_files(result)
         end
       end
     end
+
+    # memoize :current_files
 
     def default_params
       "--no-merges --first-parent --date=local"
@@ -381,72 +389,70 @@ module GitFame
     end
 
     def current_range
-      cache(:current_range) do
-        next @branch if blank?(@after) and blank?(@before)
+      return @branch if blank?(@after) and blank?(@before)
 
-        if present?(@after) and present?(@before)
-          if end_date < start_date
-            raise Error, "after=#{@after} can't be greater then before=#{@before}"
-          end
-
-          if end_date > end_commit_date and start_date > end_commit_date
-            raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
-          end
-
-          if end_date < start_commit_date and start_date < start_commit_date
-            raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date}"
-          end
-        elsif present?(@after)
-          if start_date > end_commit_date
-            raise Error, "after=#{@after} is set too high, highest is #{end_commit_date}"
-          end
-        elsif present?(@before)
-          if end_date < start_commit_date
-            raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
-          end
+      if present?(@after) and present?(@before)
+        if end_date < start_date
+          raise Error, "after=#{@after} can't be greater then before=#{@before}"
         end
 
-        if present?(@before)
-          if end_date > end_commit_date
-            commit2 = @branch
-          else
-            # Try finding a commit that day
-            commit2 = execute("git rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
-
-            # Otherwise, look for the closest commit
-            if blank?(commit2)
-              commit2 = execute("git rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
-            end
-          end
+        if end_date > end_commit_date and start_date > end_commit_date
+          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
         end
 
-        if present?(@after)
-          if start_date < start_commit_date
-            next present?(commit2) ? commit2 : @branch
-          end
-
-          commit1 = execute("git rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
-
-          # No commit found this early
-          # If NO end date is choosen, just use current branch
-          # Otherwise use specified (@before) as end date
-          if blank?(commit1)
-            next @branch unless @before
-            next commit2
-          end
+        if end_date < start_commit_date and start_date < start_commit_date
+          raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date}"
         end
-
-        if @after and @before
-          # Nothing found in date span
-          if commit1 == commit2
-            raise Error, "There are no commits between #{@before} and #{@after}"
-          end
-          next [commit1, commit2]
+      elsif present?(@after)
+        if start_date > end_commit_date
+          raise Error, "after=#{@after} is set too high, highest is #{end_commit_date}"
         end
-
-        next commit2 if @before
-        next [commit1, @branch]
+      elsif present?(@before)
+        if end_date < start_commit_date
+          raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
+        end
       end
+
+      if present?(@before)
+        if end_date > end_commit_date
+          commit2 = @branch
+        else
+          # Try finding a commit that day
+          commit2 = execute("git rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+
+          # Otherwise, look for the closest commit
+          if blank?(commit2)
+            commit2 = execute("git rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+          end
+        end
+      end
+
+      if present?(@after)
+        if start_date < start_commit_date
+          return present?(commit2) ? commit2 : @branch
+        end
+
+        commit1 = execute("git rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+
+        # No commit found this early
+        # If NO end date is choosen, just use current branch
+        # Otherwise use specified (@before) as end date
+        if blank?(commit1)
+          return @branch unless @before
+          return commit2
+        end
+      end
+
+      if @after and @before
+        # Nothing found in date span
+        if commit1 == commit2
+          raise Error, "There are no commits between #{@before} and #{@after}"
+        end
+        return [commit1, commit2]
+      end
+
+      return commit2 if @before
+      [commit1, @branch]
     end
 
     def end_of_yesterday(time)
@@ -454,16 +460,16 @@ module GitFame
     end
 
     def start_commit_date
-      cache(:first_commit_date) do
-        Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
-      end
+      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
     end
 
+    memoize :start_commit_date
+
     def end_commit_date
-      cache(:last_commit_date) do
-        Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
-      end
+      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
     end
+
+    memoize :end_commit_date
 
     def end_date
       Time.parse("#{@before} 23:59:59")
@@ -476,6 +482,7 @@ module GitFame
     # The block is only called once for every unique key
     # Used to ensure methods are only called once
     def cache(key, &block)
+      raise "not in use"
       @cache[key] ||= block.call
     end
 
@@ -498,5 +505,9 @@ module GitFame
     def init_progressbar(files_count)
       SilentProgressbar.new("GitBlame", files_count, @progressbar)
     end
+
+    memoize :populate
+    memoize :current_range
+
   end
 end
