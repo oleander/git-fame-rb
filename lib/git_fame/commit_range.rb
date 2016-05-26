@@ -11,11 +11,11 @@ class CommitRange < Struct.new(:data, :current_branch)
     data.is_a?(Array)
   end
 
-  private
-
   def range
     is_range? ? data : [data]
   end
+  
+  private
 
   def branch?(commit)
     current_branch == commit

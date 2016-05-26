@@ -236,7 +236,7 @@ module GitFame
 
     # Return mime type for file (form: x/y)
     def mime_type_for_file(file)
-      execute("file --mime-typ '#{file}'").to_s.
+      execute("git show #{commit_range.range.last}:'#{file}' | file --mime-type -").to_s.
         match(/.+: (.+?)$/).to_a[1]
     end
 
