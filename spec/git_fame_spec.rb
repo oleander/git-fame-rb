@@ -14,7 +14,7 @@ describe GitFame::Base do
       end
 
       it "should have a bunch of commits" do
-        author.raw(:commits).should eq(40)
+        author.raw(:commits).should eq(41)
       end
 
       it "should respond to name" do
@@ -22,7 +22,7 @@ describe GitFame::Base do
       end
 
       it "should have a number of locs" do
-        author.raw(:loc).should eq(581)
+        author.raw(:loc).should eq(579)
       end
 
       it "should have a number of files" do
@@ -30,7 +30,7 @@ describe GitFame::Base do
       end
 
       it "should have a distribution" do
-        author.distribution.should eq("54.0 / 64.5 / 25.0")
+        author.distribution.should eq("53.9 / 58.6 / 25.0")
       end
     end
 
@@ -60,7 +60,7 @@ describe GitFame::Base do
   describe "total" do
     it "should respond to #loc, #commits and #files" do
       subject.files.should eq(16)
-      subject.commits.should eq(62)
+      subject.commits.should eq(70)
       subject.loc.should eq(1075)
     end
   end
@@ -204,10 +204,10 @@ describe GitFame::Base do
     it "should be equal to" do
       subject.to_csv.should eq([
         "name,loc,commits,files,distribution\n",
-        "Magnus Holm,581,40,4,54.0 / 64.5 / 25.0\n",
-        "7rans,358,5,10,33.3 /  8.1 / 62.5\n",
-        "Linus Oleander,135,16,6,12.6 / 25.8 / 37.5\n",
-        "Linus Oleander,1,1,1, 0.1 /  1.6 /  6.2\n"
+        "Magnus Holm,579,41,4,53.9 / 58.6 / 25.0\n",
+        "7rans,360,6,10,33.5 /  8.6 / 62.5\n",
+        "Linus Oleander,135,22,6,12.6 / 31.4 / 37.5\n",
+        "Linus Oleander,1,1,1, 0.1 /  1.4 /  6.2\n"
       ].join)
     end
   end
@@ -263,7 +263,7 @@ describe GitFame::Base do
       GitFame::Base.new({
         repository: repository,
         after: "2000-01-01"
-      }).commits.should eq(62)
+      }).commits.should eq(70)
     end
   end
 
@@ -288,7 +288,7 @@ describe GitFame::Base do
       GitFame::Base.new({
         repository: repository,
         before: "2050-01-01"
-      }).commits.should eq(62)
+      }).commits.should eq(70)
     end
 
     it "should handle same day as last commit" do
@@ -331,7 +331,7 @@ describe GitFame::Base do
         repository: repository,
         after: "2000-01-01",
         before: "2020-01-01"
-      }).commits.should eq(62)
+      }).commits.should eq(70)
     end
 
     it "should handle a too early 'after'" do

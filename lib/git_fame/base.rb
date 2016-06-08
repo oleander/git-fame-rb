@@ -364,7 +364,7 @@ module GitFame
     end
 
     def default_params
-      "--no-merges --first-parent --date=local"
+      "--date=local"
     end
 
     def encoding_opt
