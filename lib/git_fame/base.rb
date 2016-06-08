@@ -353,7 +353,7 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git diff --name-only #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+        execute("git diff --name-status #{encoding_opt} #{default_params} #{commit_range.to_s} | grep -v '^D' | cut -f2-") do |result|
           filter_files(result)
         end
       else
