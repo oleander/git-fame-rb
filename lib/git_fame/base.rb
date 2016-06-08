@@ -161,14 +161,7 @@ module GitFame
     # @return Array<Author> A list of authors
     #
     def authors
-      @authors.values.each_with_object({}) do |author, result|
-        if ex_author = result[author.name]
-          ex_author.merge(author)
-        else
-          result[author.name] = author
-        end
-
-      end.values.sort_by do |author|
+      unique_authors.sort_by do |author|
         @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
       end
     end
@@ -230,10 +223,6 @@ module GitFame
       progressbar.finish
     end
 
-    def ignore_types
-      @default_settings.fetch(:ignore_types)
-    end
-
     # Ignore mime types found in {ignore_types}
     def check_file?(file)
       return true if @everything
@@ -249,6 +238,22 @@ module GitFame
 
     def get(hash, *keys)
       keys.inject(hash) { |h, key| h.fetch(key) }
+    end
+
+    def ignore_types
+      @default_settings.fetch(:ignore_types)
+    end
+
+    def unique_authors
+      # Merges duplicate users (users with the same name)
+      # Object#dup prevents the original to be changed
+      @authors.values.dup.each_with_object({}) do |author, result|
+        if ex_author = result[author.name]
+          result[author.name] = ex_author.dup.merge(author)
+        else
+          result[author.name] = author
+        end
+      end.values
     end
 
     # Uses the more printable names in @visible_fields
@@ -502,9 +507,9 @@ module GitFame
     memoize :populate, :run
     memoize :current_range, :current_files
     memoize :printable_fields, :files_from_author
-    memoize :raw_fields, :fields
-    memoize :end_commit_date
-    memoize :start_commit_date
+    memoize :raw_fields, :fields, :file_list
+    memoize :end_commit_date, :loc, :commits
+    memoize :start_commit_date, :files, :authors
     memoize :file_extensions, :used_files
   end
 end

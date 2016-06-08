@@ -30,7 +30,7 @@ describe GitFame::Base do
       end
 
       it "should have a distribution" do
-        author.distribution.should eq("53.8 / 56.9 / 25.0")
+        author.distribution.should eq("53.9 / 58.6 / 25.0")
       end
     end
 
@@ -61,7 +61,7 @@ describe GitFame::Base do
     it "should respond to #loc, #commits and #files" do
       subject.files.should eq(16)
       subject.commits.should eq(70)
-      subject.loc.should eq(1076)
+      subject.loc.should eq(1075)
     end
   end
 
@@ -204,9 +204,9 @@ describe GitFame::Base do
     it "should be equal to" do
       subject.to_csv.should eq([
         "name,loc,commits,files,distribution\n",
-        "Magnus Holm,579,41,4,53.8 / 56.9 / 25.0\n",
-        "7rans,360,6,10,33.4 /  8.1 / 62.5\n",
-        "Linus Oleander,140,27,11,13.0 / 36.8 / 81.2\n",
+        "Magnus Holm,579,41,4,53.9 / 58.6 / 25.0\n",
+        "7rans,360,6,10,33.5 /  8.6 / 62.5\n",
+        "Linus Oleander,136,23,7,12.7 / 32.9 / 43.8\n",
       ].join)
     end
   end

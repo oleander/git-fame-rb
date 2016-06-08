@@ -20,8 +20,10 @@ module GitFame
     end
 
     def merge(author)
-      FIELDS.each do |field|
-        inc(field, author.raw(field))
+      tap do
+        FIELDS.each do |field|
+          inc(field, author.raw(field))
+        end
       end
     end
 
