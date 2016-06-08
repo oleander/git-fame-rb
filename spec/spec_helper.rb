@@ -34,7 +34,6 @@ RSpec.configure do |config|
 
   config.include GitFame::Startup
   config.mock_with :rspec
-  config.order = "random"
   config.expect_with(:rspec) do |c|
     c.syntax = [:should, :expect]
   end
