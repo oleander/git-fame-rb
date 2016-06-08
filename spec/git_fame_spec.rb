@@ -3,7 +3,7 @@ describe GitFame::Base do
 
   describe "#authors" do
     it "should have a list of authors" do
-      subject.should have(4).authors
+      subject.should have(3).authors
     end
 
     describe "author" do
@@ -30,7 +30,7 @@ describe GitFame::Base do
       end
 
       it "should have a distribution" do
-        author.distribution.should eq("53.9 / 58.6 / 25.0")
+        author.distribution.should eq("53.8 / 56.9 / 25.0")
       end
     end
 
@@ -61,7 +61,7 @@ describe GitFame::Base do
     it "should respond to #loc, #commits and #files" do
       subject.files.should eq(16)
       subject.commits.should eq(70)
-      subject.loc.should eq(1075)
+      subject.loc.should eq(1076)
     end
   end
 
@@ -72,7 +72,7 @@ describe GitFame::Base do
         sort: "name"
       }).authors
       authors.map(&:name).
-        should eq(["7rans", "Linus Oleander", "Linus Oleander", "Magnus Holm"])
+        should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by commits" do
@@ -82,7 +82,7 @@ describe GitFame::Base do
       }).authors
 
       authors.map(&:name).
-        should eq(["Magnus Holm", "Linus Oleander", "7rans", "Linus Oleander"])
+        should eq(["Magnus Holm", "Linus Oleander", "7rans"])
     end
 
     it "should be able to sort #authors by files" do
@@ -91,7 +91,7 @@ describe GitFame::Base do
         sort: "files"
       }).authors
       authors.map(&:name).
-        should eq(["7rans", "Linus Oleander", "Magnus Holm", "Linus Oleander"])
+        should eq(["7rans", "Linus Oleander", "Magnus Holm"])
     end
 
     it "should be able to sort #authors by loc" do
@@ -100,7 +100,7 @@ describe GitFame::Base do
         sort: "loc"
       }).authors
       authors.map(&:name).
-        should eq(["Magnus Holm", "7rans", "Linus Oleander", "Linus Oleander"])
+        should eq(["Magnus Holm", "7rans", "Linus Oleander"])
     end
   end
 
@@ -204,10 +204,9 @@ describe GitFame::Base do
     it "should be equal to" do
       subject.to_csv.should eq([
         "name,loc,commits,files,distribution\n",
-        "Magnus Holm,579,41,4,53.9 / 58.6 / 25.0\n",
-        "7rans,360,6,10,33.5 /  8.6 / 62.5\n",
-        "Linus Oleander,135,22,6,12.6 / 31.4 / 37.5\n",
-        "Linus Oleander,1,1,1, 0.1 /  1.4 /  6.2\n"
+        "Magnus Holm,579,41,4,53.8 / 56.9 / 25.0\n",
+        "7rans,360,6,10,33.4 /  8.1 / 62.5\n",
+        "Linus Oleander,140,27,11,13.0 / 36.8 / 81.2\n",
       ].join)
     end
   end

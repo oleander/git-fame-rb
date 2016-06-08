@@ -161,7 +161,14 @@ module GitFame
     # @return Array<Author> A list of authors
     #
     def authors
-      @authors.values.sort_by do |author|
+      @authors.values.each_with_object({}) do |author, result|
+        if ex_author = result[author.name]
+          ex_author.merge(author)
+        else
+          result[author.name] = author
+        end
+
+      end.values.sort_by do |author|
         @sort == "name" ? author.send(@sort) : -1 * author.raw(@sort)
       end
     end

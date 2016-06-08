@@ -19,6 +19,12 @@ module GitFame
       end
     end
 
+    def merge(author)
+      FIELDS.each do |field|
+        inc(field, author.raw(field))
+      end
+    end
+
     #
     # @format loc / commits / files
     # @return String Distribution (in %) between users
