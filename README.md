@@ -110,12 +110,6 @@ repository = GitFame::Base.new(options)
   - `author.raw_files` (Fixnum) Number of files changed.
   - `author.file_type_counts` (Array) File types (k) and loc (v)
 
-#### A note about authors found
-
-TODO: Fix this
-
-The list of authors may include duplicate people. If a git user's configured name or email address change over time, the person will appear multiple times in this list (and your repo's git history). Git allows you to configure this using the .mailmap feature. See ````git shortlog --help```` for more information.
-
 ## Testing
 
 1. Download fixtures (`spec/fixtures`) using `git submodule update --init`.
