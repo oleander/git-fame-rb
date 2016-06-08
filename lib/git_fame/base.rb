@@ -488,7 +488,7 @@ module GitFame
     end
 
     def init_progressbar(files_count)
-      SilentProgressbar.new("GitBlame", files_count, (@progressbar and not @verbose))
+      SilentProgressbar.new("Git Fame", files_count, (@progressbar and not @verbose))
     end
 
     # TODO: Are all these needed?
