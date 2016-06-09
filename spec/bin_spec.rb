@@ -33,7 +33,8 @@ describe "bin/git-fame" do
     "--version",
     "--help",
     "--verbose",
-    "--everything"
+    "--everything",
+    "--timeout=10"
   ].each do |option|
     it "should support #{option}" do
       run(option).should be_a_succees
@@ -48,19 +49,26 @@ describe "bin/git-fame" do
     it "should fail on invalid before date" do
       res = run("--before='---'")
       res.should_not be_a_succees
-      res.first.should eq("Error: '---' is not a valid date\n")
+      res.should include_output("'---' is not a valid date")
     end
 
     it "should fail on invalid after date" do
       res = run("--after='---'")
       res.should_not be_a_succees
-      res.should include_output("Error: '---' is not a valid date\n")
+      res.should include_output("'---' is not a valid date")
     end
 
     it "should not print stack trace on invalid dates (--after)" do
       res = run("--after='---'")
       res.should_not be_a_succees
       res.should_not include_output("GitFame::Error")
+    end
+
+    it "should fail on invalid timeout" do
+      run("--timeout=hello").should_not be_a_succees
+      run("--timeout=").should_not be_a_succees
+      run("--timeout=-1").should_not be_a_succees
+      run("--timeout=0").should_not be_a_succees
     end
 
     it "should not print stack trace on invalid dates (--before)" do

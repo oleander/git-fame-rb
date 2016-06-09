@@ -56,6 +56,7 @@ module GitFame
       @by_type = args.fetch(:by_type, false)
       @branch = args.fetch(:branch, nil)
       @everything = args.fetch(:everything, false)
+      @timeout = args.fetch(:timeout, CMD_TIMEOUT)
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
@@ -324,11 +325,19 @@ module GitFame
     end
 
     def run(command)
-      Timeout.timeout(CMD_TIMEOUT) do
-        Open3.popen3(command, chdir: @repository) do |_, out, err, thread|
-          output = thread.value.success? ? out.read : err.read
-          Result.new(output.scrub.strip, thread.value.success?)
-        end
+      if @timeout != -1
+        Timeout.timeout(CMD_TIMEOUT) { raw_run(command) }
+      else
+        raw_run(command)
+      end
+    end
+
+    def raw_run(command)
+      Open3.popen3(command, chdir: @repository) do |_, out, err, thread|
+        out_data = out.read
+        err_data = err.read
+        output = thread.value.success? ? out_data : err_data
+        Result.new(output.scrub.strip, thread.value.success?)
       end
     end
 
@@ -366,7 +375,7 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git diff -l 1000 --name-status #{encoding_opt} #{default_params} #{commit_range.to_s} | grep -v '^D' | cut -f2-") do |result|
+        execute("git diff -l 100 --name-status #{encoding_opt} #{default_params} #{commit_range.to_s} | grep -v '^D' | cut -f2-") do |result|
           filter_files(result)
         end
       else

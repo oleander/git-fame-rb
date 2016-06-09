@@ -49,6 +49,7 @@ From a git repository run `git fame`.
 - `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --verbose` Print shell commands used by `git-fame`.
 - `git fame --everything` Images and binaries are ignored by default. Include them as well.
+- `git fame --timeout` Set timeout in seconds for each git command.
 
 #### By type
 

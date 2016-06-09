@@ -20,11 +20,16 @@ opts = Trollop::options do
   opt :after, "Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :before, "Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :verbose, "Print shell commands used by git-fame", default: false
+  opt :timeout, "Set timeout in seconds for each git command. Turn off by using -1", type: Integer, default: GitFame::CMD_TIMEOUT
   opt :everything, "Images and binaries are ignored by default. Include them as well", default: false
 end
 
 unless GitFame::SORT.include?(opts[:sort])
   Trollop::die :sort, "must be one of the following; #{GitFame::SORT.join(", ")}"
+end
+
+if opts[:timeout] <= 0
+  Trollop::die :timeout, "must be positive"
 end
 
 begin
@@ -41,10 +46,13 @@ begin
     after: opts[:after],
     before: opts[:before],
     verbose: opts[:verbose],
-    everything: opts[:everything]
+    everything: opts[:everything],
+    timeout: opts[:timeout]
   })
 
   opts[:format] == "csv" ? fame.csv_puts : fame.pretty_puts
 rescue GitFame::Error => e
-  abort "Error: #{e.message}"
+  Trollop::die e.message
+rescue Timeout::Error
+  Trollop::die "Maximum timeout of #{opts[:timeout]} sec exceed. Try passing --timeout=<sec> or -1 for no timeout"
 end
