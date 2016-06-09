@@ -325,8 +325,9 @@ module GitFame
 
     def run(command)
       Timeout.timeout(CMD_TIMEOUT) do
-        Open3.popen2e(command, chdir: @repository) do |_, out, thread|
-          Result.new(out.read.scrub.strip, thread.value.success?)
+        Open3.popen3(command, chdir: @repository) do |_, out, err, thread|
+          output = thread.value.success? ? out.read : err.read
+          Result.new(output.scrub.strip, thread.value.success?)
         end
       end
     end
@@ -365,7 +366,7 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git diff --name-status #{encoding_opt} #{default_params} #{commit_range.to_s} | grep -v '^D' | cut -f2-") do |result|
+        execute("git diff -l 1000 --name-status #{encoding_opt} #{default_params} #{commit_range.to_s} | grep -v '^D' | cut -f2-") do |result|
           filter_files(result)
         end
       else
