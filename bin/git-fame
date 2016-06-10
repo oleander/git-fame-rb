@@ -28,7 +28,7 @@ unless GitFame::SORT.include?(opts[:sort])
   Trollop::die :sort, "must be one of the following; #{GitFame::SORT.join(", ")}"
 end
 
-if opts[:timeout] <= 0
+if opts[:timeout] != -1 and opts[:timeout] <= 0
   Trollop::die :timeout, "must be positive"
 end
 
