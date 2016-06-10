@@ -1,6 +1,6 @@
 require "csv"
 require "time"
-require "open3"
+require "open4"
 require "hirb"
 require "memoist"
 require "timeout"
@@ -52,11 +52,12 @@ module GitFame
       # Default sorting option is by loc
       @include = args.fetch(:include, "").split(",")
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
-      @repository = args.fetch(:repository)
+      @repository = File.expand_path(args.fetch(:repository))
       @by_type = args.fetch(:by_type, false)
       @branch = args.fetch(:branch, nil)
       @everything = args.fetch(:everything, false)
       @timeout = args.fetch(:timeout, CMD_TIMEOUT)
+      @git_dir = File.join(@repository, ".git")
 
       # Figure out what branch the caller is using
       if present?(@branch = args[:branch])
@@ -89,7 +90,6 @@ module GitFame
       @authors = {}
       @cache = {}
       @verbose = args.fetch(:verbose, false)
-
       populate
     end
 
@@ -186,7 +186,7 @@ module GitFame
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
         # -p procelain mode (parsed by BlameParser)
-        execute("git blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+        execute("git #{git_directory_params} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
 
@@ -206,7 +206,7 @@ module GitFame
       end
 
       # Get repository summery and update each author accordingly
-      execute("git shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
+      execute("git #{git_directory_params} shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
         result.to_s.split("\n").map do |line|
           _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
           author = author_by_email(email)
@@ -233,7 +233,7 @@ module GitFame
 
     # Return mime type for file (form: x/y)
     def mime_type_for_file(file)
-      execute("git show #{commit_range.range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
+      execute("git #{git_directory_params} show #{commit_range.range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
         match(/.+: (.+?)$/).to_a[1]
     end
 
@@ -312,8 +312,7 @@ module GitFame
     # Command to be executed at @repository
     # @silent = true wont raise an error on exit code =! 0
     def execute(command, silent = false, &block)
-      result = run(command)
-
+      result = run_with_timeout(command)
       if result.success? or silent
         warn command if @verbose
         return result unless block
@@ -324,21 +323,22 @@ module GitFame
       raise Error, cmd_error_message(command, $!.message)
     end
 
-    def run(command)
+    def run_with_timeout(command)
       if @timeout != -1
-        Timeout.timeout(CMD_TIMEOUT) { raw_run(command) }
+        Timeout.timeout(CMD_TIMEOUT) { run_no_timeout(command) }
       else
-        raw_run(command)
+        run_no_timeout(command)
       end
     end
 
-    def raw_run(command)
-      Open3.popen3(command, chdir: @repository) do |_, out, err, thread|
-        out_data = out.read
-        err_data = err.read
-        output = thread.value.success? ? out_data : err_data
-        Result.new(output.scrub.strip, thread.value.success?)
-      end
+    # TODO: Simplify
+    def run_no_timeout(command)
+      pid, stdin, stdout, stderr = Open4::popen4(command)
+      stdin.close
+      ignored, status = Process::waitpid2 pid
+      ok = status.success?
+      output = ok ? stdout.read : stderr.read
+      Result.new(output.scrub.strip, ok)
     end
 
     def cmd_error_message(command, message)
@@ -347,7 +347,7 @@ module GitFame
 
     # Does @branch exist in the current git repo?
     def branch_exists?(branch)
-      execute("git show-ref '#{branch}'", true) do |result|
+      execute("git #{git_directory_params} show-ref '#{branch}'", true) do |result|
         result.success?
       end
     end
@@ -361,7 +361,7 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git rev-parse HEAD | head -1") do |result|
+      execute("git #{git_directory_params} rev-parse HEAD | head -1") do |result|
         return result.data.split(" ")[0] if result.success?
       end
       raise Error, "No branch found. Define one using --branch=<branch>"
@@ -375,11 +375,11 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+        execute("git #{git_directory_params} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
           filter_files(result)
         end
       else
-        execute("git ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
+        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
           filter_files(result)
         end
       end
@@ -387,6 +387,10 @@ module GitFame
 
     def default_params
       "--date=local"
+    end
+
+    def git_directory_params
+      "--git-dir='#{@git_dir}' --work-tree='#{@repository}'"
     end
 
     def encoding_opt
@@ -436,11 +440,11 @@ module GitFame
           commit2 = @branch
         else
           # Try finding a commit that day
-          commit2 = execute("git rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+          commit2 = execute("git #{git_directory_params} rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
 
           # Otherwise, look for the closest commit
           if blank?(commit2)
-            commit2 = execute("git rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+            commit2 = execute("git #{git_directory_params} rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
           end
         end
       end
@@ -450,7 +454,7 @@ module GitFame
           return present?(commit2) ? commit2 : @branch
         end
 
-        commit1 = execute("git rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+        commit1 = execute("git #{git_directory_params} rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
 
         # No commit found this early
         # If NO end date is choosen, just use current branch
@@ -478,11 +482,11 @@ module GitFame
     end
 
     def start_commit_date
-      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
+      Time.parse(execute("git #{git_directory_params} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
     end
 
     def end_commit_date
-      Time.parse(execute("git log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
+      Time.parse(execute("git #{git_directory_params} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
     end
 
     def end_date
@@ -514,7 +518,7 @@ module GitFame
     end
 
     # TODO: Are all these needed?
-    memoize :populate, :run
+    memoize :populate, :run_with_timeout
     memoize :current_range, :current_files
     memoize :printable_fields, :files_from_author
     memoize :raw_fields, :fields, :file_list

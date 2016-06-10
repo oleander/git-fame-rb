@@ -30,6 +30,7 @@ Generates data like:
   gem.add_dependency("scrub_rb", "~> 1.0.1")
   gem.add_dependency("memoist", "~> 0.14.0")
   gem.add_dependency("method_profiler", "~> 2.0.1")
+  gem.add_dependency("open4")
 
   gem.add_development_dependency("rspec", "~> 3.4.0")
   gem.add_development_dependency("rspec-collection_matchers", "~> 1.1.2")
