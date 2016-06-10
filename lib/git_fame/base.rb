@@ -1,6 +1,6 @@
 require "csv"
 require "time"
-require "open4"
+require "open3"
 require "hirb"
 require "memoist"
 require "timeout"
@@ -331,13 +331,10 @@ module GitFame
       end
     end
 
-    # TODO: Simplify
     def run_no_timeout(command)
-      pid, stdin, stdout, stderr = Open4::popen4(command)
-      stdin.close
-      ignored, status = Process::waitpid2 pid
+      out, err, status = Open3.capture3(command)
       ok = status.success?
-      output = ok ? stdout.read : stderr.read
+      output = ok ? out : err
       Result.new(output.scrub.strip, ok)
     end
 
@@ -379,7 +376,7 @@ module GitFame
           filter_files(result)
         end
       else
-        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} | grep blob | cut -f2-") do |result|
+        execute("git #{git_directory_params} ls-tree --name-only -r #{commit_range.to_s}") do |result|
           filter_files(result)
         end
       end
