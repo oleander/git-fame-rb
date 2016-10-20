@@ -365,7 +365,7 @@ module GitFame
     end
 
     def author_by_email(email, name = nil)
-      @authors[email.strip] ||= Author.new({ parent: self, name: name })
+      @authors[(email || "").strip] ||= Author.new({ parent: self, name: name })
     end
 
     # List all files in current git directory, excluding
