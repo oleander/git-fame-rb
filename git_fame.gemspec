@@ -27,7 +27,6 @@ Generates data like:
   gem.add_dependency("ruby-progressbar", "~> 1.7.5")
   gem.add_dependency("trollop", "~> 2.1.2")
   gem.add_dependency("hirb", "~> 0.7.3")
-  gem.add_dependency("json", "~> 1.8.3")
   gem.add_dependency("scrub_rb", "~> 1.0.1")
   gem.add_dependency("memoist", "~> 0.14.0")
   gem.add_dependency("method_profiler", "~> 2.0.1")
@@ -36,6 +35,8 @@ Generates data like:
   gem.add_development_dependency("rspec-collection_matchers", "~> 1.1.2")
   gem.add_development_dependency("rake", "~> 10.4.2")
   gem.add_development_dependency("coveralls", "~> 0.8.1")
+  gem.add_development_dependency("json", "~> 1.8.3")
+  gem.add_development_dependency("tins", "~> 1.6.0")
 
   gem.required_ruby_version = ">= 1.9.2"
 end
