@@ -45,7 +45,7 @@ From a git repository run `git fame`.
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
 - `git fame --branch=master` Branch to run on. Default is what `HEAD` points to.
 - `git fame --format=output` Output format. Default is `pretty`. Additional: `csv`.
-- `git fame --after=2010-01-01` Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included.
+- `git fame --after=2010-01-01` Only use commits after this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --verbose` Print shell commands used by `git-fame`.
 - `git fame --everything` Images and binaries are ignored by default. Include them as well.
