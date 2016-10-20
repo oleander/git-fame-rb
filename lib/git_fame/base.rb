@@ -372,12 +372,17 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git #{git_directory_params} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
-          filter_files(result)
+        execute("git #{git_directory_params} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --ignore-submodules=all --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+          filter_files(result.to_s.split(/\n/))
         end
       else
-        execute("git #{git_directory_params} ls-tree --name-only -r #{commit_range.to_s}") do |result|
-          filter_files(result)
+        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s}") do |result|
+          lines = result.to_s.split(/\n/).inject([]) do |lines, line|
+            # Ignore submodules
+            next lines if line.strip.match(/^160000/)
+            next [line.split(/\s+/).last] + lines
+          end
+          filter_files(lines)
         end
       end
     end
@@ -394,8 +399,7 @@ module GitFame
       "--encoding=UTF-8"
     end
 
-    def filter_files(result)
-      raw_files = result.to_s.split("\n")
+    def filter_files(raw_files)
       files = remove_excluded_files(raw_files)
       files = keep_included_files(files)
       files = files.map { |file| GitFame::FileUnit.new(file) }
