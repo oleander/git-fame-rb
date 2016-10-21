@@ -24,7 +24,7 @@ Generates data like:
   gem.require_paths = ["lib"]
   gem.version       = GitFame::VERSION
 
-  gem.add_dependency("ruby-progressbar", "~> 1.7.5")
+  gem.add_dependency("progressbar", "~> 0.21.0")
   gem.add_dependency("trollop", "~> 2.1.2")
   gem.add_dependency("hirb", "~> 0.7.3")
   gem.add_dependency("scrub_rb", "~> 1.0.1")
