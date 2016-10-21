@@ -1,7 +1,8 @@
 # GitFame
-[![Join the chat at https://gitter.im/oleander/git-fame-rb](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/oleander/git-fame-rb)
-[![Build Status](https://travis-ci.org/oleander/git-fame-rb.svg?branch=master)](https://travis-ci.org/oleander/git-fame-rb)
-[![Coverage Status](https://coveralls.io/repos/oleander/git-fame-rb/badge.svg?branch=master&service=github)](https://coveralls.io/github/oleander/git-fame-rb?branch=master)
+[![Gem](https://img.shields.io/gem/dt/git_fame.svg)](https://rubygems.org/gems/git_fame)
+[![Gitter](https://img.shields.io/gitter/room/oleander/git-fame-rb.svg)](https://gitter.im/oleander/git-fame-rb)
+[![Travis](https://img.shields.io/travis/oleander/git-fame-rb.svg)](https://travis-ci.org/oleander/git-fame-rb.svg?branch=master)
+[![Coveralls](https://img.shields.io/coveralls/oleander/git-fame-rb.svg)](https://coveralls.io/repos/oleander/git-fame-rb/badge.svg?branch=master&service=github)
 
 Pretty-print collaborators sorted by contributions.
 
