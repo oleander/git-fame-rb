@@ -1,12 +1,15 @@
-# GitFame
+# git-fame
 [![Gem](https://img.shields.io/gem/dt/git_fame.svg)](https://rubygems.org/gems/git_fame)
 [![Gitter](https://img.shields.io/gitter/room/oleander/git-fame-rb.svg)](https://gitter.im/oleander/git-fame-rb)
 [![Travis](https://img.shields.io/travis/oleander/git-fame-rb.svg)](https://travis-ci.org/oleander/git-fame-rb)
 [![Coveralls](https://img.shields.io/coveralls/oleander/git-fame-rb.svg)](https://coveralls.io/github/oleander/git-fame-rb)
+[![My personal webpage](https://img.shields.io/badge/me-oleander.io-blue.svg)](http://oleander.io)
 
-Pretty-print collaborators sorted by contributions.
+`git-fame` is a command-line tool that helps you summerize and pretty-print collaborators in a git repository based on contributions.
 
-## Output
+## Example output
+
+Statistics generated from this git repository using `git fame .`
 
 ```
 Statistics based on master
@@ -31,9 +34,9 @@ Note: Files matching MIME type image, binary has been ignored
 
 ## Usage
 
-### Console
+### Command-line
 
-From a git repository run `git fame`.
+From a git repository run `git fame .`
 
 #### Options
 

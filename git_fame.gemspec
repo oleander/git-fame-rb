@@ -4,18 +4,16 @@ require File.expand_path('../lib/git_fame/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Linus Oleander"]
   gem.email         = ["linus@oleander.nu"]
-  gem.description   = %q{Generates awesome stats from git-blame}
+  gem.description   = "A command-line tool that helps you summerize and pretty-print collaborators in a git repository based on contributions"
   gem.summary       = %q{
-Generates awesome stats from git-blame
+git-fame is a command-line tool that helps you summerize and pretty-print collaborators in a git repository based on contributions. A Ruby wrapper for git-blame if you will.
 
-A Ruby wrapper for git-blame.
-Generates data like:
+Generates stats like:
 - Number of files changed by a user
 - Number of commits by user
-- Lines of code by a user
-  }
+- Lines of code by a user}
 
-  gem.homepage      = "https://github.com/oleander/git-fame-rb"
+  gem.homepage      = "http://oleander.io/git-fame-rb/"
 
   gem.files         = `git ls-files`.split($\)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
