@@ -5,7 +5,7 @@
 [![Coveralls](https://img.shields.io/coveralls/oleander/git-fame-rb.svg)](https://coveralls.io/github/oleander/git-fame-rb)
 [![My personal webpage](https://img.shields.io/badge/me-oleander.io-blue.svg)](http://oleander.io)
 
-`git-fame` is a command-line tool that helps you summerize and pretty-print collaborators in a git repository based on contributions.
+`git-fame` is a command-line tool that helps you summarize and pretty-print collaborators in a git repository based on contributions.
 
 ## Example output
 
