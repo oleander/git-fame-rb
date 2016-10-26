@@ -4,7 +4,7 @@
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Git Fame : Generates awesome stats from git-blame">
+    <meta name="description" content="Git Fame : A command-line tool that helps you summarize and pretty-print git collaborators based on contributions">
 
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
@@ -19,7 +19,7 @@
           <a id="forkme_banner" href="https://github.com/oleander/git-fame-rb">View on GitHub</a>
 
           <h1 id="project_title">Git Fame</h1>
-          <h2 id="project_tagline">Generates awesome stats from git-blame</h2>
+          <h2 id="project_tagline">A command-line tool that helps you summarize and pretty-print git collaborators based on contributions</h2>
 
             <section id="downloads">
               <a class="zip_download_link" href="https://github.com/oleander/git-fame-rb/zipball/master">Download this project as a .zip file</a>
@@ -32,17 +32,20 @@
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
         <h1>
-<a id="gitfame" class="anchor" href="#gitfame" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GitFame</h1>
+<a id="git-fame" class="anchor" href="#git-fame" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>git-fame</h1>
 
 <p><a href="https://rubygems.org/gems/git_fame"><img src="https://img.shields.io/gem/dt/git_fame.svg" alt="Gem"></a>
 <a href="https://gitter.im/oleander/git-fame-rb"><img src="https://img.shields.io/gitter/room/oleander/git-fame-rb.svg" alt="Gitter"></a>
 <a href="https://travis-ci.org/oleander/git-fame-rb"><img src="https://img.shields.io/travis/oleander/git-fame-rb.svg" alt="Travis"></a>
-<a href="https://coveralls.io/github/oleander/git-fame-rb"><img src="https://img.shields.io/coveralls/oleander/git-fame-rb.svg" alt="Coveralls"></a></p>
+<a href="https://coveralls.io/github/oleander/git-fame-rb"><img src="https://img.shields.io/coveralls/oleander/git-fame-rb.svg" alt="Coveralls"></a>
+<a href="http://oleander.io"><img src="https://img.shields.io/badge/me-oleander.io-blue.svg" alt="My personal webpage"></a></p>
 
-<p>Pretty-print collaborators sorted by contributions.</p>
+<p><code>git-fame</code> is a command-line tool that helps you summarize and pretty-print collaborators in a git repository based on contributions.</p>
 
 <h2>
-<a id="output" class="anchor" href="#output" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Output</h2>
+<a id="example-output" class="anchor" href="#example-output" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example output</h2>
+
+<p>Statistics generated from this git repository using <code>git fame .</code></p>
 
 <pre><code>Statistics based on master
 Active files: 21
@@ -69,9 +72,9 @@ Note: Files matching MIME type image, binary has been ignored
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
 <h3>
-<a id="console" class="anchor" href="#console" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Console</h3>
+<a id="command-line" class="anchor" href="#command-line" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Command-line</h3>
 
-<p>From a git repository run <code>git fame</code>.</p>
+<p>From a git repository run <code>git fame .</code></p>
 
 <h4>
 <a id="options" class="anchor" href="#options" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Options</h4>
@@ -148,7 +151,7 @@ Take a look at the <a href="bin/git-fame">bin/git-fame</a> file for more informa
 <a id="statistics" class="anchor" href="#statistics" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Statistics</h4>
 
 <h5>
-<a id="gitfame-1" class="anchor" href="#gitfame-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GitFame</h5>
+<a id="gitfame" class="anchor" href="#gitfame" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>GitFame</h5>
 
 <ul>
 <li>
