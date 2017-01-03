@@ -376,13 +376,8 @@ module GitFame
           filter_files(result.to_s.split(/\n/))
         end
       else
-        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s}") do |result|
-          lines = result.to_s.split(/\n/).inject([]) do |lines, line|
-            # Ignore submodules
-            next lines if line.strip.match(/^160000/)
-            next [line.split(/\s+/).last] + lines
-          end
-          filter_files(lines)
+        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} --name-only") do |result|
+          filter_files(result.to_s.split(/\n/))
         end
       end
     end
