@@ -4,6 +4,7 @@ require "coveralls"
 require "rspec/collection_matchers"
 require "rspec/expectations"
 require "pp"
+require "colorize"
 require_relative "./support/startup"
 
 Coveralls.wear!
@@ -41,18 +42,18 @@ RSpec.configure do |config|
     mocks.syntax = :should
   end
   config.fail_fast = false
-  config.before(:all) do
+  config.before(:each) do
     Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
   end
   config.before(:suite) do
     ENV["TZ"] = "GMT-2"
     warn "-----------"
-    warn "Current environment:"
+    warn "Current environment:".yellow
     warn "\t#{`git --version`.strip}"
     warn "\t#{`grep --version`.strip}"
-    warn "Spec notes:"
+    warn "Spec notes:".yellow
     if suppress_stdout
-      warn "\tMessages to STDOUT has been suppressed. See spec/spec_helper.rb"
+      warn "\tMessages to STDOUT has been suppressed. See spec/spec_helper.rb".red
     end
     warn "\tRequires git 2.x for specs to pass"
     warn "\tTime zone during testing is set to #{ENV["TZ"]}"

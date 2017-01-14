@@ -36,6 +36,7 @@ Generates stats like:
   gem.add_development_dependency("json", "~> 1.8.3")
   gem.add_development_dependency("tins", "~> 1.6.0")
   gem.add_development_dependency("term-ansicolor", "~> 1.3.2")
+  gem.add_development_dependency("colorize")
 
   gem.required_ruby_version = ">= 1.9.2"
 end

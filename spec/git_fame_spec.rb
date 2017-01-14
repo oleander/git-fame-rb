@@ -134,8 +134,8 @@ describe GitFame::Base do
       })
     end
 
-    let(:author) do 
-      subject.authors.find do |author| 
+    let(:author) do
+      subject.authors.find do |author|
         author.name == "7rans"
       end
     end
@@ -459,6 +459,30 @@ describe GitFame::Base do
         after: "2008-09-02",
         before: "2008-09-05"
       }).commits.should eq(4)
+    end
+  end
+
+  describe "sub modules" do
+    it "should ignore any sub modules" do
+      before = GitFame::Base.new({repository: repository})
+      Dir.chdir(repository) do
+        `git submodule deinit levenshteinish 2>&1`
+        `git rm levenshteinish 2>&1`
+        `git submodule add https://github.com/oleander/levenshteinish.git`
+        `git submodule init`
+        `git add . && git commit -m "Add submodule"`
+      end
+      after = GitFame::Base.new({repository: repository})
+
+      before.authors.count.should eq(after.authors.count)
+      before.authors.zip(after.authors).each do |authors|
+        [:name, :raw_files, :raw_commits,
+          :raw_loc, :files_list,
+          :file_type_counts
+        ].each do |field|
+          authors[0].send(field).should eq(authors[1].send(field))
+        end
+      end
     end
   end
 end

@@ -88,7 +88,6 @@ module GitFame
       ]
       @wopt = args.fetch(:whitespace, false) ? "-w" : ""
       @authors = {}
-      @cache = {}
       @verbose = args.fetch(:verbose, false)
       populate
     end
@@ -369,7 +368,7 @@ module GitFame
     end
 
     # Lists the paths to contained git submodules
-    def submodules
+    def current_submodules
       execute("git config --file .gitmodules --get-regexp path | awk '{ print $2 }'") do |result|
         result.to_s.split(/\n/)
       end
@@ -383,8 +382,9 @@ module GitFame
           filter_files(result.to_s.split(/\n/))
         end
       else
+        submodules = current_submodules
         execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} --name-only") do |result|
-          filter_files(result.to_s.split(/\n/).select { |f| submodules.index(f) == nil })
+          filter_files(result.to_s.split(/\n/).select { |f| !submodules.index(f) })
         end
       end
     end
