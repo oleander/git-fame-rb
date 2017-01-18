@@ -223,8 +223,8 @@ module GitFame
 
             author.update({
               raw_commits: author.raw_commits + commits.to_i,
-              raw_files: author.raw_files + files_from_author(author).count,
-              files_list: author.files_list.concat(files_from_author(author))
+              raw_files: files_from_author(author).count,
+              files_list: files_from_author(author)
             })
           end
         end
