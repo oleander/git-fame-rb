@@ -106,7 +106,7 @@ module GitFame
     def pretty_puts
       extend Hirb::Console
       Hirb.enable({ pager: false })
-      puts "\nStatistics based on #{commit_range.to_s(true)}"
+      puts "\nStatistics based on #{@branch}"
       puts "Active files: #{number_with_delimiter(files)}"
       puts "Active lines: #{number_with_delimiter(loc)}"
       puts "Total commits: #{number_with_delimiter(commits)}\n"
@@ -193,7 +193,7 @@ module GitFame
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
         # -p procelain mode (parsed by BlameParser)
-        execute("git #{git_directory_params(file.rep)} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+        execute("git #{git_directory_params(file.rep)} blame #{encoding_opt} -p -M #{default_params} #{commit_range(file.rep).to_s} #{@wopt} -- '#{file}'") do |result|
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
 
@@ -214,7 +214,7 @@ module GitFame
 
       @repositories.each do |repository|
         # Get repository summery and update each author accordingly
-        execute("git #{git_directory_params(repository)} shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
+        execute("git #{git_directory_params(repository)} shortlog #{encoding_opt} #{default_params} -se #{commit_range(repository).to_s}") do |result|
           result.to_s.split("\n").map do |line|
             _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
             author = author_by_email(email)
@@ -242,7 +242,7 @@ module GitFame
 
     # Return mime type for file (form: x/y)
     def mime_type_for_file(file, repository)
-      execute("git #{git_directory_params(repository)} show #{commit_range.range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
+      execute("git #{git_directory_params(repository)} show #{commit_range(repository).range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
         match(/.+: (.+?)$/).to_a[1]
     end
 
@@ -389,13 +389,13 @@ module GitFame
     def current_files
       files = []
       @repositories.each do |repository|
-        if commit_range.is_range?
+        if commit_range(repository).is_range?
           execute("git #{git_directory_params(repository)} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --ignore-submodules=all --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
             files.concat(filter_files(result.to_s.split(/\n/), repository))
           end
         else
           submodules = current_submodules
-          execute("git #{git_directory_params(repository)} ls-tree -r #{commit_range.to_s} --name-only") do |result|
+          execute("git #{git_directory_params(repository)} ls-tree -r #{commit_range(repository).to_s} --name-only") do |result|
             files.concat(filter_files(result.to_s.split(/\n/).select { |f| !submodules.index(f) }, repository))
           end
         end
@@ -424,11 +424,11 @@ module GitFame
       files.select { |file| @extensions.include?(file.extname) }
     end
 
-    def commit_range
-      CommitRange.new(current_range, @branch)
+    def commit_range(repository)
+      CommitRange.new(current_range(repository), @branch)
     end
 
-    def current_range
+    def current_range(repository)
       return @branch if blank?(@after) and blank?(@before)
 
       if present?(@after) and present?(@before)
@@ -436,43 +436,43 @@ module GitFame
           raise Error, "after=#{@after} can't be greater then before=#{@before}"
         end
 
-        if end_date > end_commit_date and start_date > end_commit_date
-          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
+        if end_date > end_commit_date(repository) and start_date > end_commit_date(repository)
+          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date(repository)}"
         end
 
-        if end_date < start_commit_date and start_date < start_commit_date
-          raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date}"
+        if end_date < start_commit_date(repository) and start_date < start_commit_date(repository)
+          raise Error, "after=#{@after} and before=#{@before} is set too low, lowest is #{start_commit_date(repository)}"
         end
       elsif present?(@after)
-        if start_date > end_commit_date
-          raise Error, "after=#{@after} is set too high, highest is #{end_commit_date}"
+        if start_date > end_commit_date(repository)
+          raise Error, "after=#{@after} is set too high, highest is #{end_commit_date(repository)}"
         end
       elsif present?(@before)
-        if end_date < start_commit_date
-          raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date}"
+        if end_date < start_commit_date(repository)
+          raise Error, "before=#{@before} is set too low, lowest is #{start_commit_date(repository)}"
         end
       end
 
       if present?(@before)
-        if end_date > end_commit_date
+        if end_date > end_commit_date(repository)
           commit2 = @branch
         else
           # Try finding a commit that day
-          commit2 = execute("git #{git_directory_params} rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+          commit2 = execute("git #{git_directory_params(repository)} rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
 
           # Otherwise, look for the closest commit
           if blank?(commit2)
-            commit2 = execute("git #{git_directory_params} rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+            commit2 = execute("git #{git_directory_params(repository)} rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
           end
         end
       end
 
       if present?(@after)
-        if start_date < start_commit_date
+        if start_date < start_commit_date(repository)
           return present?(commit2) ? commit2 : @branch
         end
 
-        commit1 = execute("git #{git_directory_params} rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+        commit1 = execute("git #{git_directory_params(repository)} rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
 
         # No commit found this early
         # If NO end date is choosen, just use current branch
@@ -499,12 +499,12 @@ module GitFame
       (Time.parse(time) - 86400).strftime("%F 23:59:59")
     end
 
-    def start_commit_date
-      Time.parse(execute("git #{git_directory_params} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
+    def start_commit_date(repository)
+      Time.parse(execute("git #{git_directory_params(repository)} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | tail -1").to_s)
     end
 
-    def end_commit_date
-      Time.parse(execute("git #{git_directory_params} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
+    def end_commit_date(repository)
+      Time.parse(execute("git #{git_directory_params(repository)} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
     end
 
     def end_date
