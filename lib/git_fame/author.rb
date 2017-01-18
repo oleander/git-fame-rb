@@ -13,6 +13,7 @@ module GitFame
       @raw_loc          = 0
       @raw_commits      = 0
       @raw_files        = 0
+      @files_list       = []
       @file_type_counts = Hash.new(0)
       args.keys.each do |name|
         instance_variable_set "@" + name.to_s, args[name]
