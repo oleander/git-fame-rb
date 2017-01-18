@@ -52,20 +52,28 @@ module GitFame
       # Default sorting option is by loc
       @include = args.fetch(:include, "").split(",")
       @sort = args.fetch(:sort, @default_settings.fetch(:sorting))
-      @repository = File.expand_path(args.fetch(:repository))
       @by_type = args.fetch(:by_type, false)
       @branch = args.fetch(:branch, nil)
       @everything = args.fetch(:everything, false)
       @timeout = args.fetch(:timeout, CMD_TIMEOUT)
-      @git_dir = File.join(@repository, ".git")
+      repositoriesPattern = args.fetch(:repositories, "")
 
-      # Figure out what branch the caller is using
-      if present?(@branch = args[:branch])
-        unless branch_exists?(@branch)
-          raise Error, "Branch '#{@branch}' does not exist"
-        end
+      if repositoriesPattern != ""
+        @repositories = Dir.glob(File.expand_path(repositoriesPattern)).select {|f| File.directory? f}
       else
-        @branch = default_branch
+        @repository = File.expand_path(args.fetch(:repository))
+        @repositories = [@repository]
+      end
+
+      @repositories.each do |repository|
+        # Figure out what branch the caller is using
+        if present?(@branch = args[:branch])
+          unless branch_exists?(@branch, repository)
+            raise Error, "Branch '#{@branch}' does not exist for repository #{repository}"
+          end
+        else
+          @branch = default_branch(repository)
+        end
       end
 
       @after = args.fetch(:after, nil)
@@ -185,7 +193,7 @@ module GitFame
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
         # -p procelain mode (parsed by BlameParser)
-        execute("git #{git_directory_params} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
+        execute("git #{git_directory_params(file.rep)} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
 
@@ -204,19 +212,21 @@ module GitFame
         end
       end
 
-      # Get repository summery and update each author accordingly
-      execute("git #{git_directory_params} shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
-        result.to_s.split("\n").map do |line|
-          _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
-          author = author_by_email(email)
+      @repositories.each do |repository|
+        # Get repository summery and update each author accordingly
+        execute("git #{git_directory_params(repository)} shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
+          result.to_s.split("\n").map do |line|
+            _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
+            author = author_by_email(email)
 
-          author.name = name
+            author.name = name
 
-          author.update({
-            raw_commits: commits.to_i,
-            raw_files: files_from_author(author).count,
-            files_list: files_from_author(author)
-          })
+            author.update({
+              raw_commits: author.raw_commits + commits.to_i,
+              raw_files: author.raw_files + files_from_author(author).count,
+              files_list: author.files_list.concat(files_from_author(author))
+            })
+          end
         end
       end
 
@@ -226,13 +236,13 @@ module GitFame
     # Ignore mime types found in {ignore_types}
     def check_file?(file)
       return true if @everything
-      type = mime_type_for_file(file)
+      type = mime_type_for_file(file, file.rep)
       ! ignore_types.any? { |ignored| type.include?(ignored) }
     end
 
     # Return mime type for file (form: x/y)
-    def mime_type_for_file(file)
-      execute("git #{git_directory_params} show #{commit_range.range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
+    def mime_type_for_file(file, repository)
+      execute("git #{git_directory_params(repository)} show #{commit_range.range.last}:'#{file}' | LC_ALL=C file --mime-type -").to_s.
         match(/.+: (.+?)$/).to_a[1]
     end
 
@@ -342,8 +352,8 @@ module GitFame
     end
 
     # Does @branch exist in the current git repo?
-    def branch_exists?(branch)
-      execute("git #{git_directory_params} show-ref '#{branch}'", true) do |result|
+    def branch_exists?(branch, repository)
+      execute("git #{git_directory_params(repository)} show-ref '#{branch}'", true) do |result|
         result.success?
       end
     end
@@ -352,12 +362,12 @@ module GitFame
     # We try to define it for him/her by
     # 1. check if { @default_settings.fetch(:branch) } exists
     # 1. look at .git/HEAD (basically)
-    def default_branch
-      if branch_exists?(@default_settings.fetch(:branch))
+    def default_branch(repository)
+      if branch_exists?(@default_settings.fetch(:branch), repository)
         return @default_settings.fetch(:branch)
       end
 
-      execute("git #{git_directory_params} rev-parse HEAD | head -1") do |result|
+      execute("git #{git_directory_params(repository)} rev-parse HEAD | head -1") do |result|
         return result.data.split(" ")[0] if result.success?
       end
       raise Error, "No branch found. Define one using --branch=<branch>"
@@ -377,34 +387,39 @@ module GitFame
     # List all files in current git directory, excluding
     # extensions in @extensions defined by the user
     def current_files
-      if commit_range.is_range?
-        execute("git #{git_directory_params} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --ignore-submodules=all --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
-          filter_files(result.to_s.split(/\n/))
-        end
-      else
-        submodules = current_submodules
-        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} --name-only") do |result|
-          filter_files(result.to_s.split(/\n/).select { |f| !submodules.index(f) })
+      files = []
+      @repositories.each do |repository|
+        if commit_range.is_range?
+          execute("git #{git_directory_params(repository)} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --ignore-submodules=all --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
+            files.concat(filter_files(result.to_s.split(/\n/), repository))
+          end
+        else
+          submodules = current_submodules
+          execute("git #{git_directory_params(repository)} ls-tree -r #{commit_range.to_s} --name-only") do |result|
+            files.concat(filter_files(result.to_s.split(/\n/).select { |f| !submodules.index(f) }, repository))
+          end
         end
       end
+
+      return files
     end
 
     def default_params
       "--date=local"
     end
 
-    def git_directory_params
-      "--git-dir='#{@git_dir}' --work-tree='#{@repository}'"
+    def git_directory_params(repository)
+      "--git-dir='#{File.join(repository, ".git")}' --work-tree='#{repository}'"
     end
 
     def encoding_opt
       "--encoding=UTF-8"
     end
 
-    def filter_files(raw_files)
+    def filter_files(raw_files, repository)
       files = remove_excluded_files(raw_files)
       files = keep_included_files(files)
-      files = files.map { |file| GitFame::FileUnit.new(file) }
+      files = files.map { |file| GitFame::FileUnit.new(file, repository) }
       return files if @extensions.empty?
       files.select { |file| @extensions.include?(file.extname) }
     end

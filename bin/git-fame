@@ -8,6 +8,7 @@ require "trollop"
 opts = Trollop::options do
   version "git-fame #{GitFame::VERSION} (c) 2012-#{Date.today.year} Linus Oleander"
   opt :repository, "What git repository should be used?", default: "."
+  opt :repositories, "What git repositories should be used?", default: ""
   opt :sort, "What should the printed table be sorted by? #{GitFame::SORT.join(", ")}", default: "loc", type: String
   opt :"hide-progressbar", "Hide progressbar", default: false
   opt :whitespace, "Ignore whitespace changes", default: false
@@ -35,6 +36,7 @@ end
 begin
   fame = GitFame::Base.new({
     repository: opts[:repository],
+    repositories: opts[:repositories],
     progressbar: ! opts[:"hide-progressbar"],
     sort: opts[:sort],
     whitespace: opts[:whitespace],
