@@ -422,7 +422,7 @@ module GitFame
         end
 
         if end_date > end_commit_date and start_date > end_commit_date
-          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
+          raise Error, "after=#{@after} and before=#{@before} is set too high, highest is #{end_commit_date}"
         end
 
         if end_date < start_commit_date and start_date < start_commit_date
