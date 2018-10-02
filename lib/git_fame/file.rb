@@ -7,7 +7,7 @@ module GitFame
     end
 
     def to_s
-      path
+      path.gsub(/'/, "'\"'\"'")
     end
   end
 end
