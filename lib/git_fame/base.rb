@@ -343,6 +343,7 @@ module GitFame
 
     # Does @branch exist in the current git repo?
     def branch_exists?(branch)
+      return true if branch == "HEAD"
       execute("git #{git_directory_params} show-ref '#{branch}'", true) do |result|
         result.success?
       end
