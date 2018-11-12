@@ -31,7 +31,7 @@ end
 
 RSpec.configure do |config|
   # Set to false to allow Kernel#puts
-  suppress_stdout = true
+  suppress_stdout = false
 
   config.include GitFame::Startup
   config.mock_with :rspec
@@ -59,7 +59,7 @@ RSpec.configure do |config|
     warn "\tTime zone during testing is set to #{ENV["TZ"]}"
     warn "-----------"
   end
-  config.before(:each) do
-    $stdout.stub(:puts) if suppress_stdout
-  end
+  # config.before(:each) do
+  #   $stdout.stub(:puts) if suppress_stdout
+  # end
 end

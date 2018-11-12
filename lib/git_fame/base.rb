@@ -185,6 +185,8 @@ module GitFame
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
         # -p procelain mode (parsed by BlameParser)
+        # result = git("git #{git_directory_params} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'")
+
         execute("git #{git_directory_params} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
@@ -205,19 +207,18 @@ module GitFame
       end
 
       # Get repository summery and update each author accordingly
-      execute("git #{git_directory_params} shortlog #{encoding_opt} #{default_params} -se #{commit_range.to_s}") do |result|
-        result.to_s.split("\n").map do |line|
-          _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
-          author = author_by_email(email)
+      result = git("shortlog", encoding_opt, default_params, "-se", commit_range.to_s)
+      result.to_s.split("\n").map do |line|
+        _, commits, name, email = line.match(/(\d+)\s+(.+)\s+<(.+?)>/).to_a
+        author = author_by_email(email)
 
-          author.name = name
+        author.name = name
 
-          author.update({
-            raw_commits: commits.to_i,
-            raw_files: files_from_author(author).count,
-            files_list: files_from_author(author)
-          })
-        end
+        author.update({
+          raw_commits: commits.to_i,
+          raw_files: files_from_author(author).count,
+          files_list: files_from_author(author)
+        })
       end
 
       progressbar.finish
@@ -322,6 +323,13 @@ module GitFame
       raise Error, cmd_error_message(command, $!.message)
     end
 
+    def git(*args)
+      out, err, status = Open3.capture3("git", *git_directory_array, *args)
+      ok = status.success?
+      output = ok ? out : err
+      Result.new(output.scrub.strip, ok)
+    end
+
     def run_with_timeout(command)
       if @timeout != -1
         Timeout.timeout(CMD_TIMEOUT) { run_no_timeout(command) }
@@ -344,9 +352,7 @@ module GitFame
     # Does @branch exist in the current git repo?
     def branch_exists?(branch)
       return true if branch == "HEAD"
-      execute("git #{git_directory_params} show-ref '#{branch}'", true) do |result|
-        result.success?
-      end
+      git("show-ref", branch).success?
     end
 
     # In those cases the users havent defined a branch
@@ -358,9 +364,8 @@ module GitFame
         return @default_settings.fetch(:branch)
       end
 
-      execute("git #{git_directory_params} rev-parse HEAD | head -1") do |result|
-        return result.data.split(" ")[0] if result.success?
-      end
+      result = git("rev-parse", "HEAD", "--max-count=1")
+      return result.data.split(" ")[0] if result.success?
       raise Error, "No branch found. Define one using --branch=<branch>"
     end
 
@@ -379,14 +384,13 @@ module GitFame
     # extensions in @extensions defined by the user
     def current_files
       if commit_range.is_range?
-        execute("git #{git_directory_params} -c diff.renames=0 -c diff.renameLimit=1000 diff -M -C -c --name-only --ignore-submodules=all --diff-filter=AM #{encoding_opt} #{default_params} #{commit_range.to_s}") do |result|
-          filter_files(result.to_s.split(/\n/))
-        end
+        result = git("-c", "diff.renames=0", "-c", "diff.renameLimit=1000", "diff", "-M", "-C", "-c", "--name-only", "--ignore-submodules=all", "--diff-filter=AM", encoding_opt, default_params, commit_range.to_s)
+        filter_files(result.to_s.split(/\n/))
       else
         submodules = current_submodules
-        execute("git #{git_directory_params} ls-tree -r #{commit_range.to_s} --name-only") do |result|
-          filter_files(result.to_s.split(/\n/).select { |f| !submodules.index(f) })
-        end
+        result = git("ls-tree", "-r", commit_range.to_s, "--name-only")
+        files = result.to_s.split(/\n/).select { |f| !submodules.index(f) }
+        filter_files(files)
       end
     end
 
@@ -396,6 +400,10 @@ module GitFame
 
     def git_directory_params
       "--git-dir='#{@git_dir}' --work-tree='#{@repository}'"
+    end
+
+    def git_directory_array
+      ["--git-dir", @git_dir, "--work-tree", @repository]
     end
 
     def encoding_opt
@@ -444,11 +452,24 @@ module GitFame
           commit2 = @branch
         else
           # Try finding a commit that day
-          commit2 = execute("git #{git_directory_params} rev-list --before='#{@before} 23:59:59' --after='#{@before} 00:00:01' #{default_params} '#{@branch}' | head -1").to_s
+          commit2 = git(
+            "rev-list",
+            "--before", "#{@before} 23:59:59",
+            "--after", "#{@before} 00:00:01",
+            default_params,
+            @branch,
+            "--max-count=1"
+          ).to_s
 
           # Otherwise, look for the closest commit
           if blank?(commit2)
-            commit2 = execute("git #{git_directory_params} rev-list --before='#{@before}' #{default_params} '#{@branch}' | head -1").to_s
+            commit2 = git(
+              "rev-list",
+              "--before", @before,
+              default_params,
+              @branch,
+              "--max-count=1"
+            ).to_s
           end
         end
       end
@@ -458,7 +479,13 @@ module GitFame
           return present?(commit2) ? commit2 : @branch
         end
 
-        commit1 = execute("git #{git_directory_params} rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
+        commit1 = git(
+          "rev-list",
+          "--before", end_of_yesterday(@after),
+          default_params,
+          @branch,
+          "--max-count=1"
+        ).to_s
 
         # No commit found this early
         # If NO end date is choosen, just use current branch
@@ -490,7 +517,7 @@ module GitFame
     end
 
     def end_commit_date
-      Time.parse(execute("git #{git_directory_params} log #{encoding_opt} --pretty=format:'%cd' #{default_params} #{@branch} | head -1").to_s)
+      Time.parse(git("log", encoding_opt, "--pretty=format:'%cd'", default_params, @branch, "--max-count=1").to_s)
     end
 
     def end_date
