@@ -47,7 +47,7 @@ From a git repository run `git fame .`
 - `git fame --hide-progressbar` Hide progressbar.
 - `git fame --whitespace` Ignore whitespace changes when blaming files. [More about git blame and whitespace](https://coderwall.com/p/x8xbnq/git-don-t-blame-people-for-changing-whitespaces-or-moving-code).
 - `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
-- `git fame --branch=master` Branch to run on. Default is what `HEAD` points to.
+- `git fame --branch=HEAD` Branch to run on. Default is what `HEAD` points to.
 - `git fame --format=output` Output format. Default is `pretty`. Additional: `csv`.
 - `git fame --after=2010-01-01` Only use commits after this date. Format: yyyy-mm-dd. Note that the given date is included.
 - `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
