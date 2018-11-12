@@ -15,7 +15,7 @@ opts = Trollop::options do
   opt :include, "Comma separated, glob file path to include. I.e path/*.rb", default: "", type: String
   opt :exclude, "Comma separated, glob file path to exclude. I.e any/**/path/*", default: "", type: String
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
-  opt :branch, "Branch to run on", default: "master", type: String
+  opt :branch, "Branch to run on", default: "HEAD", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
   opt :after, "Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :before, "Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
