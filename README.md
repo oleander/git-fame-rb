@@ -17,7 +17,7 @@ Active files: 21
 Active lines: 967
 Total commits: 109
 
-Note: Files matching MIME type image, binary has been ignored
+Note: Files matching MIME type image, binary have been ignored
 
 +----------------+-----+---------+-------+---------------------+
 | name           | loc | commits | files | distribution (%)    |
@@ -104,11 +104,11 @@ repository = GitFame::Base.new(options)
 
 `author = repository.authors.first`
 
-- Formated
+- Formatted
   - `author.loc` (String) Number of lines.
   - `author.commits` (String) Number of commits.
   - `author.files` (String) Number of files changed.
-- Non formated
+- Non formatted
   - `author.distribution` (String) Distribution (in %) between users (loc/commits/files)
   - `author.raw_loc` (Fixnum) Number of lines.
   - `author.raw_commits` (Fixnum) Number of commits.

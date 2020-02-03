@@ -21,7 +21,7 @@ module GitFame
       end
       chunks
     rescue Exception => error
-      raise Error, "Failed parsing Procelain: #{error.message}"
+      raise Error, "Failed parsing Porcelain: #{error.message}"
     end
 
     def is_header?(line)

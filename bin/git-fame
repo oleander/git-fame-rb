@@ -17,7 +17,7 @@ opts = Trollop::options do
   opt :extension, "Comma-separated list of extensions to consider, leave blank for all", default: "", type: String
   opt :branch, "Branch to run on", default: "HEAD", type: String
   opt :format, "Format (pretty/csv)", default: "pretty", type: String
-  opt :after, "Only use commmits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
+  opt :after, "Only use commits after this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :before, "Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included", type: String
   opt :verbose, "Print shell commands used by git-fame", default: false
   opt :timeout, "Set timeout in seconds for each git command. Turn off by using -1", type: Integer, default: GitFame::CMD_TIMEOUT
