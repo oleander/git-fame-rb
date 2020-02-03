@@ -53,7 +53,7 @@ RSpec.configure do |config|
     warn "\t#{`grep --version`.strip}"
     warn "Spec notes:".yellow
     if suppress_stdout
-      warn "\tMessages to STDOUT has been suppressed. See spec/spec_helper.rb".red
+      warn "\tWriting to STDOUT has been suppressed. See spec/spec_helper.rb".red
     end
     warn "\tRequires git 2.x for specs to pass"
     warn "\tTime zone during testing is set to #{ENV["TZ"]}"

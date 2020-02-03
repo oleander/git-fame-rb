@@ -103,7 +103,7 @@ module GitFame
       puts "Active lines: #{number_with_delimiter(loc)}"
       puts "Total commits: #{number_with_delimiter(commits)}\n"
       unless @everything
-        puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} has been ignored\n\n"
+        puts "\nNote: Files matching MIME type #{ignore_types.join(", ")} have been ignored\n\n"
       end
       table(authors, fields: printable_fields)
     end
@@ -184,7 +184,7 @@ module GitFame
 
         # -w ignore whitespaces (defined in @wopt)
         # -M detect moved or copied lines.
-        # -p procelain mode (parsed by BlameParser)
+        # -p porcelain mode (parsed by BlameParser)
         execute("git #{git_directory_params} blame #{encoding_opt} -p -M #{default_params} #{commit_range.to_s} #{@wopt} -- '#{file}'") do |result|
           BlameParser.new(result.to_s).parse.each do |row|
             next if row[:boundary]
@@ -309,7 +309,7 @@ module GitFame
     end
 
     # Command to be executed at @repository
-    # @silent = true wont raise an error on exit code =! 0
+    # @silent = true won't raise an error on exit code =! 0
     def execute(command, silent = false, &block)
       result = run_with_timeout(command)
       if result.success? or silent
@@ -349,7 +349,7 @@ module GitFame
       end
     end
 
-    # In those cases the users havent defined a branch
+    # In those cases the users haven't defined a branch
     # We try to define it for him/her by
     # 1. check if { @default_settings.fetch(:branch) } exists
     # 1. look at .git/HEAD (basically)
@@ -423,7 +423,7 @@ module GitFame
         end
 
         if end_date > end_commit_date and start_date > end_commit_date
-          raise Error, "after=#{@after} and before=#{@before} is set too high, higest is #{end_commit_date}"
+          raise Error, "after=#{@after} and before=#{@before} is set too high, highest is #{end_commit_date}"
         end
 
         if end_date < start_commit_date and start_date < start_commit_date
@@ -461,7 +461,7 @@ module GitFame
         commit1 = execute("git #{git_directory_params} rev-list --before='#{end_of_yesterday(@after)}' #{default_params} '#{@branch}' | head -1").to_s
 
         # No commit found this early
-        # If NO end date is choosen, just use current branch
+        # If NO end date is chosen, just use current branch
         # Otherwise use specified (@before) as end date
         if blank?(commit1)
           return @branch unless @before
