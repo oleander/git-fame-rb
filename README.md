@@ -5,7 +5,10 @@
 [![Coveralls](https://img.shields.io/coveralls/oleander/git-fame-rb.svg)](https://coveralls.io/github/oleander/git-fame-rb)
 [![My personal webpage](https://img.shields.io/badge/me-oleander.io-blue.svg)](http://oleander.io)
 
-`git-fame` is a command-line tool that helps you summarize and pretty-print collaborators in a git repository based on contributions.
+`git-fame` is a command-line tool that helps you summarize and pretty-print collaborators in a git repository, based on the number of contributions.
+
+The statistics are mostly based on the output of `git blame` on the current branch.
+`git fame` counts the total number of current lines of code (and files) that were last touched by each author, and prints out these totals, along with the number of commits per author, as a sorted table.
 
 ## Example output
 
