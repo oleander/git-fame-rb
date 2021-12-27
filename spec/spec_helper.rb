@@ -1,65 +1,39 @@
-require "rspec"
+# frozen_string_literal: true
+
+require "bundler/setup"
+
+Bundler.require
+
+require "active_support/core_ext/numeric/time"
+require "rspec/its"
+require "pathname"
 require "git_fame"
-require "coveralls"
-require "rspec/collection_matchers"
-require "rspec/expectations"
-require "pp"
-require "colorize"
-require_relative "./support/startup"
+require "rspec"
+require "json"
+require "pry"
 
-Coveralls.wear!
+require_relative "support/dumpable"
 
-RSpec::Matchers.define :be_a_succees do
-  match do |actual|
-    actual.last
-  end
-
-  failure_message do |actual|
-    "expected command to be a success, but failed"
-  end
+class GitFame::Base
+  include Dumpable
 end
 
-RSpec::Matchers.define :include_output do |expected|
-  match do |actual|
-    actual.first.include?(expected)
+class GitFame::Collector
+  include Dumpable
+end
+
+module Support
+  def fixture_path(path)
+    Pathname(__dir__).join("fixtures").join(path)
   end
 
-  failure_message do |actual|
-    "expected #{actual} to include #{expected}, but didn't"
+  def fixture(path)
+    JSON.parse(fixture_path(path).read, symbolize_names: true)
   end
 end
 
 RSpec.configure do |config|
-  # Set to false to allow Kernel#puts
-  suppress_stdout = true
-
-  config.include GitFame::Startup
-  config.mock_with :rspec
-  config.expect_with(:rspec) do |c|
-    c.syntax = [:should, :expect]
-  end
-  config.mock_with :rspec do |mocks|
-    mocks.syntax = :should
-  end
-  config.fail_fast = false
-  config.before(:each) do
-    Dir.chdir(repository) { system "git checkout 7ab01bc5a720 > /dev/null 2>&1" }
-  end
-  config.before(:suite) do
-    ENV["TZ"] = "GMT-2"
-    warn "-----------"
-    warn "Current environment:".yellow
-    warn "\t#{`git --version`.strip}"
-    warn "\t#{`grep --version`.strip}"
-    warn "Spec notes:".yellow
-    if suppress_stdout
-      warn "\tWriting to STDOUT has been suppressed. See spec/spec_helper.rb".red
-    end
-    warn "\tRequires git 2.x for specs to pass"
-    warn "\tTime zone during testing is set to #{ENV["TZ"]}"
-    warn "-----------"
-  end
-  config.before(:each) do
-    $stdout.stub(:puts) if suppress_stdout
-  end
+  config.example_status_persistence_file_path = ".stats.rspec"
+  config.filter_run_when_matching :focus
+  config.include Support
 end

@@ -17,4 +17,5 @@ test/version_tmp
 tmp
 .byebug_history
 .tags
-.tags1
+.tags1.rspec
+.stats.rspec

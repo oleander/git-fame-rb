@@ -1,0 +1,13 @@
+{
+  "contributions" : [
+    {
+      "author"  : {
+        "email" : "hello@hello.com",
+        "name"  : "John Doe"
+      },
+      "commits" : ["abc","def"],
+      "files"   : ["file1","file2"],
+      "lines"   : 1
+    }
+  ]
+}

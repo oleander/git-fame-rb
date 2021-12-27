@@ -1,0 +1,274 @@
+require:
+  - rubocop-performance
+  - rubocop-rspec
+  - rubocop-rake
+  - rubocop-md
+
+AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+  Exclude: ['bin/*', 'vendor/**/*']
+
+Layout/LineLength:
+   Max: 120
+   Exclude: ['**/spec/**/*.rb']
+
+RSpec/NestedGroups:
+  Exclude:
+    - spec/**/*
+
+RSpec/ExampleLength:
+  Exclude:
+    - spec/**/*
+
+RSpec/ContextWording:
+  Prefixes:
+    - when
+    - with
+    - without
+    - if
+    - unless
+    - for
+    - given
+
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Max: 40
+
+RSpec:
+  Enabled: true
+
+Style/Documentation:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: False
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: true
+
+Layout/SpaceAroundMethodCallOperator:
+  Enabled: true
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true
+
+Style/ExponentialNotation:
+  Enabled: true
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Style/SlicingWithRange:
+  Enabled: true
+
+Style/MultilineBlockChain:
+  Enabled: false
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Lint/AmbiguousBlockAssociation:
+  Enabled: false
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Lint/EmptyFile:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Enabled: false
+
+Style/CaseEquality:
+  Enabled: false
+
+RSpec/RepeatedExampleGroupBody:
+  Enabled: false
+
+Naming/MethodName:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Style/SignalException:
+  Enabled: false
+
+Style/SymbolProc:
+  Enabled: false
+
+RSpec/FilePath:
+  Enabled: false
+
+Layout/CaseIndentation:
+  EnforcedStyle: end
+
+Lint/ShadowedException:
+  Enabled: false
+
+Lint/Void:
+  Exclude: ["spec/unit/remap/state/extension_spec.rb"]
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Naming/PredicateName:
+  Exclude: ["lib/remap/result.rb", "lib/remap/failure.rb"]
+
+Lint/EmptyClass:
+  Exclude: ["lib/remap/nothing.rb"]
+
+Style/MixinUsage:
+  Enabled: false
+
+Style/OpenStructUse:
+  Enabled: false
+
+Style/Alias:
+  EnforcedStyle: prefer_alias
+
+Style/FormatString:
+  EnforcedStyle: percent
+
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+
+Style/WordArray:
+  EnforcedStyle: brackets
+
+Style/Lambda:
+  EnforcedStyle: literal
+
+Layout/SpaceInLambdaLiteral:
+  EnforcedStyle: require_space
+
+Style/StabbyLambdaParentheses:
+  EnforcedStyle: require_no_parentheses
+
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+Lint/EmptyBlock:
+  Exclude: ["lib/remap/base.rb"]
+
+Layout/ClassStructure:
+  ExpectedOrder:
+    - module_inclusion
+    - constants
+    - association
+    - public_attribute_macros
+    - public_delegate
+    - macros
+    - public_class_methods
+    - initializer
+    - public_methods
+    - protected_attribute_macros
+    - protected_methods
+    - private_attribute_macros
+    - private_delegate
+    - private_methods
+  Enabled: true
+  Categories:
+    association:
+      - has_many
+      - has_one
+    attribute_macros:
+      - attr_accessor
+      - attr_reader
+      - attr_writer
+      - attribute
+    macros:
+      - validates
+      - validate
+    module_inclusion:
+      - include
+      - prepend
+      - extend
+
+Layout/MultilineHashKeyLineBreaks:
+  Enabled: true
+
+Layout/MultilineMethodArgumentLineBreaks:
+  Enabled: false
+
+Layout/RedundantLineBreak:
+  Enabled: true
+
+Layout/FirstArrayElementLineBreak:
+  Enabled: true
+
+Layout/FirstHashElementLineBreak:
+  Enabled: true
+
+Layout/DefEndAlignment:
+  Enabled: true
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+
+Layout/FirstArgumentIndentation:
+  EnforcedStyle: consistent
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: no_comma
+
+Layout/HashAlignment:
+  Enabled: true
+
+Layout/ClosingParenthesisIndentation:
+  Enabled: true
+
+Layout/MultilineMethodCallBraceLayout:
+  EnforcedStyle: symmetrical
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
+RSpec/AlignLeftLetBrace:
+  Enabled: false
+
+RSpec/AlignRightLetBrace:
+  Enabled: false
+
+RSpec/RepeatedDescription:
+  Enabled: false
+
+Performance/BlockGivenWithExplicitBlock:
+  Enabled: true
+
+Naming/MethodParameterName:
+  Enabled: false
+
+Metrics/ModuleLength:
+  Enabled: false
