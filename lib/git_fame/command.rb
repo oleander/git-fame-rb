@@ -85,7 +85,7 @@ module GitFame
         abort help
       end
 
-      spinner = TTY::Spinner.new("[:spinner] Calculating stats, hold on ...", interval: 1)
+      spinner = TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
       spinner.auto_spin
       render = Render.new(result: result, **options(:branch))
       spinner.stop
@@ -99,7 +99,7 @@ module GitFame
     private
 
     def filter
-      Filter.new(**params.to_h.compact_blank)
+      Filter.new(**params.to_h.compact_blank.except(:branch))
     end
 
     def repo
