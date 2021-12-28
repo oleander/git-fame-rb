@@ -17,10 +17,10 @@ module GitFame
         in { type: :blob, name: file }
           Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&block)
         in { type: type, name: file }
-          say("Ignore type %s in for %s", type, file)
+          say("Ignore type [%s] in for %s for %p", type, root + file, commit)
         end
-      rescue Rugged::TreeError => e
-        next warn(e.message)
+      rescue Rugged::OdbError => e
+        say("Error: %s, root: %s, entry: %s, commit %p", e, root, entry, commit)
       end
     end
   end
