@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - uses: jwlawson/actions-setup-cmake@v1.9
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
@@ -20,10 +21,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
-    - name: Setup cmake
-      uses: jwlawson/actions-setup-cmake@v1.9
+      with:
+        fetch-depth: '0'
+    - uses: jwlawson/actions-setup-cmake@v1.9
     - uses: ruby/setup-ruby@v1
       with:
         bundler-cache: true
         ruby-version: ${{ matrix.ruby }}
-    - run: bundle exec rspec --format RSpec::Github::Formatter --force-color
+    - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
+    - run: bundle exec exe/git-fame --log-level debug

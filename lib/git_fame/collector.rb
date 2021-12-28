@@ -22,11 +22,10 @@ module GitFame
 
       diff.each do |change|
         filter.call(change) do |loc, file, oid, name, email|
-          if commits[email].add?(oid)
-            files[email].add(file)
-            names[email] = name
-            lines[email] += loc
-          end
+          commits[email].add(oid)
+          files[email].add(file)
+          names[email] = name
+          lines[email] += loc
         end
       end
 

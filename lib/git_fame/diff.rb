@@ -14,13 +14,11 @@ module GitFame
     def each(&block)
       tree.walk(:preorder).each do |root, entry|
         case entry
-        in { type: :blob, name: file }
+        in { type: :blob, name: file, oid: }
           Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&block)
         in { type: type, name: file }
           say("Ignore type [%s] in for %s for %p", type, root + file, commit)
         end
-      rescue Rugged::OdbError => e
-        say("Error: %s, root: %s, entry: %s, commit %p", e, root, entry, commit)
       end
     end
   end
