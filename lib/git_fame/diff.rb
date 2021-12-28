@@ -17,7 +17,7 @@ module GitFame
         in { type: :blob, name: file, oid: }
           Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&block)
         in { type: type, name: file }
-          say("Ignore type [%s] in for %s for %p", type, root + file, commit)
+          say("Ignore type [%s] in for %s", type, root + file)
         end
       end
     end
