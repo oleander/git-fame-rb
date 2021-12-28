@@ -18,4 +18,5 @@ jobs:
     - run: git status
     - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --force-color
     - run: bundle exec rake install:local
+    - run: rbenv rehash
     - run: git fame --log-level debug
