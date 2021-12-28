@@ -29,4 +29,5 @@ jobs:
         bundler-cache: true
         ruby-version: ${{ matrix.ruby }}
     - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
+    - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
