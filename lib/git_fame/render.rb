@@ -13,29 +13,20 @@ module GitFame
     attribute :result, Result
     delegate_missing_to :result
 
-    using Module.new {
-      refine Contribution do
-        def dist(result)
-          l = lines.to_f / result.lines
-          c = commits.count.to_f / result.commits.count
-          f = files.count.to_f / result.files.count
-
-          "%0.1f%% / %0.1f%% / %0.1f%%" % [l * 100, c * 100, f * 100]
-        end
-      end
-    }
+    using Extension
 
     # Renders to stdout
     #
     # @return [void]
     def call
       table = TTY::Table.new(header: FIELDS)
+      width = TTY::Screen.width
 
       contributions.map do |c|
-        table << [c.name, c.email, c.lines, c.commits.count, c.files.count, c.dist(self)]
+        table << [c.name, c.email, c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
       end
 
-      print table.render(:unicode, width: TTY::Screen.width, resize: true, alignment: [:center])
+      print table.render(:unicode, width: width, resize: true, alignment: [:center])
     end
   end
 end
