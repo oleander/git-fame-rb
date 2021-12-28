@@ -7,7 +7,7 @@ require:
 AllCops:
   TargetRubyVersion: 2.7
   NewCops: enable
-  Exclude: ['bin/*', 'vendor/**/*']
+  Exclude: ['vendor/**/*']
 
 Layout/LineLength:
    Max: 120
