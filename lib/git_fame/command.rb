@@ -9,25 +9,44 @@ module GitFame
     include TTY::Option
     using Extension
 
+    usage do
+      program "git"
+      command "fame"
+      desc "GitFame is a tool to generate a contributor list from git history"
+      example "Include commits made since 2010", "git fame --after 2010-01-01"
+      example "Include commits made before 2015", "git fame --before 2015-01-01"
+      example "Include commits made since 2010 and before 2015", "git fame --after 2010-01-01 --before 2015-01-01"
+      example "Only changes made to the master branch", "git fame --branch master"
+      example "Only ruby and javascript files", "git fame --extensions .rb .js"
+      example "Exclude spec files and the README", "git fame --exclude */**/*_spec.rb README.md"
+      example "Only spec files and markdown files", "git fame --include */**/*_spec.rb */**/*.md"
+      example "A parent directory of the current directory", "git fame ../other/git/repo"
+    end
+
     option :log_level do
+      permit ["debug", "info", "warn", "error", "fatal"]
       long "--log-level [LEVEL]"
+      desc "Log level"
     end
 
     option :exclude do
-      arity zero_or_more
+      desc "Exclude files matching the given glob pattern"
       long "--exclude [GLOB]"
+      arity zero_or_more
       short "-E [BLOB]"
       convert :list
     end
 
     option :include do
-      arity zero_or_more
+      desc "Include files matching the given glob pattern"
       long "--include [GLOB]"
+      arity zero_or_more
       short "-I [BLOB]"
       convert :list
     end
 
     option :extensions do
+      desc "File extensions to be included starting with a period"
       arity zero_or_more
       long "--extensions [EXT]"
       short "-ex [EXT]"
@@ -39,6 +58,7 @@ module GitFame
     end
 
     option :before do
+      desc "Only changes made after this date"
       long "--before [DATE]"
       short "-B [DATE]"
       validate -> input do
@@ -47,6 +67,7 @@ module GitFame
     end
 
     option :after do
+      desc "Only changes made before this date"
       long "--after [DATE]"
       short "-A [DATE]"
 
@@ -55,28 +76,33 @@ module GitFame
       end
     end
 
-    option :path do
-      long "--path [PATH]"
-      short "-P [PATH]"
+    argument :path do
+      desc "Path or sub path to the git repository"
       default { Dir.pwd }
+      optional
+
+      validate -> path do
+        File.directory?(path)
+      end
     end
 
     option :branch do
+      desc "Branch to be used as starting point"
       long "--branch [NAME]"
       default "HEAD"
     end
 
     flag :help do
-      short "-h"
-      long "--help"
       desc "Print usage"
+      long "--help"
+      short "-h"
     end
 
-    def self.call
+    def self.call(argv = ARGV)
       cmd = new
-      cmd.parse(raise_on_parse_error: true)
+      cmd.parse(argv, raise_on_parse_error: true)
       cmd.run
-    rescue TTY::Option::InvalidArgument => e
+    rescue TTY::Option::Error => e
       abort e.message
     end
 
@@ -85,6 +111,7 @@ module GitFame
         abort help
       end
 
+      pp ARGV
       spinner = TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
       spinner.auto_spin
       render = Render.new(result: result, **options(:branch))
@@ -93,7 +120,7 @@ module GitFame
     rescue Dry::Struct::Error => e
       abort e.message
     rescue Interrupt
-      abort "Interrupted ..."
+      exit
     end
 
     private

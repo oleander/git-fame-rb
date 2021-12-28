@@ -10,6 +10,8 @@ module GitFame
     attribute? :include, Types::Set
     attribute? :exclude, Types::Set
 
+    schema schema.strict(false)
+
     # Invokes block if hunk is valid
     #
     # @param hunk [Hash]

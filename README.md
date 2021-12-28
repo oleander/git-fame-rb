@@ -1,143 +1,66 @@
-# git-fame
-[![Gem](https://img.shields.io/gem/dt/git_fame.svg)](https://rubygems.org/gems/git_fame)
-[![Gitter](https://img.shields.io/gitter/room/oleander/git-fame-rb.svg)](https://gitter.im/oleander/git-fame-rb)
-[![Travis](https://img.shields.io/travis/oleander/git-fame-rb.svg)](https://travis-ci.org/oleander/git-fame-rb)
-[![Coveralls](https://img.shields.io/coveralls/oleander/git-fame-rb.svg)](https://coveralls.io/github/oleander/git-fame-rb)
-[![My personal webpage](https://img.shields.io/badge/me-oleander.io-blue.svg)](http://oleander.io)
+# git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame)
 
-`git-fame` is a command-line tool that helps you summarize and pretty-print collaborators in a git repository, based on the number of contributions.
+![git-fame](resources/example.png)
+
+`git-fame` is a command-line tool that helps you summarize and pretty-print collaborators, based on the number of contributions.
 
 The statistics are mostly based on the output of `git blame` on the current branch.
 `git fame` counts the total number of current lines of code (and files) that were last touched by each author, and prints out these totals, along with the number of commits per author, as a sorted table.
 
-## Example output
-
-Statistics generated from this git repository using `git fame .`
-
-```
-Statistics based on master
-Active files: 21
-Active lines: 967
-Total commits: 109
-
-Note: Files matching MIME type image, binary have been ignored
-
-+----------------+-----+---------+-------+---------------------+
-| name           | loc | commits | files | distribution (%)    |
-+----------------+-----+---------+-------+---------------------+
-| Linus Oleander | 914 | 106     | 21    | 94.5 / 97.2 / 100.0 |
-| f1yegor        | 47  | 2       | 7     |  4.9 /  1.8 / 33.3  |
-| David Selassie | 6   | 1       | 2     |  0.6 /  0.9 /  9.5  |
-+----------------+-----+---------+-------+---------------------+
-```
-
 ## Installation
 
-`[sudo] gem install git_fame`
+`gem install git_fame`
 
 ## Usage
 
-### Command-line
+``` shell
+Usage: git fame [OPTIONS] [PATH]
 
-From a git repository run `git fame .`
+GitFame is a tool to generate a contributor list from git history
 
-#### Options
+Arguments:
+  PATH  Path or sub path to the git repository
 
-- `git fame --by-type` Group line counts by file extension (i.e. .rb, .erb, .yml). See the *by type* section below.
-- `git fame --exclude=path1/*,path2/*` Comma separated, [glob](https://en.wikipedia.org/wiki/Glob_(programming)) file path to exclude.
-- `git fame --include=path1/*,path2/*` Comma separated, [glob](https://en.wikipedia.org/wiki/Glob_(programming)) file path to include.
-- `git fame --sort=loc` Order table by `loc`. Available options are: `loc`, `files` and `commits`. Default is `loc`.
-- `git fame --hide-progressbar` Hide progressbar.
-- `git fame --whitespace` Ignore whitespace changes when blaming files. [More about git blame and whitespace](https://coderwall.com/p/x8xbnq/git-don-t-blame-people-for-changing-whitespaces-or-moving-code).
-- `git fame --repository=/path/to/repo` Git repository to be used. Default is the current folder.
-- `git fame --branch=HEAD` Branch to run on. Default is what `HEAD` points to.
-- `git fame --format=output` Output format. Default is `pretty`. Additional: `csv`.
-- `git fame --after=2010-01-01` Only use commits after this date. Format: yyyy-mm-dd. Note that the given date is included.
-- `git fame --before=2016-02-01` Only use commits before this date. Format: yyyy-mm-dd. Note that the given date is included.
-- `git fame --verbose` Print shell commands used by `git-fame`.
-- `git fame --everything` Images and binaries are ignored by default. Include them as well.
-- `git fame --timeout` Set timeout in seconds for each git command.
+Options:
+  -A, --after [DATE]       Only changes made before this date
+  -B, --before [DATE]      Only changes made after this date
+      --branch [NAME]      Branch to be used as starting point (default
+                           "HEAD")
+  -E, --exclude [GLOB]     Exclude files matching the given glob pattern
+  -e, --extensions [EXT]   File extensions to be included starting with a
+                           period
+  -h, --help               Print usage
+  -I, --include [GLOB]     Include files matching the given glob pattern
+      --log-level [LEVEL]  Log level (permitted: debug,info,warn,error,fatal)
 
-#### By type
+Examples:
+  Include commits made since 2010
+  git fame --after 2010-01-01
 
-`--by-type` adds extra columns file types.
+  Include commits made before 2015
+  git fame --before 2015-01-01
 
-```
-+----------------+-----+---------+-------+---------------------+---------+-----+----+---------+-----+
-| name           | loc | commits | files | distribution (%)    | unknown | yml | md | gemspec | rb  |
-+----------------+-----+---------+-------+---------------------+---------+-----+----+---------+-----+
-| Linus Oleander | 914 | 106     | 21    | 94.5 / 97.2 / 100.0 | 32      | 5   | 61 | 23      | 257 |
-| f1yegor        | 47  | 2       | 7     |  4.9 /  1.8 / 33.3  | 3       | 5   | 6  | 1       | 10  |
-| David Selassie | 6   | 1       | 2     |  0.6 /  0.9 /  9.5  | 2       | 0   | 3  | 0       | 0   |
-+----------------+-----+---------+-------+---------------------+---------+-----+----+---------+-----+
-```
+  Include commits made since 2010 and before 2015
+  git fame --after 2010-01-01 --before 2015-01-01
 
-### Programmatically
+  Only changes made to the master branch
+  git fame --branch master
 
-Want to work with the data before using it? Here's how.
+  Only ruby and javascript files
+  git fame --extensions .rb .js
 
-#### Constructor arguments
+  Exclude spec files and the README
+  git fame --exclude */**/*_spec.rb README.md
 
-`options` is a hash with most of the arguments passed to the binary defined above.
-Take a look at the [bin/git-fame](bin/git-fame) file for more information.
+  Only spec files and markdown files
+  git fame --include */**/*_spec.rb */**/*.md
 
-``` ruby
-repository = GitFame::Base.new(options)
+  A parent directory of the current directory
+  git fame ../other/git/repo
 ```
 
-#### Print table
+## Development
 
-`repository.pretty_puts` outputs the statistics as an ascii table.
-
-
-#### Print csv table to console
-
-`repository.csv_puts` outputs the statistics as csv.
-
-#### Statistics
-
-##### GitFame
-
-- `repository.loc` (Fixnum) Total number of lines.
-- `repository.commits` (Fixnum) Total number of commits.
-- `repository.files` (Fixnum) Total number of files.
-- `repository.authors` (Array< Author >) All authors.
-
-##### Author
-
-`author = repository.authors.first`
-
-- Formatted
-  - `author.loc` (String) Number of lines.
-  - `author.commits` (String) Number of commits.
-  - `author.files` (String) Number of files changed.
-- Non formatted
-  - `author.distribution` (String) Distribution (in %) between users (loc/commits/files)
-  - `author.raw_loc` (Fixnum) Number of lines.
-  - `author.raw_commits` (Fixnum) Number of commits.
-  - `author.raw_files` (Fixnum) Number of files changed.
-  - `author.file_type_counts` (Array) File types (k) and loc (v)
-
-## Testing
-
-1. Download fixtures (`spec/fixtures`) using `git submodule update --init`.
-2. Run rspec using `bundle exec rspec`.
-
-Note that `puts` has been disabled to avoid unnecessary output during testing.
-Visit `spec/spec_helper.rb` to enable it again.
-
-## Contributing
-
-1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
-
-## Requirements
-
-*GitFame* should work on all Unix based operating system with Git installed.
-
-## License
-
-*GitFame* is released under the *MIT license*.
+1. `git clone https://github.com/oleander/git-fame-rb.git`
+2. `bundle install`
+3. `bundle exec rspec`
