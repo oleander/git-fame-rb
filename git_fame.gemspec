@@ -25,11 +25,11 @@ Gem::Specification.new do |gem|
     on contributions. A Ruby wrapper for git-blame if you will.
   SUMMARY
 
-  gem.homepage              = "https://github.com/oleander/git-fame-rb"
-  gem.files                  = Dir["lib/**/*"]
+  gem.homepage = "https://github.com/oleander/git-fame-rb"
+  gem.files = Dir["lib/**/*"]
   gem.required_ruby_version = ">= 2.7.0"
-  gem.executables           << "git-fame"
-  gem.bindir                = "exe"
+  gem.executables << "git-fame"
+  gem.bindir = "exe"
 
   gem.add_dependency "activesupport", "~> 7.0"
   gem.add_dependency "dry-core"
@@ -44,4 +44,5 @@ Gem::Specification.new do |gem|
   gem.add_dependency "tty-spinner"
   gem.add_dependency "tty-table", "0.10.0"
   gem.add_dependency "zeitwerk"
+  gem.metadata = { "rubygems_mfa_required" => "true" }
 end

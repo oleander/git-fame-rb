@@ -16,6 +16,6 @@ group :development, :test do
   gem "method_profiler"
   gem "rake"
   gem "rspec"
-  gem 'rspec-github', require: false
+  gem "rspec-github", require: false
   gem "rspec-its", require: "rspec/its"
 end
