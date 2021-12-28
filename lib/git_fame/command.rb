@@ -92,6 +92,12 @@ module GitFame
       default "HEAD"
     end
 
+    flag :version do
+      desc "Current version"
+      long "--version"
+      short "-v"
+    end
+
     flag :help do
       desc "Print usage"
       long "--help"
@@ -102,13 +108,19 @@ module GitFame
       cmd = new
       cmd.parse(argv, raise_on_parse_error: true)
       cmd.run
-    rescue TTY::Option::Error => e
+    rescue TTY::Option::InvalidParameter, TTY::Option::InvalidArgument => e
       abort e.message
     end
 
     def run
       if params[:help]
-        abort help
+        puts help
+        exit
+      end
+
+      if params[:version]
+        puts "git-fame v#{GitFame::VERSION}"
+        exit
       end
 
       thread = spinner.run do
