@@ -1,12 +1,23 @@
 name: git-fame
 on: [push]
 jobs:
+  rubocop:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: 2.7.5
+    - run: bundle exec rubocop
+
   rspec:
     runs-on: ${{ matrix.os }}
+    needs: [rubocop]
     strategy:
       matrix:
         ruby: ["2.7.5", "3.0.3", "3.1.0"]
-        os: ["ubuntu-latest", "macos-latest"]
+        os: [ubuntu-latest, macos-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Setup cmake
@@ -15,5 +26,4 @@ jobs:
       with:
         bundler-cache: true
         ruby-version: ${{ matrix.ruby }}
-    - run: bundle exec rubocop
     - run: bundle exec rspec --format RSpec::Github::Formatter --force-color
