@@ -16,6 +16,10 @@ module GitFame
         case entry
         in { type: :blob, name: file }
           file = root + file
+          pp repo
+          pp file
+          pp commit
+          pp self
           Rugged::Blame.new(repo, file, newest_commit: commit).each do |change|
             block[change.merge(file_path: Pathname(file))]
           end
