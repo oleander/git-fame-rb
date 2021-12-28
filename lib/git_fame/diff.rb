@@ -8,6 +8,9 @@ module GitFame
     delegate :tree, to: :commit
     delegate :repo, to: :tree
 
+    # @yield [Hash]
+    #
+    # @return [void]
     def each(&block)
       tree.walk(:preorder).each do |root, entry|
         case entry

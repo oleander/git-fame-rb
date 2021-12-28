@@ -10,8 +10,19 @@ module GitFame
     attribute? :include, Types::Set
     attribute? :exclude, Types::Set
 
-    def call(changes, &block)
-      case [changes, attributes]
+    # Invokes block if hunk is valid
+    #
+    # @param hunk [Hash]
+    #
+    # @yieldparam lines [Integer]
+    # @yieldparam file_path [Pathname]
+    # @yieldparam oid [String]
+    # @yieldparam name [String]
+    # @yieldparam email [String]
+    #
+    # @return [void]
+    def call(hunk, &block)
+      case [hunk, attributes]
       in [{ file_path:, final_signature: { time: created_at } }, { after: }] unless created_at > after
         say("File %s ignored due to [created > after] (%p > %p)", file_path, created_at, after)
       in [{ file_path:, final_signature: { time: created_at } }, { before: }] unless created_at < before

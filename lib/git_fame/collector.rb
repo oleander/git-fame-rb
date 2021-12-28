@@ -12,10 +12,7 @@ module GitFame
     param :lines, type: Types::Hash, default: -> { Hash.new(0) }
     param :names, type: Types::Hash, default: -> { {} }
 
-    def to_h
-      { commits: commits, files: files, names: names, filter: filter }
-    end
-
+    # @return [Collector]
     def call
       Result.new(contributions: contributions)
     end

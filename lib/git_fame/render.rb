@@ -25,6 +25,9 @@ module GitFame
       end
     }
 
+    # Renders to stdout
+    #
+    # @return [void]
     def call
       table = TTY::Table.new(header: FIELDS)
 
