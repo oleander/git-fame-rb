@@ -3,6 +3,7 @@
 require "factory_bot"
 require "rspec/its"
 require "git_fame"
+require "faker"
 require "rspec"
 require "pry"
 

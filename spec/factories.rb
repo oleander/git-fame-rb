@@ -1,9 +1,5 @@
 # frozen_string_literal: true
 
-# This will guess the User class
-
-require "faker"
-
 FactoryBot.define do
   sequence(:ext) { [".rb", ".js", ".html", ".css", ".md"].sample }
   sequence(:file) { Faker::File.file_name(ext: "rb") }
