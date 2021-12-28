@@ -111,11 +111,9 @@ module GitFame
         abort help
       end
 
-      # spinner = TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
-      # spinner.auto_spin
-      render = Render.new(result: result, **options(:branch))
-      # spinner.stop
-      render.call
+      engine = spinner.run do
+        Render.new(result: result, **options(:branch))
+      end.value.call
     rescue Dry::Struct::Error => e
       abort e.message
     rescue Interrupt
@@ -126,6 +124,10 @@ module GitFame
 
     def filter
       Filter.new(**params.to_h.compact_blank.except(:branch))
+    end
+
+    def spinner
+      @spinner ||= TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
     end
 
     def repo
