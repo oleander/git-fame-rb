@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "tty-screen"
 require "tty-table"
 require "tty-box"
 require "erb"
