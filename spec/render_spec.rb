@@ -6,6 +6,6 @@ describe GitFame::Render do
   let(:render) { described_class.new(result: result, branch: "master") }
 
   it "renders to stdout" do
-    expect { render.call }.to output(/Statistics based on .*\n/).to_stdout
+    expect { render.call }.to output(/John Doe/).to_stdout
   end
 end

@@ -6,25 +6,15 @@ require "erb"
 
 module GitFame
   class Render < Base
+    FIELDS = [:name, :email, :lines, :commits, :files, :dist].map(&:to_s).freeze
+
     Table = Struct.new(:name, :email, :lines)
     attribute :branch, Types::String
     attribute :result, Result
     delegate_missing_to :result
 
     def call
-      box = TTY::Box.frame(title: { top_left: "Stats" }, width: TTY::Screen.width, align: :center, padding: 3) do
-        ERB.new(<<~ERB).result(binding)
-          Statistics based on <%= branch %>
-          Active files: <%= files_count %>
-          Total commits: <%= commits_count %>
-          Contributions <%= contributions_count %>
-          Total lines: <%= lines_count %>
-        ERB
-      end
-
-      print box
-
-      table = TTY::Table.new(header: printable_fields)
+      table = TTY::Table.new(header: FIELDS)
 
       contributions.map do |c|
         table << [c.name, c.email, c.lines, c.commits.count, c.files.count, dist(c)]
@@ -59,18 +49,10 @@ module GitFame
       number_with_delimiter(lines)
     end
 
-    def printable_fields
-      [:name, :email, :lines, :commits, :files, :dist].map(&:to_s)
-    end
-
     def table_authors
       contributions.map do |c|
         Table.new(c.name, c.email, number_with_delimiter(c.lines))
       end
-    end
-
-    def number_with_delimiter(number)
-      number
     end
   end
 end
