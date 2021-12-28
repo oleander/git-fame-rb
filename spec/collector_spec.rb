@@ -22,7 +22,7 @@ describe GitFame::Collector do
     let(:collector) { described_class.new(**hash, diff: diff) }
 
     let(:repo) { Rugged::Repository.discover(".") }
-    let(:commit) { repo.rev_parse("master") }
+    let(:commit) { repo.rev_parse("HEAD") }
 
     let(:diff) { GitFame::Diff.new(commit: commit) }
 
