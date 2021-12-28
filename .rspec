@@ -1,1 +1,2 @@
 -r spec_helper
+-f progress
