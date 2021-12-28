@@ -15,6 +15,7 @@ module GitFame
       tree.walk(:preorder).each do |_root, entry|
         case entry
         in { type: :blob, name: file }
+          say("File %s, commit %p, repo %p" % [file, commit, repo])
           Rugged::Blame.new(repo, file, newest_commit: commit).each do |change|
             block[change.merge(file_path: Pathname(file))]
           end

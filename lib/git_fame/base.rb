@@ -4,7 +4,7 @@ module GitFame
   class Base < Dry::Struct
     schema schema.strict(true)
 
-    attribute? :log_level, Types::Coercible::Symbol.default(:info).enum(:debug, :info, :warn, :error, :fatal, :unknown)
+    attribute? :log_level, Types::Coercible::Symbol.default(:debug).enum(:debug, :info, :warn, :error, :fatal, :unknown)
 
     private
 
