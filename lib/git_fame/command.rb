@@ -111,9 +111,11 @@ module GitFame
         abort help
       end
 
-      engine = spinner.run do
+      thread = spinner.run do
         Render.new(result: result, **options(:branch))
-      end.value.call
+      end
+
+      thread.value.call
     rescue Dry::Struct::Error => e
       abort e.message
     rescue Interrupt
