@@ -15,9 +15,7 @@ module GitFame
       tree.walk(:preorder).each do |root, entry|
         case entry
         in { type: :blob, name: file }
-          Rugged::Blame.new(repo, root + file, newest_commit: commit).each do |change|
-            block[change.merge(file_path: Pathname(file))]
-          end
+          Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&block)
         in { type: type, name: file }
           say("Ignore type %s in for %s", type, file)
         end

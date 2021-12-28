@@ -111,10 +111,10 @@ module GitFame
         abort help
       end
 
-      spinner = TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
-      spinner.auto_spin
+      # spinner = TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
+      # spinner.auto_spin
       render = Render.new(result: result, **options(:branch))
-      spinner.stop
+      # spinner.stop
       render.call
     rescue Dry::Struct::Error => e
       abort e.message

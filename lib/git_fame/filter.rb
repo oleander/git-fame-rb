@@ -17,7 +17,7 @@ module GitFame
     # @param hunk [Hash]
     #
     # @yieldparam lines [Integer]
-    # @yieldparam file_path [Pathname]
+    # @yieldparam orig_path [Pathname]
     # @yieldparam oid [String]
     # @yieldparam name [String]
     # @yieldparam email [String]
@@ -25,18 +25,18 @@ module GitFame
     # @return [void]
     def call(hunk, &block)
       case [hunk, attributes]
-      in [{ file_path:, final_signature: { time: created_at } }, { after: }] unless created_at > after
-        say("File %s ignored due to [created > after] (%p > %p)", file_path, created_at, after)
-      in [{ file_path:, final_signature: { time: created_at } }, { before: }] unless created_at < before
-        say("File %s ignored due to [created < before] (%p < %p)", file_path, created_at, before)
-      in [{ file_path: }, { exclude: excluded }] if excluded.any? { file_path.fnmatch?(_1, OPT) }
-        say("File %s excluded by [exclude] (%p)", file_path, excluded)
-      in [{ file_path: }, { include: included }] unless included.any? { file_path.fnmatch?(_1, OPT) }
-        say("File %s excluded by [include] (%p)", file_path, included)
-      in [{ file_path: }, { extensions: }] unless extensions.include?(file_path.extname)
-        say("File %s excluded by [extensions] (%p)", file_path, extensions)
-      in [{final_signature: { name:, email:}, final_commit_id: oid, lines_in_hunk: lines, file_path:}, Hash]
-        block[lines, file_path, oid, name, email]
+      in [{ orig_path: path, final_signature: { time: created_at } }, { after: }] unless created_at > after
+        say("File %s ignored due to [created > after] (%p > %p)", path, created_at, after)
+      in [{ orig_path: path, final_signature: { time: created_at } }, { before: }] unless created_at < before
+        say("File %s ignored due to [created < before] (%p < %p)", path, created_at, before)
+      in [{ orig_path: path}, { exclude: excluded }] if excluded.any? { File.fnmatch?(_1, path, OPT) }
+        say("File %s excluded by [exclude] (%p)", path, excluded)
+      in [{ orig_path: path }, { include: included }] unless included.any? { File.fnmatch?(_1, path, OPT) }
+        say("File %s excluded by [include] (%p)", path, included)
+      in [{ orig_path: path }, { extensions: }] unless extensions.any? { File.extname(path) == _1 }
+        say("File %s excluded by [extensions] (%p)", path, extensions)
+      in [{final_signature: { name:, email:}, final_commit_id: oid, lines_in_hunk: lines, orig_path: path}, Hash]
+        block[lines, path, oid, name, email]
       end
     end
   end

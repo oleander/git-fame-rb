@@ -14,7 +14,7 @@ FactoryBot.define do
   sequence(:number) { Faker::Number.number(digits: 2) }
   sequence(:change) do
     {
-      file_path: Pathname(FactoryBot.generate(:file)),
+      orig_path: FactoryBot.generate(:file),
       final_signature: {
         time: FactoryBot.generate(:time),
         email: FactoryBot.generate(:email),

@@ -16,8 +16,8 @@ describe GitFame::Filter do
       end
 
       let(:now) { DateTime.now }
-      let(:changes) { super().deep_merge(file_path: file_path, final_signature: { time: time }) }
-      let(:file_path) { Pathname("test.rb") }
+      let(:changes) { super().deep_merge(orig_path: file_path, final_signature: { time: time }) }
+      let(:file_path) { "test.rb" }
       let(:time) { Time.now }
       let(:before) { now + 1_000 }
       let(:after) { now - 1_000 }
@@ -29,8 +29,8 @@ describe GitFame::Filter do
       end
 
       context "when the [exclude] filter fails" do
-        let(:file_path) { Pathname("test_spec.rb") }
-        let(:changes) { super().deep_merge(file_path: file_path) }
+        let(:file_path) { "test_spec.rb" }
+        let(:changes) { super().deep_merge(orig_path: file_path) }
 
         it "does not invoke the block" do
           expect { |b| filter.call(changes, &b) }.not_to yield_control
@@ -64,11 +64,11 @@ describe GitFame::Filter do
     context "when the [exclude] filter is set to ignore [LI*ENCE]" do
       subject(:filter) { build(:filter, exclude: exclude) }
 
-      let(:changes) { super().deep_merge(file_path: file_path) }
+      let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:exclude) { Set["LI*ENCE"] }
 
       context "when the change does NOT match the glob pattern" do
-        let(:file_path) { Pathname("README") }
+        let(:file_path) { "README" }
 
         it "does invoke the block" do
           expect { |b| filter.call(changes, &b) }.to yield_control
@@ -76,7 +76,7 @@ describe GitFame::Filter do
       end
 
       context "when the change does match the glob pattern" do
-        let(:file_path) { Pathname("LICENCE") }
+        let(:file_path) { "LICENCE" }
 
         it "does not invoke the block" do
           expect { |b| filter.call(changes, &b) }.not_to yield_control
@@ -87,11 +87,11 @@ describe GitFame::Filter do
     context "when the [include] filter is set to include [*_spec.rb]" do
       subject(:filter) { build(:filter, include: include) }
 
-      let(:changes) { super().deep_merge(file_path: file_path) }
+      let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:include) { Set["*_spec.rb"] }
 
       context "when the change does NOT match the glob pattern" do
-        let(:file_path) { Pathname("main.rb") }
+        let(:file_path) { "main.rb" }
 
         it "does not invoke the block" do
           expect { |b| filter.call(changes, &b) }.not_to yield_control
@@ -99,7 +99,7 @@ describe GitFame::Filter do
       end
 
       context "when the change does match the glob pattern" do
-        let(:file_path) { Pathname("main_spec.rb") }
+        let(:file_path) { "main_spec.rb" }
 
         it "does invoke the block" do
           expect { |b| filter.call(changes, &b) }.to yield_control
@@ -110,11 +110,11 @@ describe GitFame::Filter do
     context "when the [extensions] filter is set to ignore [.rb]" do
       subject(:filter) { build(:filter, extensions: extensions) }
 
-      let(:changes) { super().deep_merge(file_path: file_path) }
+      let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:extensions) { Set[".rb"] }
 
       context "when the change does NOT have an .rb extension" do
-        let(:file_path) { Pathname("foo.js") }
+        let(:file_path) { "foo.js" }
 
         it "does not invoke the block" do
           expect { |b| filter.call(changes, &b) }.not_to yield_control
@@ -122,7 +122,7 @@ describe GitFame::Filter do
       end
 
       context "when the change does have an .rb extension" do
-        let(:file_path) { Pathname("foo.rb") }
+        let(:file_path) { "foo.rb" }
 
         it "invokes the block" do
           expect { |b| filter.call(changes, &b) }.to yield_control
