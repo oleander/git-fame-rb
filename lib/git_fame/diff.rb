@@ -12,11 +12,10 @@ module GitFame
     #
     # @return [void]
     def each(&block)
-      tree.walk(:preorder).each do |_root, entry|
+      tree.walk(:preorder).each do |root, entry|
         case entry
         in { type: :blob, name: file }
-          say("File %s, commit %p, repo %p" % [file, commit, repo])
-          Rugged::Blame.new(repo, file, newest_commit: commit).each do |change|
+          Rugged::Blame.new(repo, root + file, newest_commit: commit).each do |change|
             block[change.merge(file_path: Pathname(file))]
           end
         in { type: type, name: file }
