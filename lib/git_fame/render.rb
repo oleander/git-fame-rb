@@ -22,11 +22,17 @@ module GitFame
       table = TTY::Table.new(header: FIELDS)
       width = TTY::Screen.width
 
-      contributions.map do |c|
+      contributions.reverse_each do |c|
         table << [c.name, c.email, c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
       end
 
       print table.render(:unicode, width: width, resize: true, alignment: [:center])
+    end
+
+    private
+
+    def contributions
+      result.contributions.sort_by(&:lines)
     end
   end
 end
