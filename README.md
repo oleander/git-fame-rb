@@ -43,8 +43,8 @@ Examples:
   Include commits made since 2010 and before 2015
   git fame --after 2010-01-01 --before 2015-01-01
 
-  Only changes made to the master branch
-  git fame --branch master
+  Only changes made to the main branch
+  git fame --branch main
 
   Only ruby and javascript files
   git fame --extensions .rb .js

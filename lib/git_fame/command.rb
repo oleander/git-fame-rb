@@ -16,7 +16,7 @@ module GitFame
       example "Include commits made since 2010", "git fame --after 2010-01-01"
       example "Include commits made before 2015", "git fame --before 2015-01-01"
       example "Include commits made since 2010 and before 2015", "git fame --after 2010-01-01 --before 2015-01-01"
-      example "Only changes made to the master branch", "git fame --branch master"
+      example "Only changes made to the main branch", "git fame --branch main"
       example "Only ruby and javascript files", "git fame --extensions .rb .js"
       example "Exclude spec files and the README", "git fame --exclude */**/*_spec.rb README.md"
       example "Only spec files and markdown files", "git fame --include */**/*_spec.rb */**/*.md"
