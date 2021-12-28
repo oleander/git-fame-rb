@@ -2,10 +2,11 @@ name: git-fame
 on: [push]
 jobs:
   rspec:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         ruby: ["2.7.5", "3.0.3", "3.1.0"]
+        os: ["ubuntu-latest", "macos-latest"]
     steps:
     - uses: actions/checkout@v2
     - name: Setup cmake
@@ -18,5 +19,4 @@ jobs:
     - run: git status
     - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --force-color
     - run: bundle exec rake install:local
-    - run: rbenv rehash
-    - run: git fame --log-level debug
+    - run: git-fame --log-level debug
