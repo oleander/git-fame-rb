@@ -1,11 +1,9 @@
 # frozen_string_literal: true
 
 describe GitFame::Render do
-  let(:input) { fixture("result.large.json") }
-  let(:result) { GitFame::Result.new(input) }
-  let(:render) { described_class.new(result: result, branch: "master") }
+  let(:render) { build(:render) }
 
   it "renders to stdout" do
-    expect { render.call }.to output(/John Doe/).to_stdout
+    expect { render.call }.to output(/name|email|lines|commits|files/).to_stdout
   end
 end

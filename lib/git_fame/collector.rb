@@ -5,12 +5,7 @@ module GitFame
     extend Dry::Initializer
 
     option :filter, type: Filter
-    option :diff, type: Diff
-
-    param :commits, type: Types::Hash, default: -> { Hash.new { |h, k| h[k] = Set.new } }
-    param :files, type: Types::Hash, default: -> { Hash.new { |h, k| h[k] = Set.new } }
-    param :lines, type: Types::Hash, default: -> { Hash.new(0) }
-    param :names, type: Types::Hash, default: -> { {} }
+    option :diff, type: Types::Any
 
     # @return [Collector]
     def call
@@ -20,12 +15,18 @@ module GitFame
     private
 
     def contributions
+      commits = Hash.new { |h, k| h[k] = Set.new }
+      files = Hash.new { |h, k| h[k] = Set.new }
+      lines = Hash.new(0)
+      names = {}
+
       diff.each do |change|
         filter.call(change) do |loc, file, oid, name, email|
-          commits[email].add(oid)
-          files[email].add(file)
-          names[email] = name
-          lines[email] += loc
+          if commits[email].add?(oid)
+            files[email].add(file)
+            names[email] = name
+            lines[email] += loc
+          end
         end
       end
 

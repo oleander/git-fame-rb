@@ -2,22 +2,11 @@
 
 describe GitFame::Filter do
   describe "#call" do
-    let(:changes) do
-      {
-        file_path: Pathname("."),
-        final_signature: {
-          time: Time.now,
-          email: "hello@example.com",
-          name: "John Doe"
-        },
-        final_commit_id: "abc",
-        lines_in_hunk: 1
-      }
-    end
+    let(:changes) { generate(:change) }
 
     context "when the filter contains all rules" do
       subject(:filter) do
-        described_class.new({
+        build(:filter, {
           include: Set["test*{.rb, .js, .ts}"],
           extensions: Set[".rb", ".js"],
           exclude: Set["*_spec.rb"],
@@ -50,7 +39,7 @@ describe GitFame::Filter do
     end
 
     context "when the before filter is set to today" do
-      subject(:filter) { described_class.new(before: before) }
+      subject(:filter) { build(:filter, before: before) }
 
       let(:changes) { super().deep_merge(final_signature: { time: time }) }
       let(:before) { DateTime.now }
@@ -73,7 +62,7 @@ describe GitFame::Filter do
     end
 
     context "when the [exclude] filter is set to ignore [LI*ENCE]" do
-      subject(:filter) { described_class.new(exclude: exclude) }
+      subject(:filter) { build(:filter, exclude: exclude) }
 
       let(:changes) { super().deep_merge(file_path: file_path) }
       let(:exclude) { Set["LI*ENCE"] }
@@ -96,7 +85,7 @@ describe GitFame::Filter do
     end
 
     context "when the [include] filter is set to include [*_spec.rb]" do
-      subject(:filter) { described_class.new(include: include) }
+      subject(:filter) { build(:filter, include: include) }
 
       let(:changes) { super().deep_merge(file_path: file_path) }
       let(:include) { Set["*_spec.rb"] }
@@ -119,7 +108,7 @@ describe GitFame::Filter do
     end
 
     context "when the [extensions] filter is set to ignore [.rb]" do
-      subject(:filter) { described_class.new(extensions: extensions) }
+      subject(:filter) { build(:filter, extensions: extensions) }
 
       let(:changes) { super().deep_merge(file_path: file_path) }
       let(:extensions) { Set[".rb"] }
@@ -142,7 +131,7 @@ describe GitFame::Filter do
     end
 
     context "when the after filter is set to today" do
-      subject(:filter) { described_class.new(after: after) }
+      subject(:filter) { build(:filter, after: after) }
 
       let(:changes) { super().deep_merge(final_signature: { time: time }) }
       let(:after) { DateTime.now }
