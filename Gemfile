@@ -13,7 +13,6 @@ group :development, :test do
   gem "rubocop-rake"
   gem "rubocop-rspec"
 
-  gem "method_profiler"
   gem "rake"
   gem "rspec"
   gem "rspec-github", require: false

@@ -1,15 +1,8 @@
-#!/usr/bin/env rake
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-require "method_profiler"
-require "git_fame"
+require "rspec/core/rake_task"
 
-desc "Benchmark GitFame"
-task :profile do
-  profiler = MethodProfiler.observe(GitFame::Base)
+RSpec::Core::RakeTask.new(:spec)
 
-  GitFame::Base.new({ repository: "spec/fixtures/gash" })
-
-  puts profiler.report
-end
+task default: :spec
