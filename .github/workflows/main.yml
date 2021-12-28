@@ -17,5 +17,3 @@ jobs:
         ruby-version: ${{ matrix.ruby }}
     - run: bundle exec rubocop
     - run: bundle exec rspec --format RSpec::Github::Formatter --force-color
-    - run: bundle exec rake install
-    - run: git fame --log-level debug
