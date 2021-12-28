@@ -10,8 +10,6 @@ module GitFame
     attribute? :include, Types::Set
     attribute? :exclude, Types::Set
 
-    schema schema.strict(false)
-
     def call(changes, &block)
       case [changes, attributes]
       in [{ file_path:, final_signature: { time: created_at } }, { after: }] unless created_at > after
