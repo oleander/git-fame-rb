@@ -22,8 +22,8 @@ Arguments:
   PATH  Path or sub path to the git repository
 
 Options:
-  -A, --after [DATE]       Only changes made before this date
-  -B, --before [DATE]      Only changes made after this date
+  -A, --after [DATE]       Only changes made after this date
+  -B, --before [DATE]      Only changes made before this date
       --branch [NAME]      Branch to be used as starting point (default
                            "HEAD")
   -E, --exclude [GLOB]     Exclude files matching the given glob pattern
