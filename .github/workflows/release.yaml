@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: jwlawson/actions-setup-cmake@v1.13
 
       - uses: ruby/setup-ruby@v1
         with:
