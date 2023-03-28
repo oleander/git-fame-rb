@@ -20,3 +20,7 @@ group :development, :test do
   gem "rspec-github", require: false
   gem "rspec-its", require: "rspec/its"
 end
+
+group :development do
+  gem "reek"
+end
