@@ -32,7 +32,7 @@ jobs:
     - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
     - name: Upload coverage report
-      uses: codecov/codecov-action@v3.2.0
+      uses: codecov/codecov-action@v3
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
       with:
