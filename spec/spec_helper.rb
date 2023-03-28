@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "simplecov"
+
 require "factory_bot"
 require "rspec/its"
 require "git_fame"

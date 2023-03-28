@@ -20,3 +20,8 @@ group :development, :test do
   gem "rspec-github", require: false
   gem "rspec-its", require: "rspec/its"
 end
+
+group :test do
+  gem "simplecov"
+  gem "simplecov-cobertura"
+end
