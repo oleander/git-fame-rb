@@ -24,7 +24,7 @@ jobs:
       - name: Bump gem version
         run: |
           gem install bump
-          bump patch --no-bundle
+          bump patch
 
       - name: Build gem and release to Rubygems
         uses: cadwallion/publish-rubygems-action@master
