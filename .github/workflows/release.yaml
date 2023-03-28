@@ -25,6 +25,7 @@ jobs:
         run: |
           gem install bump
           bundle install
+          bundle config unset deployment
           bump patch --commit-message "released"
 
       - name: Build gem and release to Rubygems
