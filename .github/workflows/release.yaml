@@ -1,5 +1,4 @@
 name: Publish Gem
-
 on:
   push:
     branches:
