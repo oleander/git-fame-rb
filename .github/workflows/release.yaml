@@ -24,6 +24,7 @@ jobs:
       - name: Bump gem version
         run: |
           gem install bump
+          bundle install
           bump patch --commit-message "released"
 
       - name: Build gem and release to Rubygems
