@@ -6,17 +6,51 @@ on:
     tags:
       - v*
 jobs:
-  build:
+  deploy:
+    concurrency:
+      group: deploy
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: Jobport/bump-gem-version-action@main
+      - uses: jwlawson/actions-setup-cmake@v1.13
+
+      - uses: ruby/setup-ruby@v1
         with:
-          default_bump_level: patch
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: cadwallion/publish-rubygems-action@master
-        if: contains(github.ref, 'refs/tags/v')
+          bundler-cache: true
+
+      - uses: fregante/setup-git-user@v2
+
+      - name: Bump gem version
+        run: |
+          gem install bump
+          bump patch --no-bundle
+
+      - name: Build gem and release to Rubygems
+        uses: cadwallion/publish-rubygems-action@master
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          RUBYGEMS_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
-          RELEASE_COMMAND: bin/rake release
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push code to main
+        run: git push origin -f main
+
+      - name: Get current gem version
+        run: echo "::set-output name=version::$(bin/bump current)"
+        id: gem
+
+      - name: Create github release
+        uses: actions/create-release@v1.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          release_name: Release ${{ steps.gem.outputs.version }}
+          tag_name: v${{ steps.gem.outputs.version }}
+          prerelease: false
+          draft: false
+
+      - name: Publish gem to Github
+        uses: jstastny/publish-gem-to-github@v2.3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: oleander
