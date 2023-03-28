@@ -1,5 +1,5 @@
 # git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame) [![Maintainability](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/maintainability)](https://codeclimate.com/github/oleander/git-fame-rb/maintainability)
-![git-fame](resources/example.png) [![Test Coverage](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/test_coverage)](https://codeclimate.com/github/oleander/git-fame-rb/test_coverage)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/test_coverage)](https://codeclimate.com/github/oleander/git-fame-rb/test_coverage) ![git-fame](resources/example.png)
 
 `git-fame` is a command-line tool that helps you summarize and pretty-print collaborators, based on the number of contributions.
 
