@@ -31,3 +31,10 @@ jobs:
     - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
     - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
+    - uses: paambaati/codeclimate-action@v3.2.0
+      env:
+        CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+        CI: true
+      with:
+        coverageLocations: ${{github.workspace}}/coverage/coverage.xml:cobertura
+        coverageCommand: bundle exec rspec

@@ -1,4 +1,4 @@
-# git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame)
+# git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame) [![Test Coverage](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/test_coverage)](https://codeclimate.com/github/oleander/git-fame-rb/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/maintainability)](https://codeclimate.com/github/oleander/git-fame-rb/maintainability)
 
 ![git-fame](resources/example.png)
 
@@ -22,8 +22,8 @@ Arguments:
   PATH  Path or sub path to the git repository
 
 Options:
-  -A, --after [DATE]       Only changes made before this date
-  -B, --before [DATE]      Only changes made after this date
+  -A, --after [DATE]       Only changes made after this date
+  -B, --before [DATE]      Only changes made before this date
       --branch [NAME]      Branch to be used as starting point (default
                            "HEAD")
   -E, --exclude [GLOB]     Exclude files matching the given glob pattern
