@@ -21,6 +21,11 @@ group :development, :test do
   gem "rspec-its", require: "rspec/its"
 end
 
+group :test do
+  gem "simplecov", require: false
+  gem "simplecov-cobertura", require: false
+end
+
 group :development do
   gem "bump"
   gem "reek"
