@@ -31,7 +31,7 @@ jobs:
         CI: true
     - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
-    - uses: paambaati/codeclimate-action@v2.2.4
+    - uses: paambaati/codeclimate-action@v3.2.0
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
       with:
