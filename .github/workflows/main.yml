@@ -34,5 +34,7 @@ jobs:
     - uses: paambaati/codeclimate-action@v3.2.0
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+        CI: true
       with:
         coverageLocations: ${github.workspace}}/coverage/coverage.xml
+        coverageCommand: bundle exec rspec
