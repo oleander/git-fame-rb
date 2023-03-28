@@ -12,6 +12,8 @@ jobs:
     steps:
       - run: bin/bump patch --tag --tag-prefix v
       - run: git push --tags
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - uses: actions/checkout@v3
       - if: contains(github.ref, 'refs/tags/v')
         uses: cadwallion/publish-rubygems-action@master
