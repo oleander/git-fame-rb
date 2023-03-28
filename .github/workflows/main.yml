@@ -36,5 +36,5 @@ jobs:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
         CI: true
       with:
-        coverageLocations: ${github.workspace}}/coverage/coverage.xml:cobertura
+        coverageLocations: ${github.workspace}}/coverage/coverage.xml:simplecov
         coverageCommand: bundle exec rspec
