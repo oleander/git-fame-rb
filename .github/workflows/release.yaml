@@ -1,5 +1,4 @@
 name: Publish Gem
-
 on:
   push:
     branches:
@@ -10,13 +9,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - run: bin/bump patch --tag --tag-prefix v
-      - run: git push --tags
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - uses: actions/checkout@v3
-      - if: contains(github.ref, 'refs/tags/v')
-        uses: cadwallion/publish-rubygems-action@master
+      - uses: Jobport/bump-gem-version-action@master
+        with:
+          default_bump_level: patch
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cadwallion/publish-rubygems-action@master
+        if: contains(github.ref, 'refs/tags/v')
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           RUBYGEMS_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
