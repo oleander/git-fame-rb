@@ -21,7 +21,7 @@ jobs:
       - uses: fregante/setup-git-user@v2
 
       - name: Bump gem version
-        run: bin/bump patch --changelog
+        run: bin/bump patch --changelog --push
 
       - name: Build gem and release to Rubygems
         uses: cadwallion/publish-rubygems-action@master
