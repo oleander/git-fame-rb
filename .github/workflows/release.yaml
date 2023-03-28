@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: Jobport/bump-gem-version-action@master
+      - uses: Jobport/bump-gem-version-action@main
         with:
           default_bump_level: patch
           github_token: ${{ secrets.GITHUB_TOKEN }}
