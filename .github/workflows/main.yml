@@ -31,9 +31,8 @@ jobs:
         CI: true
     - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
-    - name: Upload coverage report
-      uses: codecov/codecov-action@v3
+    - uses: paambaati/codeclimate-action@v2.2.4
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
       with:
-        file: coverage/coverage.xml
+        coverageLocations: ${github.workspace}}/coverage/coverage.xml
