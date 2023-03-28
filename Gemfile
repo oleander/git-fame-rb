@@ -22,5 +22,6 @@ group :development, :test do
 end
 
 group :development do
+  gem "bump"
   gem "reek"
 end
