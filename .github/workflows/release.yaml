@@ -24,7 +24,7 @@ jobs:
         run: bin/bump patch --changelog
 
       - name: Build gem and release to Rubygems
-        uses: cadwallion/publish-rubygems-action@v1.1.0
+        uses: cadwallion/publish-rubygems-action@master
         env:
           RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
