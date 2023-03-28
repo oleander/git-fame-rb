@@ -1,16 +1,15 @@
 name: git-fame
-on: [push]
+on: [push, pull_request]
 jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: jwlawson/actions-setup-cmake@v1.9
-    - uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-    - run: bundle exec rubocop
-
+      - uses: actions/checkout@v2
+      - uses: jwlawson/actions-setup-cmake@v1.9
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - run: bundle exec rubocop
   rspec:
     runs-on: ${{ matrix.os }}
     needs: [rubocop]

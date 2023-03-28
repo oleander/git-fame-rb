@@ -59,6 +59,7 @@ GEM
     i18n (1.12.0)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
+    kwalify (0.7.2)
     method_source (1.0.0)
     minitest (5.17.0)
     neatjson (0.9)
@@ -74,6 +75,10 @@ GEM
       method_source (~> 1.0)
     rainbow (3.0.0)
     rake (13.0.6)
+    reek (6.0.6)
+      kwalify (~> 0.7.0)
+      parser (~> 3.0.0)
+      rainbow (>= 2.0, < 4.0)
     regexp_parser (2.2.0)
     rexml (3.2.5)
     rspec (3.10.0)
@@ -165,6 +170,7 @@ DEPENDENCIES
   git_fame!
   pry
   rake
+  reek
   rspec
   rspec-github
   rspec-its
