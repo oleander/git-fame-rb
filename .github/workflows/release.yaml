@@ -1,0 +1,22 @@
+name: Publish Gem
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - v*
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Jobport/bump-gem-version-action@main
+        with:
+          default_bump_level: patch
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: cadwallion/publish-rubygems-action@master
+        if: contains(github.ref, 'refs/tags/v')
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          RUBYGEMS_API_KEY: ${{secrets.RUBYGEMS_API_KEY}}
+          RELEASE_COMMAND: bin/rake release
