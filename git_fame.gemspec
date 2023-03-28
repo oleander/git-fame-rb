@@ -41,7 +41,7 @@ Gem::Specification.new do |gem|
   gem.add_dependency "tty-option", "~> 0.2"
   gem.add_dependency "tty-screen", "~> 0.5"
   gem.add_dependency "tty-spinner", "~> 0.9"
-  gem.add_dependency "tty-table", "<= 0.10.0", "~> 0.9"
+  gem.add_dependency "tty-table", "~> 0.9", "<= 0.13.0"
   gem.add_dependency "zeitwerk", "~> 2.0"
   gem.metadata = { "rubygems_mfa_required" => "true" }
 end
