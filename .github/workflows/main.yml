@@ -4,7 +4,7 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - uses: jwlawson/actions-setup-cmake@v1.9
     - uses: ruby/setup-ruby@v1
       with:
@@ -17,10 +17,10 @@ jobs:
     needs: [rubocop]
     strategy:
       matrix:
-        ruby: ["2.7.5", "3.0.3", "3.1.0"]
+        ruby: ["2.7.5", "3.0.3", "3.1.0", "3.2.2"]
         os: [ubuntu-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: '0'
     - uses: jwlawson/actions-setup-cmake@v1.9
@@ -32,6 +32,7 @@ jobs:
     - run: bundle exec rake install:local
     - run: bundle exec exe/git-fame --log-level debug
     - uses: paambaati/codeclimate-action@v3.2.0
+      if: github.repository == 'oleander/git-fame-rb'
       env:
         CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
         CI: true
