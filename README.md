@@ -64,3 +64,9 @@ Examples:
 1. `git clone https://github.com/oleander/git-fame-rb.git`
 2. `bundle install`
 3. `bundle exec rspec`
+
+## New release
+
+1. Update version in `lib/git_fame/version.rb`
+2. `bundle exec rake release`
+3. Done!
