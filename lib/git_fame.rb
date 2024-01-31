@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# See: https://github.com/oleander/git-fame-rb/issues/126
+require "active_support"
+
 require "active_support/core_ext/module/delegation"
 require "active_support/isolated_execution_state"
 require "active_support/core_ext/numeric/time"
