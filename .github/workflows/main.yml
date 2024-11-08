@@ -93,7 +93,7 @@ jobs:
           fetch-depth: 0
 
       - name: Build Docker image
-        run: docker build -t git-fame -f .devcontainer/Dockerfile --build-arg USER_ID=$(id -u) --build-arg GROUP_ID=$(id -g) .
+        run: docker build -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run tests in Docker container
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
