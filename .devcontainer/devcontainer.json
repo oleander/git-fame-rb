@@ -1,0 +1,21 @@
+{
+  "name": "Ruby Dev Container",
+  "build": {
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
+  "extensions": [
+    "castwide.solargraph",
+    "rebornix.Ruby"
+  ],
+  "settings": {
+    "solargraph.diagnostics": true
+  },
+  "postCreateCommand": "bundle install",
+  "mounts": [
+    "source=${localWorkspaceFolder}/,target=/workspace,type=bind,consistency=cached"
+  ],
+  "workspaceFolder": "/workspace",
+  "remoteUser": "vscode"
+}
+

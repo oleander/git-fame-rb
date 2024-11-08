@@ -4,13 +4,13 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: jwlawson/actions-setup-cmake@v1.9
-    - uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-        ruby-version: 2.7.5
-    - run: bundle exec rubocop
+      - uses: actions/checkout@v2
+      - uses: jwlawson/actions-setup-cmake@v1.9
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 2.7.5
+      - run: bundle exec rubocop
 
   rspec:
     runs-on: ${{ matrix.os }}
@@ -20,21 +20,42 @@ jobs:
         ruby: ["2.7.5", "3.0.3", "3.1.0", "3.2.0", "3.3.0"]
         os: [ubuntu-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: '0'
-    - uses: jwlawson/actions-setup-cmake@v1
-    - uses: ruby/setup-ruby@v1
-      with:
-        bundler-cache: true
-        ruby-version: ${{ matrix.ruby }}
-    - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
-    - run: bundle exec rake install:local
-    - run: bundle exec exe/git-fame --log-level debug
-    - uses: paambaati/codeclimate-action@v5
-      env:
-        CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
-        CI: true
-      with:
-        coverageLocations: ${{github.workspace}}/coverage/coverage.xml:cobertura
-        coverageCommand: bundle exec rspec
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: "0"
+      - uses: jwlawson/actions-setup-cmake@v1
+      - uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: ${{ matrix.ruby }}
+      - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
+      - run: bundle exec rake install:local
+      - run: bundle exec exe/git-fame --log-level debug
+      - uses: paambaati/codeclimate-action@v5
+        env:
+          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          CI: true
+        with:
+          coverageLocations: ${{github.workspace}}/coverage/coverage.xml:cobertura
+          coverageCommand: bundle exec rspec
+  devcontainer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+
+      - name: Set up devcontainer CLI
+        run: npm install -g @devcontainers/cli
+
+      - name: Build devcontainer
+        run: devcontainer build --workspace-folder .
+
+      - name: Start devcontainer
+        run: devcontainer up --workspace-folder .
+
+      - name: Install dependencies
+        run: devcontainer exec --workspace-folder . bundle exec rspec
