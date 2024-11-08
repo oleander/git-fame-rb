@@ -65,6 +65,8 @@ Examples:
 2. `docker build -t git-fame -f .devcontainer/Dockerfile .`
 3. `docker run -it -v $(pwd):/workspace git-fame bundle exec rspec`
 
+Have a look at `.devcontainer/Dockerfile` and `.github/workflows/main.yml` for more information.
+
 ## New release
 
 1. Update version in `lib/git_fame/version.rb`
