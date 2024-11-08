@@ -17,14 +17,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-          ruby-version: 3.0
+      - name: Build Docker image with Ruby version
+        run: docker build --build-arg RUBY_VERSION=3.3 -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run Rubocop
-        run: bundle exec rubocop
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rubocop
 
   rspec:
     runs-on: ${{ matrix.os }}
