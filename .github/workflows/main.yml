@@ -61,6 +61,7 @@ jobs:
 
   devcontainer:
     runs-on: ubuntu-latest
+    needs: [dockerfile]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
