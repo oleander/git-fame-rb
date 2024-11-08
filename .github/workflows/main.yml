@@ -47,7 +47,7 @@ jobs:
     # needs: rubocop
     strategy:
       matrix:
-        ruby: ["2.7", "3.0", "3.1", "3.2", "3.3"]
+        ruby: ["3.0", "3.1", "3.2", "3.3"]
         os: [ubuntu-latest]
     steps:
       - name: Check out repository
@@ -57,6 +57,8 @@ jobs:
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
+        with:
+          install: true
 
       - name: Start Docker service
         run: sudo service docker start
@@ -81,7 +83,6 @@ jobs:
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec exe/git-fame --log-level debug
 
       - name: Upload coverage to CodeClimate
-        if: runner.os != 'macos'
         uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
@@ -89,10 +90,6 @@ jobs:
         with:
           coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
           coverageCommand: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec --format RSpec::Github::Formatter
-
-      - name: Run RSpec
-        if: runner.os == 'macos'
-        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec --format RSpec::Github::Formatter
 
   devcontainer:
     runs-on: ubuntu-latest
