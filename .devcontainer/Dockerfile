@@ -10,7 +10,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN git config --global --add safe.directory *
-RUN gem install solargraph bundler:2.3.3
+RUN gem install solargraph bundler:2.5.22 gem-release
 
 COPY Gemfile Gemfile.lock git_fame.gemspec ./
 COPY lib/git_fame/version.rb ./lib/git_fame/version.rb
