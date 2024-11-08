@@ -132,12 +132,12 @@ jobs:
       - name: Increment version
         run: gem bump --version patch --tag --commit
 
-      - name: Push new version
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: git push --tags
-
       - name: Push to RubyGems
         env:
           GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
         run: gem release
+
+      - name: Push new version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push --tags
