@@ -62,5 +62,13 @@ Examples:
 ## Development
 
 1. `git clone https://github.com/oleander/git-fame-rb.git`
-2. `bundle install`
-3. `bundle exec rspec`
+2. `docker build -t git-fame -f .devcontainer/Dockerfile .`
+3. `docker run -it -v $(pwd):/workspace git-fame bundle exec rspec`
+
+Have a look at `.devcontainer/Dockerfile` and `.github/workflows/main.yml` for more information.
+
+## New release
+
+1. Update version in `lib/git_fame/version.rb`
+2. `bundle exec rake release`
+3. Done!

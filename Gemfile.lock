@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_fame (3.1.0)
+    git_fame (3.1.1)
       activesupport (~> 7.0)
       dry-initializer (~> 3.0)
       dry-struct (~> 1.0)
@@ -18,7 +18,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activesupport (7.0.4.3)
+    activesupport (7.0.6)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (>= 1.6, < 2)
       minitest (>= 5.1)
@@ -53,12 +53,12 @@ GEM
       activesupport (>= 5.0.0)
     faker (3.1.1)
       i18n (>= 1.8.11, < 2)
-    i18n (1.12.0)
+    i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
     json (2.6.3)
     method_source (1.0.0)
-    minitest (5.18.0)
+    minitest (5.18.1)
     neatjson (0.10.5)
     necromancer (0.4.0)
     parallel (1.22.1)
@@ -152,8 +152,10 @@ GEM
     zeitwerk (2.6.7)
 
 PLATFORMS
+  aarch64-linux
   arm64-darwin-22
   x86_64-darwin-19
+  x86_64-darwin-20
   x86_64-darwin-21
   x86_64-linux
 
