@@ -17,7 +17,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-          ruby-version: 2.7.5
+          ruby-version: 3.3.0
 
       - name: Run Rubocop
         run: bundle exec rubocop
@@ -27,7 +27,7 @@ jobs:
     needs: [rubocop]
     strategy:
       matrix:
-        ruby: ["2.7.5", "3.0.3", "3.1.0", "3.2.0", "3.3.0"]
+        ruby: ["2.7", "3.0", "3.1", "3.2", "3.3"]
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Check out repository
@@ -97,3 +97,38 @@ jobs:
 
       - name: Run tests in Docker container
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
+
+  release:
+    runs-on: ubuntu-latest
+    needs: [rspec, dockerfile, devcontainer]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+          ruby-version: 3.3.0
+
+      - name: Install dependencies
+        run: bundle install
+
+      - name: Increment version
+        run: bundle exec bump patch --commit --tag
+
+      - name: Push new version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin main --tags
+
+      - name: Build the gem
+        run: gem build git-fame.gemspec
+
+      - name: Push to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: gem push git-fame-*.gem
