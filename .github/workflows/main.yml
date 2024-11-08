@@ -1,10 +1,14 @@
 name: git-fame
 
-on: [push]
+on: push
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   rubocop:
@@ -13,55 +17,83 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start Docker service
+        run: sudo service docker start
+
+      - name: Set up Docker cache
+        uses: actions/cache@v3
         with:
-          bundler-cache: true
-          ruby-version: 2.7.5
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image with Ruby version
+        run: |
+          docker buildx create --use
+          docker buildx build --build-arg RUBY_VERSION=3.3 \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+            --load -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run Rubocop
-        run: bundle exec rubocop
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rubocop
 
   rspec:
     runs-on: ${{ matrix.os }}
-    needs: [rubocop]
+    # needs: rubocop
     strategy:
       matrix:
-        ruby: ["2.7.5", "3.0.3", "3.1.0", "3.2.0", "3.3.0"]
-        os: [ubuntu-latest, macos-latest]
+        ruby: ["3.0", "3.1", "3.2", "3.3"]
+        os: [ubuntu-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
         with:
-          bundler-cache: true
-          ruby-version: ${{ matrix.ruby }}
+          install: true
 
-      - name: Run RSpec
-        run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
+      - name: Start Docker service
+        run: sudo service docker start
 
-      - name: Install gem locally
-        run: bundle exec rake install:local
+      - name: Set up Docker cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image with Ruby version
+        run: |
+          docker buildx create --use
+          docker buildx build --build-arg RUBY_VERSION=${{ matrix.ruby }} \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+            --load -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run git-fame
-        run: bundle exec exe/git-fame --log-level debug
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec exe/git-fame --log-level debug
 
       - name: Upload coverage to CodeClimate
-        if: runner.os != 'macos'
         uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
           CI: true
         with:
           coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
-          coverageCommand: bundle exec rspec
+          coverageCommand: docker run --rm git-fame bundle exec rspec --format RSpec::Github::Formatter
 
   devcontainer:
     runs-on: ubuntu-latest
+    needs: rubocop
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -84,16 +116,32 @@ jobs:
       - name: Run tests inside DevContainer
         run: devcontainer exec --workspace-folder . bundle exec rspec
 
-  dockerfile:
+  release:
     runs-on: ubuntu-latest
+    needs: rspec
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
         with:
-          fetch-depth: 0
+          bundler-cache: true
+          ruby-version: 3.3
 
-      - name: Build Docker image
-        run: docker build -t git-fame -f .devcontainer/Dockerfile .
+      - name: Setup git
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
 
-      - name: Run tests in Docker container
-        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
+      - name: Install gem-release
+        run: gem install gem-release
+
+      - name: Install dependencies
+        run: bundle install --jobs 4 --retry 3
+
+      - name: Increment version
+        run: gem bump --version patch --tag --push --skip-ci --release --file lib/git_fame/version.rb --remote origin --branch main
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
