@@ -9,7 +9,7 @@ module GitFame
 
     # @return [Collector]
     def call
-      Result.new(contributions: contributions)
+      Result.new(contributions:)
     end
 
     private
@@ -36,7 +36,7 @@ module GitFame
           files: files[email],
           author: {
             name: names[email],
-            email: email
+            email:
           }
         })
       end
