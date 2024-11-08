@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: jwlawson/actions-setup-cmake@v1
+      - uses: jwlawson/actions-setup-cmake@v2
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: "0"
-      - uses: jwlawson/actions-setup-cmake@v1
+      - uses: jwlawson/actions-setup-cmake@v2
 
       - uses: ruby/setup-ruby@v1
         with:
@@ -35,13 +35,14 @@ jobs:
       - run: bundle exec rake install:local
       - run: bundle exec exe/git-fame --log-level debug
 
-      - uses: paambaati/codeclimate-action@v5
+      - uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           CI: true
         with:
           coverageLocations: ${{github.workspace}}/coverage/coverage.xml:cobertura
           coverageCommand: bundle exec rspec
+
   devcontainer:
     runs-on: ubuntu-latest
     steps:
