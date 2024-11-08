@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     # needs: [rspec, dockerfile, devcontainer]
     # if: github.ref == 'refs/heads/main'
-    needs: rspec
+    needs: rubocop
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
