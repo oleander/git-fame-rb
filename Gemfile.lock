@@ -7,7 +7,7 @@ GIT
 PATH
   remote: .
   specs:
-    git_fame (3.1.10)
+    git_fame (3.1.12)
       activesupport (~> 7.0)
       dry-initializer (~> 3.0)
       dry-struct (~> 1.0)
