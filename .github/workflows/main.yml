@@ -113,6 +113,9 @@ jobs:
           bundler-cache: true
           ruby-version: 3.3.0
 
+      - name: Install gem-release
+        run: gem install gem-release
+
       - name: Install dependencies
         run: bundle install
 
