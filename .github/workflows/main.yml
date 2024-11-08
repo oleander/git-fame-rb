@@ -1,17 +1,29 @@
 name: git-fame
+
 on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - uses: jwlawson/actions-setup-cmake@v2
-      - uses: ruby/setup-ruby@v1
+      - name: Install cmake
+        uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Install ruby
+        uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: 2.7.5
-      - run: bundle exec rubocop
+
+      - name: Rubocop
+        run: bundle exec rubocop
 
   rspec:
     runs-on: ${{ matrix.os }}
@@ -21,21 +33,31 @@ jobs:
         ruby: ["2.7.5", "3.0.3", "3.1.0", "3.2.0", "3.3.0"]
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: "0"
-      - uses: jwlawson/actions-setup-cmake@v2
 
-      - uses: ruby/setup-ruby@v1
+      - name: Install cmake
+        uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Install ruby
+        uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
 
-      - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
-      - run: bundle exec rake install:local
-      - run: bundle exec exe/git-fame --log-level debug
+      - name: Run tests
+        run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
 
-      - uses: paambaati/codeclimate-action@v9
+      - name: Install gem locally
+        run: bundle exec rake install:local
+
+      - name: Run git-fame
+        run: bundle exec exe/git-fame --log-level debug
+
+      - name: Codeclimate (code coverage)
+        uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
           CI: true
