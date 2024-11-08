@@ -13,16 +13,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@v2
-
-      - name: Install ruby
+      - name: Install Ruby and dependencies
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: 2.7.5
 
-      - name: Rubocop
+      - name: Run Rubocop
         run: bundle exec rubocop
 
   rspec:
@@ -36,18 +33,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: "0"
+          fetch-depth: 0
 
-      - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@v2
-
-      - name: Install ruby
+      - name: Install Ruby and dependencies
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
 
-      - name: Run tests
+      - name: Run RSpec
         run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
 
       - name: Install gem locally
@@ -56,14 +50,14 @@ jobs:
       - name: Run git-fame
         run: bundle exec exe/git-fame --log-level debug
 
-      - name: Codeclimate (code coverage)
-        if: runner.os != 'macos'
+      - name: Upload coverage to CodeClimate
+        if: runner.os != 'macos-latest'
         uses: paambaati/codeclimate-action@v9
         env:
-          CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
+          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
           CI: true
         with:
-          coverageLocations: ${{github.workspace}}/coverage/coverage.xml:cobertura
+          coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
           coverageCommand: bundle exec rspec
 
   devcontainer:
@@ -74,20 +68,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: "20.x"
 
-      - name: Set up devcontainer CLI
+      - name: Set up DevContainer CLI
         run: npm install -g @devcontainers/cli
 
-      - name: Build devcontainer
-        run: devcontainer build --workspace-folder .
+      - name: Build and start DevContainer
+        run: |
+          devcontainer build --workspace-folder .
+          devcontainer up --workspace-folder .
 
-      - name: Start devcontainer
-        run: devcontainer up --workspace-folder .
-
-      - name: Install dependencies
+      - name: Run tests inside DevContainer
         run: devcontainer exec --workspace-folder . bundle exec rspec
 
   dockerfile:
@@ -98,8 +92,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build docker image
+      - name: Build Docker image
         run: docker build -t git-fame -f .devcontainer/Dockerfile .
 
-      - name: Test docker image
-        run: docker run -t -v $(pwd):/workspace git-fame bundle exec rspec
+      - name: Run tests in Docker container
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
