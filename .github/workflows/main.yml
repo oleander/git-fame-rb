@@ -122,8 +122,7 @@ jobs:
       - name: Push new version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push origin main --tags
+        run: git push origin main --tags
 
       - name: Build the gem
         run: gem build git-fame.gemspec
