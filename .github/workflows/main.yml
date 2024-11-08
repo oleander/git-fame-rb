@@ -51,7 +51,7 @@ jobs:
         run: bundle exec exe/git-fame --log-level debug
 
       - name: Upload coverage to CodeClimate
-        if: runner.os != 'macos-latest'
+        if: runner.os != 'macos'
         uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
