@@ -17,7 +17,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-          ruby-version: 2.7.5
+          ruby-version: 3.3.0
 
       - name: Run Rubocop
         run: bundle exec rubocop
