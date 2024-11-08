@@ -26,6 +26,4 @@ group :test do
   gem "simplecov-cobertura"
 end
 
-gem "bump", github: "gregorym/bump"
-
 gem "gem-release", "~> 2.2"
