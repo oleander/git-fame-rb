@@ -28,6 +28,7 @@ jobs:
 
   rspec:
     runs-on: ${{ matrix.os }}
+    needs: rubocop
     strategy:
       matrix:
         ruby: ["2.7", "3.0", "3.1", "3.2", "3.3"]
@@ -44,9 +45,6 @@ jobs:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
 
-      - name: Run RSpec
-        run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
-
       - name: Install gem locally
         run: bundle exec rake install:local
 
@@ -61,7 +59,11 @@ jobs:
           CI: true
         with:
           coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
-          coverageCommand: bundle exec rspec
+          coverageCommand: bundle exec rspec --format RSpec::Github::Formatter
+
+      - name: Run RSpec
+        if: runner.os == 'macos'
+        run: bundle exec rspec --format RSpec::Github::Formatter
 
   devcontainer:
     runs-on: ubuntu-latest
