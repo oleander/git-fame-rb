@@ -92,6 +92,7 @@ jobs:
         run: devcontainer exec --workspace-folder . bundle exec rspec
 
   dockerfile:
+    needs: rspec
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
