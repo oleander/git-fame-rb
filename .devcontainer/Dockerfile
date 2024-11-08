@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/ruby:3.3.0
+FROM mcr.microsoft.com/devcontainers/ruby:3.3
 
 WORKDIR /workspace
 
