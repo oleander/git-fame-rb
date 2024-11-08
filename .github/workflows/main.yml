@@ -89,7 +89,7 @@ jobs:
           CI: true
         with:
           coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
-          coverageCommand: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec --format RSpec::Github::Formatter
+          coverageCommand: docker run --rm git-fame bundle exec rspec --format RSpec::Github::Formatter
 
   devcontainer:
     runs-on: ubuntu-latest

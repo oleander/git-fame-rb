@@ -17,4 +17,6 @@ RUN gem install solargraph bundler:2.5.22 gem-release
 COPY Gemfile Gemfile.lock git_fame.gemspec ./
 COPY lib/git_fame/version.rb ./lib/git_fame/version.rb
 
+COPY . .
+
 RUN bundle install --jobs 4 --retry 3
