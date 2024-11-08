@@ -96,4 +96,4 @@ jobs:
         run: docker build -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run tests in Docker container
-        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
+        run: docker run --rm -v $(pwd):/workspace -w /workspace git-fame bundle exec rspec
