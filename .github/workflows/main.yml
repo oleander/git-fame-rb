@@ -17,11 +17,19 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Install Docker
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image with Ruby version
-        run: docker build --build-arg RUBY_VERSION=3.3 -t git-fame -f .devcontainer/Dockerfile .
+        run: docker build --build-arg RUBY_VERSION=3.3 --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run Rubocop
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rubocop
@@ -39,11 +47,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Docker cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Install Docker
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image with Ruby version
-        run: docker build --build-arg RUBY_VERSION=${{ matrix.ruby }} -t git-fame -f .devcontainer/Dockerfile .
+        run: docker build --build-arg RUBY_VERSION=${{ matrix.ruby }} --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run git-fame
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec exe/git-fame --log-level debug
