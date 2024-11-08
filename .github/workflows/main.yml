@@ -137,6 +137,6 @@ jobs:
         run: bundle install --jobs 4 --retry 3
 
       - name: Increment version
-        run: gem bump --version patch --tag --push --skip-ci --release --file lib/git_fame/version.rb --remote origin --branch main --pretend
+        run: gem bump --version patch --tag --push --skip-ci --release --file lib/git_fame/version.rb --remote origin --branch main
         env:
           GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
