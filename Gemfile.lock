@@ -7,7 +7,7 @@ GIT
 PATH
   remote: .
   specs:
-    git_fame (3.1.12)
+    git_fame (3.1.13)
       activesupport (~> 7.0)
       dry-initializer (~> 3.0)
       dry-struct (~> 1.0)
@@ -59,6 +59,7 @@ GEM
       activesupport (>= 5.0.0)
     faker (3.1.1)
       i18n (>= 1.8.11, < 2)
+    gem-release (2.2.2)
     i18n (1.14.1)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
@@ -169,6 +170,7 @@ DEPENDENCIES
   bundler
   factory_bot
   faker
+  gem-release (~> 2.2)
   git_fame!
   pry
   rake

@@ -27,3 +27,5 @@ group :test do
 end
 
 gem "bump", github: "gregorym/bump"
+
+gem "gem-release", "~> 2.2"

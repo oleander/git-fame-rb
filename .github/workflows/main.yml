@@ -117,7 +117,7 @@ jobs:
         run: bundle install
 
       - name: Increment version
-        run: bundle exec bump patch --commit --tag --replace-in lib/git_fame/version.rb
+        run: gem bump --version patch --tag --commit
 
       - name: Push new version
         env:
