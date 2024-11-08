@@ -7,7 +7,7 @@ gemspec
 group :development, :test do
   gem "bundler"
   gem "pry"
-  gem "rubocop", "~> 1.24.0"
+  gem "rubocop", "~> 1.42.0"
   gem "rubocop-md"
   gem "rubocop-performance"
   gem "rubocop-rake"
