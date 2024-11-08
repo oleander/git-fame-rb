@@ -28,7 +28,7 @@ jobs:
 
   rspec:
     runs-on: ${{ matrix.os }}
-    needs: [dockerfile, devcontainer, rubocop]
+    needs: rubocop
     strategy:
       matrix:
         ruby: ["2.7", "3.0", "3.1", "3.2", "3.3"]
@@ -39,17 +39,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-          ruby-version: ${{ matrix.ruby }}
-
-      - name: Install gem locally
-        run: bundle exec rake install:local
+      - name: Build Docker image with Ruby version
+        run: docker build --build-arg RUBY_VERSION=${{ matrix.ruby }} -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run git-fame
-        run: bundle exec exe/git-fame --log-level debug
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec exe/git-fame --log-level debug
 
       - name: Upload coverage to CodeClimate
         if: runner.os != 'macos'
@@ -59,14 +53,15 @@ jobs:
           CI: true
         with:
           coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
-          coverageCommand: bundle exec rspec --format RSpec::Github::Formatter
+          coverageCommand: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec --format RSpec::Github::Formatter
 
       - name: Run RSpec
         if: runner.os == 'macos'
-        run: bundle exec rspec --format RSpec::Github::Formatter
+        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec --format RSpec::Github::Formatter
 
   devcontainer:
     runs-on: ubuntu-latest
+    needs: rubocop
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -88,20 +83,6 @@ jobs:
 
       - name: Run tests inside DevContainer
         run: devcontainer exec --workspace-folder . bundle exec rspec
-
-  dockerfile:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build Docker image
-        run: docker build -t git-fame -f .devcontainer/Dockerfile .
-
-      - name: Run tests in Docker container
-        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
 
   release:
     runs-on: ubuntu-latest
