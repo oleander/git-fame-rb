@@ -6,7 +6,7 @@ ENV BUNDLE_PATH=/cache/bundle
 VOLUME "$BUNDLE_PATH"
 
 RUN apt-get update && \
-    apt-get install -y cmake git && \
+    apt-get install -y cmake git libssl-dev && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
