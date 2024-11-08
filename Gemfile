@@ -25,3 +25,5 @@ group :test do
   gem "simplecov"
   gem "simplecov-cobertura"
 end
+
+gem "gem-release", "~> 2.2"
