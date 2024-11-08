@@ -4,8 +4,9 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: jwlawson/actions-setup-cmake@v1.9
+      - uses: actions/checkout@v4
+
+      - uses: jwlawson/actions-setup-cmake@v1
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
@@ -24,13 +25,16 @@ jobs:
         with:
           fetch-depth: "0"
       - uses: jwlawson/actions-setup-cmake@v1
+
       - uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
+
       - run: bundle exec rspec --format RSpec::Github::Formatter --format progress --color --tty
       - run: bundle exec rake install:local
       - run: bundle exec exe/git-fame --log-level debug
+
       - uses: paambaati/codeclimate-action@v5
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
@@ -61,3 +65,17 @@ jobs:
 
       - name: Install dependencies
         run: devcontainer exec --workspace-folder . bundle exec rspec
+
+  dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build docker image
+        run: docker build -t git-fame -f .devcontainer/Dockerfile .
+
+      - name: Test docker image
+        run: docker run -it -v $(pwd):/workspace git-fame bundle exec rspec
