@@ -5,7 +5,7 @@ require:
   - rubocop-md
 
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.0
   NewCops: enable
   Exclude: ['vendor/**/*']
 
