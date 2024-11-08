@@ -102,4 +102,4 @@ jobs:
         run: docker build -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Test docker image
-        run: docker run -it -v $(pwd):/workspace git-fame bundle exec rspec
+        run: docker run -t -v $(pwd):/workspace git-fame bundle exec rspec
