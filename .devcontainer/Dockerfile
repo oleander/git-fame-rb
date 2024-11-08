@@ -10,10 +10,11 @@ RUN groupadd -g $GROUP_ID -o user && \
 ENV BUNDLE_PATH=/cache/bundle
 
 RUN apt-get update && \
-    apt-get install -y cmake && \
+    apt-get install -y cmake git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN git config --global --add safe.directory *
 RUN gem install solargraph bundler:2.3.3
 
 COPY Gemfile Gemfile.lock git_fame.gemspec ./
