@@ -57,6 +57,7 @@ jobs:
         run: bundle exec exe/git-fame --log-level debug
 
       - name: Codeclimate (code coverage)
+        if: runner.os != 'macos'
         uses: paambaati/codeclimate-action@v9
         env:
           CC_TEST_REPORTER_ID: ${{secrets.CC_TEST_REPORTER_ID}}
