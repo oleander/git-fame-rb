@@ -62,8 +62,8 @@ Examples:
 ## Development
 
 1. `git clone https://github.com/oleander/git-fame-rb.git`
-2. `bundle install`
-3. `bundle exec rspec`
+2. `docker build -t git-fame -f .devcontainer/Dockerfile .`
+3. `docker run -it -v $(pwd):/workspace git-fame bundle exec rspec`
 
 ## New release
 
