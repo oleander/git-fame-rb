@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   rubocop:
+    needs: release
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
