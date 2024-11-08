@@ -33,7 +33,10 @@ jobs:
       - name: Build Docker image with Ruby version
         run: |
           docker buildx create --use
-          docker buildx build --build-arg RUBY_VERSION=3.3 --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache --output type=docker -t git-fame -f .devcontainer/Dockerfile .
+          docker buildx build --build-arg RUBY_VERSION=3.3 \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+            --load -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run Rubocop
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rubocop
@@ -67,7 +70,10 @@ jobs:
       - name: Build Docker image with Ruby version
         run: |
           docker buildx create --use
-          docker buildx build --build-arg RUBY_VERSION=${{ matrix.ruby }} --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache --output type=docker -t git-fame -f .devcontainer/Dockerfile .
+          docker buildx build --build-arg RUBY_VERSION=${{ matrix.ruby }} \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+            --load -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run git-fame
         run: docker run --rm -v $(pwd):/workspace git-fame bundle exec exe/git-fame --log-level debug
