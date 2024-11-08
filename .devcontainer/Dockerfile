@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/devcontainers/ruby:3.3
 WORKDIR /workspace
 
 ENV BUNDLE_PATH=/cache/bundle
+VOLUME "$BUNDLE_PATH"
 
 RUN apt-get update && \
     apt-get install -y cmake git && \
