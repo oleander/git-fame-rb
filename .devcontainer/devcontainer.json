@@ -13,9 +13,8 @@
   },
   "postCreateCommand": "bundle install",
   "mounts": [
-    "source=${localWorkspaceFolder}/,target=/workspace,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
   ],
-  "workspaceFolder": "/workspace",
-  "remoteUser": "vscode"
+  "workspaceFolder": "/workspace"
 }
 
