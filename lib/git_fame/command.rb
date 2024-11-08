@@ -125,7 +125,7 @@ module GitFame
       end
 
       thread = spinner.run do
-        Render.new(result:, **options(:branch))
+        Render.new(result: result, **options(:branch))
       end
 
       thread.value.call
@@ -150,11 +150,11 @@ module GitFame
     end
 
     def collector
-      Collector.new(filter:, diff:, **options)
+      Collector.new(filter: filter, diff: diff, **options)
     end
 
     def diff
-      Diff.new(commit:, **options)
+      Diff.new(commit: commit, **options)
     end
 
     def options(*args)
