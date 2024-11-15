@@ -12,7 +12,6 @@ permissions:
 
 jobs:
   rubocop:
-    needs: release
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -107,7 +106,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     # if: github.ref == 'refs/heads/main'
-    # needs: [rspec, dockerfile, devcontainer]
+    needs: [rubocop]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
