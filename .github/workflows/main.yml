@@ -81,10 +81,8 @@ jobs:
       - name: Set up DevContainer CLI
         run: npm install -g @devcontainers/cli
 
-      - name: Build and start DevContainer
-        run: |
-          devcontainer build --workspace-folder .
-          devcontainer up --workspace-folder .
+      - name: Build DevContainer
+        run: devcontainer build --workspace-folder .
   dockerfile:
     runs-on: ubuntu-latest
     steps:
