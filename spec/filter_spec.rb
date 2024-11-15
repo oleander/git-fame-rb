@@ -10,13 +10,13 @@ describe GitFame::Filter do
           include: Set["test*{.rb, .js, .ts}"],
           extensions: Set[".rb", ".js"],
           exclude: Set["*_spec.rb"],
-          before: before,
-          after: after
+          before:,
+          after:
         })
       end
 
       let(:now) { DateTime.now }
-      let(:changes) { super().deep_merge(orig_path: file_path, final_signature: { time: time }) }
+      let(:changes) { super().deep_merge(orig_path: file_path, final_signature: { time: }) }
       let(:file_path) { "test.rb" }
       let(:time) { Time.now }
       let(:before) { now + 1_000 }
@@ -39,9 +39,9 @@ describe GitFame::Filter do
     end
 
     context "when the before filter is set to today" do
-      subject(:filter) { build(:filter, before: before) }
+      subject(:filter) { build(:filter, before:) }
 
-      let(:changes) { super().deep_merge(final_signature: { time: time }) }
+      let(:changes) { super().deep_merge(final_signature: { time: }) }
       let(:before) { DateTime.now }
 
       context "when the change is set BEFORE the [before] filter" do
@@ -62,7 +62,7 @@ describe GitFame::Filter do
     end
 
     context "when the [exclude] filter is set to ignore [LI*ENCE]" do
-      subject(:filter) { build(:filter, exclude: exclude) }
+      subject(:filter) { build(:filter, exclude:) }
 
       let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:exclude) { Set["LI*ENCE"] }
@@ -85,7 +85,7 @@ describe GitFame::Filter do
     end
 
     context "when the [include] filter is set to include [*_spec.rb]" do
-      subject(:filter) { build(:filter, include: include) }
+      subject(:filter) { build(:filter, include:) }
 
       let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:include) { Set["*_spec.rb"] }
@@ -108,7 +108,7 @@ describe GitFame::Filter do
     end
 
     context "when the [extensions] filter is set to ignore [.rb]" do
-      subject(:filter) { build(:filter, extensions: extensions) }
+      subject(:filter) { build(:filter, extensions:) }
 
       let(:changes) { super().deep_merge(orig_path: file_path) }
       let(:extensions) { Set[".rb"] }
@@ -131,9 +131,9 @@ describe GitFame::Filter do
     end
 
     context "when the after filter is set to today" do
-      subject(:filter) { build(:filter, after: after) }
+      subject(:filter) { build(:filter, after:) }
 
-      let(:changes) { super().deep_merge(final_signature: { time: time }) }
+      let(:changes) { super().deep_merge(final_signature: { time: }) }
       let(:after) { DateTime.now }
 
       context "when the change is set BEFORE the after filter" do
