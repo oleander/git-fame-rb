@@ -98,7 +98,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: [rspec, rubocop, devcontainer, dockerfile]
     steps:
       - name: Check out repository
