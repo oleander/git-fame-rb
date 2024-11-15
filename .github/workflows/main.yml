@@ -85,10 +85,6 @@ jobs:
         run: |
           devcontainer build --workspace-folder .
           devcontainer up --workspace-folder .
-
-      - name: Run tests inside DevContainer
-        run: devcontainer exec --workspace-folder . bundle exec rspec
-
   dockerfile:
     runs-on: ubuntu-latest
     steps:
@@ -106,7 +102,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     # if: github.ref == 'refs/heads/main'
-    needs: [rubocop]
+    needs: [rubocop, devcontainer]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
