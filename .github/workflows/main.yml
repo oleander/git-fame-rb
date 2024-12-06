@@ -135,4 +135,6 @@ jobs:
         run: git commit -a --amend --no-edit
 
       - name: Push changes
-        run: git push --tags
+        run: |
+          git push
+          git push --tags
