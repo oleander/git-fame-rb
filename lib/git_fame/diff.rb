@@ -11,11 +11,11 @@ module GitFame
     # @yield [Hash]
     #
     # @return [void]
-    def each(&block)
+    def each(&)
       tree.walk(:preorder).each do |root, entry|
         case entry
         in { type: :blob, name: file, oid: }
-          Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&block)
+          Rugged::Blame.new(repo, root + file, newest_commit: commit).each(&)
         in { type: type, name: file }
           say("Ignore type [%s] in for %s", type, root + file)
         end
