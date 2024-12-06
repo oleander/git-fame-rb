@@ -26,7 +26,7 @@ module GitFame
         table << [c.name, c.email, c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
       end
 
-      print table.render(:unicode, width: width, resize: true, alignment: [:center])
+      print table.render(:unicode, width:, resize: true, alignment: [:center])
     end
 
     private
