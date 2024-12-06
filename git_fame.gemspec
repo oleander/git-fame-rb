@@ -31,7 +31,7 @@ Gem::Specification.new do |gem|
   gem.executables << "git-fame"
   gem.bindir = "exe"
 
-  gem.add_dependency "activesupport", "~> 7.0"
+  gem.add_dependency "activesupport", ">= 7", "< 9"
   gem.add_dependency "dry-initializer", "~> 3.0"
   gem.add_dependency "dry-struct", "~> 1.0"
   gem.add_dependency "dry-types", "~> 1.0"
