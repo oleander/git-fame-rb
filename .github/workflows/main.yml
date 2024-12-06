@@ -122,6 +122,15 @@ jobs:
         run: bundle install
 
       - name: Increment version
-        run: gem bump --version patch --tag --push --skip-ci --release --file lib/git_fame/version.rb
+        run: gem bump --version patch --tag --skip-ci --release --file lib/git_fame/version.rb
         env:
           GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
+
+      - name: Add and commit version bump
+        run: |
+          bundle install
+          git add .
+          git commit --amend --no-edit
+
+      - name: Push changes
+        run: git push
