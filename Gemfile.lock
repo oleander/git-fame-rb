@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_fame (3.2.17)
+    git_fame (3.2.18)
       activesupport (~> 7.0)
       dry-initializer (~> 3.0)
       dry-struct (~> 1.0)
@@ -56,6 +56,7 @@ GEM
     i18n (1.14.6)
       concurrent-ruby (~> 1.0)
     ice_nine (0.11.2)
+    json (2.6.3)
     method_source (1.0.0)
     minitest (5.25.4)
     neatjson (0.10.5)
@@ -92,13 +93,14 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.12.0)
     rspec-support (3.12.0)
-    rubocop (1.24.1)
+    rubocop (1.42.0)
+      json (~> 2.3)
       parallel (~> 1.10)
-      parser (>= 3.0.0.0)
+      parser (>= 3.1.2.1)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 1.8, < 3.0)
-      rexml
-      rubocop-ast (>= 1.15.1, < 2.0)
+      rexml (>= 3.2.5, < 4.0)
+      rubocop-ast (>= 1.24.1, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 1.4.0, < 3.0)
     rubocop-ast (1.28.0)
@@ -171,7 +173,7 @@ DEPENDENCIES
   rspec
   rspec-github
   rspec-its
-  rubocop (~> 1.24.0)
+  rubocop (~> 1.42.0)
   rubocop-md
   rubocop-performance
   rubocop-rake
