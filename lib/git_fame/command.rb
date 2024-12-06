@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "active_support/core_ext/enumerable"
+require "active_support/core_ext/object/blank"
 require "tty-option"
 require "tty-spinner"
 
@@ -124,7 +125,7 @@ module GitFame
       end
 
       thread = spinner.run do
-        Render.new(result: result, **options(:branch))
+        Render.new(result:, **options(:branch))
       end
 
       thread.value.call
@@ -149,11 +150,11 @@ module GitFame
     end
 
     def collector
-      Collector.new(filter: filter, diff: diff, **options)
+      Collector.new(filter:, diff:, **options)
     end
 
     def diff
-      Diff.new(commit: commit, **options)
+      Diff.new(commit:, **options)
     end
 
     def options(*args)

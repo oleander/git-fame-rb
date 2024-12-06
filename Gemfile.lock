@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_fame (3.1.1)
+    git_fame (3.2.11)
       activesupport (~> 7.0)
       dry-initializer (~> 3.0)
       dry-struct (~> 1.0)
@@ -69,6 +69,7 @@ GEM
     pry (0.14.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
+    racc (1.8.1)
     rainbow (3.1.1)
     rake (13.0.6)
     regexp_parser (2.7.0)
@@ -150,7 +151,10 @@ GEM
     zeitwerk (2.6.7)
 
 PLATFORMS
+  aarch64-linux
   arm64-darwin-22
+  arm64-darwin-23
+  arm64-darwin-24
   x86_64-darwin-19
   x86_64-darwin-20
   x86_64-darwin-21
@@ -162,6 +166,7 @@ DEPENDENCIES
   faker
   git_fame!
   pry
+  racc (~> 1.8)
   rake
   rspec
   rspec-github
@@ -175,4 +180,4 @@ DEPENDENCIES
   simplecov-cobertura
 
 BUNDLED WITH
-   2.3.3
+   2.5.22
