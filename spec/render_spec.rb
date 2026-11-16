@@ -94,6 +94,14 @@ describe GitFame::Render do
       end
     end
 
+    context "when a name contains a tab" do
+      let(:render) { build(:render, result: build(:result, contributions: [build(:contribution, author: { name: "Ada\tLovelace", email: "ada@example.com" })])) }
+
+      it "prints the escaped name in full" do
+        expect(stdout).to include("Ada\\tLovelace")
+      end
+    end
+
     context "with a terminal wider than the table" do
       let(:render) { build(:render, result:, width: 500) }
 

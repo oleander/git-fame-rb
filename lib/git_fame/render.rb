@@ -35,7 +35,7 @@ module GitFame
       table = TTY::Table.new(header: FIELDS)
 
       contributions.reverse_each do |c|
-        table << [c.name, c.email, c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
+        table << [escape(c.name), escape(c.email), c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
       end
 
       puts render(table)
@@ -48,8 +48,17 @@ module GitFame
       table.render(:unicode, column_widths: widths, width: table_width(widths), resize: false, alignment: [:center])
     end
 
+    # Writes tabs and line breaks as \t, \r and \n, like the escape step in
+    # tty-table, but before the column widths are measured
+    #
+    # @return [String]
+    def escape(text)
+      text.gsub(/[\t\r\n]/) { |char| char.dump.delete('"') }
+    end
+
     # Natural column widths, with name and email truncated as needed to fit
-    # the table within {#width}
+    # the table within {#width}. TTY::Table::Columns is private API, which is
+    # why the gemspec allows tty-table 0.12.x only.
     #
     # @return [Array<Integer>]
     def column_widths(table)

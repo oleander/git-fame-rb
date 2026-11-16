@@ -14,7 +14,7 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 
 - Ruby 3.3 or later is required. Ruby 3.1 and 3.2 reached their end of life in March 2025 and March 2026. On older Rubies, `gem install git_fame` keeps installing 3.2.19.
 - Dependencies: activesupport 7.1 to 8.x, tty-table 0.12, tty-screen 0.8 and tty-option 0.3. The unused neatjson and tty-box gems are no longer installed, and logger is declared because Ruby 4.0 no longer ships it as a default gem.
-- Output that is piped or redirected prints the table at its natural width instead of fitting it into 80 columns.
+- The table keeps its natural width. It no longer stretches to fill a wide terminal, and output that is piped or redirected is no longer fitted into 80 columns.
 - The gem declares its MIT license and links to its source code, changelog and issue tracker, and ships with LICENSE, README.md and CHANGELOG.md.
 - Binary files are skipped. They used to add their newline bytes to the line counts, which git-fame 2.x did not do either.
 - The file share in the `dist` column is relative to the number of distinct files, as in git-fame 2.x. It used to be relative to the sum of every author's file count, which counted a file once per author.

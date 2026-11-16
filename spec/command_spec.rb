@@ -126,4 +126,22 @@ describe GitFame::Command do
       ).to_stdout
     end
   end
+
+  describe "#terminal_width" do
+    subject(:width) { described_class.new.send(:terminal_width) }
+
+    before { allow(TTY::Screen).to receive(:width).and_return(72) }
+
+    it "is the screen width when stdout is a terminal" do
+      allow($stdout).to receive(:tty?).and_return(true)
+
+      expect(width).to eq(72)
+    end
+
+    it "is nil, so the table keeps its natural width, when stdout is not a terminal" do
+      allow($stdout).to receive(:tty?).and_return(false)
+
+      expect(width).to be_nil
+    end
+  end
 end
