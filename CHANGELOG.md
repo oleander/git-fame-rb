@@ -6,6 +6,8 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-16
+
 ### Added
 
 - Support for Ruby 3.4 and 4.0.
@@ -38,3 +40,6 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 - In an 80-column terminal, the `lines`, `commits` and `files` columns collapsed to zero width and the borders broke. Names and email addresses are now shortened to fit the terminal, and the number columns keep their width.
 - CI no longer depends on the retired Code Climate coverage service, whose upload step was the only step running RSpec on Linux.
 - Release tags point to commits on `main`. The old release job amended the version commit after tagging it, so the tags `v3.2.15` to `v3.2.19` point to commits that never reached `main`.
+
+[Unreleased]: https://github.com/oleander/git-fame-rb/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/oleander/git-fame-rb/compare/v3.2.19...v3.3.0
