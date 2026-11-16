@@ -24,7 +24,6 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 
 ### Fixed
 
-<<<<<<< HEAD
 - Outside a git repository, in a repository or on a branch without commits, with an unknown `--branch`, with an unreadable repository file and with an invalid option value such as `--log-level loud`, git-fame printed a stack trace. It now prints an error message and exits with status 1.
 - `--branch` with an annotated tag raised `NameError`. Annotated tags now resolve to the commit they point to.
 - `--include`, `--exclude` and `--extensions` matched renamed files by their path before the rename, so `--extensions .ts` missed a file renamed from `.js` to `.ts`.
@@ -35,10 +34,7 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 - The table ends with a newline, so the shell prompt no longer starts on its last line.
 - Ctrl-C exits with status 130 instead of 0.
 - `exe/git-fame` run from a source checkout added `exe/lib` instead of `lib` to the load path.
-||||||| a20ee3d
-=======
 - An author name or email that is not valid UTF-8 crashed the table with `ArgumentError: invalid byte sequence in UTF-8`; invalid bytes are now shown as U+FFFD.
->>>>>>> chore/ruby-4-and-deps
 - In an 80-column terminal, the `lines`, `commits` and `files` columns collapsed to zero width and the borders broke. Names and email addresses are now shortened to fit the terminal, and the number columns keep their width.
 - CI no longer depends on the retired Code Climate coverage service, whose upload step was the only step running RSpec on Linux.
 - Release tags point to commits on `main`. The old release job amended the version commit after tagging it, so the tags `v3.2.15` to `v3.2.19` point to commits that never reached `main`.
