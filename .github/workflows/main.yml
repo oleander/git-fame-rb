@@ -141,10 +141,10 @@ jobs:
     needs: [rubocop, rspec, gem, devcontainer, dockerfile]
     permissions:
       contents: write
-    # One release at a time. GitHub keeps only the newest waiting job in a
-    # group: if several pushes to main finish their tests while a release runs,
-    # the older waiting ones are cancelled and the newest version is released
-    # (an intermediate version number can be skipped).
+    # One release at a time. GitHub keeps only one waiting job in this group:
+    # if several pushes to main finish their tests while a release runs, the
+    # job that started waiting last replaces the others, so a version can be
+    # skipped or wait for the next push or a manual run on main.
     concurrency:
       group: release
       cancel-in-progress: false

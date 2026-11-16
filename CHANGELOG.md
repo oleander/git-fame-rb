@@ -31,7 +31,7 @@ Releases before 3.3.0 are listed on [RubyGems](https://rubygems.org/gems/git_fam
 - `--include`, `--exclude` and `--extensions` matched renamed files by their path before the rename, so `--extensions .ts` missed a file renamed from `.js` to `.ts`.
 - `--include` or `--exclude` with a non-ASCII pattern crashed with `Encoding::CompatibilityError` on files with non-ASCII names.
 - A blame hunk without an author or path raised `NoMatchingPatternError`; such hunks are now skipped.
-- The help text described `--before` as "after this date" and `--after` as "before this date", and showed `[BLOB]` instead of `[GLOB]` for `-E` and `-I`.
+- The help text described `--before` as "after this date" and `--after` as "before this date".
 - When no lines match the filters, git-fame explains that on stderr instead of printing nothing.
 - The table ends with a newline, so the shell prompt no longer starts on its last line.
 - Ctrl-C exits with status 130 instead of 0.
