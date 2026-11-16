@@ -1,140 +1,206 @@
 name: git-fame
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
+# Runs on main are never cancelled: the release job must not stop halfway.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   rubocop:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.338.0
         with:
           bundler-cache: true
-          ruby-version: 3.3.0
+          ruby-version: "3.3"
 
       - name: Run Rubocop
         run: bundle exec rubocop
 
   rspec:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
+      fail-fast: false
       matrix:
         ruby: ["3.1", "3.2", "3.3"]
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Ruby and dependencies
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@v1.338.0
         with:
           bundler-cache: true
           ruby-version: ${{ matrix.ruby }}
 
-      - name: Install gem locally
-        run: bundle exec rake install:local
+      - name: Run RSpec
+        run: bundle exec rspec --format RSpec::Github::Formatter --format progress
 
       - name: Run git-fame
         run: bundle exec exe/git-fame --log-level debug
 
-      - name: Upload coverage to CodeClimate
-        if: runner.os != 'macos'
-        uses: paambaati/codeclimate-action@v9
-        env:
-          CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
-          CI: true
+  # Installs the built gem the way users do (gem install, no Bundler, newest
+  # dependencies allowed by the gemspec) and runs the installed executable.
+  gem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.1", "3.2", "3.3"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
         with:
-          coverageLocations: ${{ github.workspace }}/coverage/coverage.xml:cobertura
-          coverageCommand: bundle exec rspec --format RSpec::Github::Formatter
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Run RSpec
-        if: runner.os == 'macos'
-        run: bundle exec rspec --format RSpec::Github::Formatter
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1.338.0
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Build gem
+        run: gem build git_fame.gemspec
+
+      - name: Install gem
+        run: gem install --no-document ./git_fame-*.gem
+
+      - name: Run installed git-fame
+        run: |
+          git-fame --version
+          git-fame --after 2010-01-01 --before 2100-01-01
+          cd lib && git-fame --extensions .rb
 
   devcontainer:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
-          fetch-depth: 0
+          persist-credentials: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.1.0
         with:
-          node-version: "20.x"
+          node-version: "24"
 
       - name: Set up DevContainer CLI
-        run: npm install -g @devcontainers/cli
+        run: npm install -g @devcontainers/cli@0.90.0
 
       - name: Build DevContainer
         run: devcontainer build --workspace-folder .
+
   dockerfile:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Build Docker image
         run: docker build -t git-fame -f .devcontainer/Dockerfile .
 
       - name: Run tests in Docker container
-        run: docker run --rm -v $(pwd):/workspace git-fame bundle exec rspec
+        run: docker run --rm -v "$(pwd):/workspace" git-fame bundle exec rspec
 
+  # Publishes the version in lib/git_fame/version.rb once. Pushes to main that
+  # do not change the version find it already released and skip every step.
   release:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    needs: [rspec, rubocop, devcontainer, dockerfile]
+    timeout-minutes: 15
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [rubocop, rspec, gem, devcontainer, dockerfile]
+    permissions:
+      contents: write
+    concurrency:
+      group: release
+      cancel-in-progress: false
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+        uses: actions/checkout@v7.0.1
         with:
-          bundler-cache: true
-          ruby-version: 3.3.0
+          persist-credentials: false
 
-      - name: Setup git
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1.338.0
+        with:
+          ruby-version: "3.3"
+
+      - name: Read version and release state
+        id: state
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
+          version="$(ruby -e 'require "./lib/git_fame/version"; print GitFame::VERSION')"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Install gem-release
-        run: gem install gem-release
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Install dependencies
-        run: bundle install
+          status="$(curl -sS -o /dev/null -w '%{http_code}' "https://rubygems.org/api/v2/rubygems/git_fame/versions/$version.json")"
+          case "$status" in
+            200) echo "published=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "published=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::RubyGems returned HTTP $status for git_fame $version"; exit 1 ;;
+          esac
 
-      - name: Increment version
-        run: gem bump --version patch --tag --skip-ci --release --file lib/git_fame/version.rb
+      - name: Create tag and GitHub release
+        if: steps.state.outputs.tagged == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.state.outputs.version }}
+        run: |
+          # Release notes come from the CHANGELOG.md section for this version,
+          # or from the merged pull requests when that section is missing.
+          touch release-notes.md
+          if [ -f CHANGELOG.md ]; then
+            awk -v version="$VERSION" '
+              index($0, "## [" version "]") == 1 || index($0, "## " version) == 1 { found = 1; next }
+              found && /^## / { exit }
+              found { print }
+            ' CHANGELOG.md > release-notes.md
+          fi
+
+          if [ -s release-notes.md ]; then
+            gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file release-notes.md
+          else
+            gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes
+          fi
+
+      - name: Build gem
+        if: steps.state.outputs.published == 'false'
+        run: gem build git_fame.gemspec
+
+      - name: Publish gem to RubyGems
+        if: steps.state.outputs.published == 'false'
         env:
           GEM_HOST_API_KEY: ${{ secrets.GEM_HOST_API_KEY }}
-
-      - name: Install dependencies
-        run: bundle install
-        env:
-          BUNDLE_FROZEN: "false"
-
-      - name: Add and commit version bump
-        run: git commit -a --amend --no-edit
-
-      - name: Push changes
-        run: |
-          git push
-          git push --tags
+          VERSION: ${{ steps.state.outputs.version }}
+        run: gem push "git_fame-$VERSION.gem"
