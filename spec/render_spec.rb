@@ -10,9 +10,9 @@ describe GitFame::Render do
   end
 
   describe "#call" do
-    subject(:lines) { output.lines.map(&:chomp) }
+    subject(:lines) { stdout.lines.map(&:chomp) }
 
-    let(:output) do
+    let(:stdout) do
       capture = StringIO.new
       original = $stdout
       $stdout = capture
@@ -35,7 +35,7 @@ describe GitFame::Render do
       let(:render) { build(:render, result:) }
 
       it "prints every name and email in full" do
-        expect(output).to include("Margaret Hamilton", "margaret.hamilton@apollo.example.com", "조성빈", "René Descartes")
+        expect(stdout).to include("Margaret Hamilton", "margaret.hamilton@apollo.example.com", "조성빈", "René Descartes")
       end
 
       it "prints all six column headers" do
@@ -55,11 +55,11 @@ describe GitFame::Render do
       end
 
       it "keeps the number columns intact" do
-        expect(output).to include("1 234", "lines", "commits", "files")
+        expect(stdout).to include("1 234", "lines", "commits", "files")
       end
 
       it "truncates the email column" do
-        expect(output).not_to include("margaret.hamilton@apollo.example.com")
+        expect(stdout).not_to include("margaret.hamilton@apollo.example.com")
       end
     end
 
@@ -67,7 +67,7 @@ describe GitFame::Render do
       let(:render) { build(:render, result:, width: 20) }
 
       it "keeps the number columns intact" do
-        expect(output).to include("1 234", "lines", "commits", "files")
+        expect(stdout).to include("1 234", "lines", "commits", "files")
       end
 
       it "shortens names and emails to the minimum width" do
@@ -75,6 +75,14 @@ describe GitFame::Render do
 
         expect([name, email]).to all(include("…"))
         expect([name, email].map { Unicode::DisplayWidth.of(_1) }).to eq([8, 8])
+      end
+    end
+
+    context "when a name contains a tab" do
+      let(:render) { build(:render, result: build(:result, contributions: [build(:contribution, author: { name: "Ada\tLovelace", email: "ada@example.com" })])) }
+
+      it "prints the escaped name in full" do
+        expect(stdout).to include("Ada\\tLovelace")
       end
     end
 

@@ -11,7 +11,7 @@ PATH
       tty-option (~> 0.3)
       tty-screen (~> 0.8)
       tty-spinner (~> 0.9)
-      tty-table (~> 0.12)
+      tty-table (~> 0.12.0)
       zeitwerk (~> 2.0)
 
 GEM
