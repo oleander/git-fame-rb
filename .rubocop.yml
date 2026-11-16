@@ -1,11 +1,12 @@
-require:
+plugins:
   - rubocop-performance
   - rubocop-rspec
   - rubocop-rake
+  - rubocop-factory_bot
   - rubocop-md
 
 AllCops:
-  TargetRubyVersion: 3.1
+  TargetRubyVersion: 3.3
   NewCops: enable
   Exclude: ['vendor/**/*']
 
@@ -125,7 +126,7 @@ Style/SignalException:
 Style/SymbolProc:
   Enabled: false
 
-RSpec/FilePath:
+RSpec/SpecFilePathFormat:
   Enabled: false
 
 Layout/CaseIndentation:
@@ -140,7 +141,7 @@ Lint/Void:
 Style/SymbolArray:
   EnforcedStyle: brackets
 
-Naming/PredicateName:
+Naming/PredicatePrefix:
   Exclude: ["lib/remap/result.rb", "lib/remap/failure.rb"]
 
 Lint/EmptyClass:

@@ -7,6 +7,7 @@ Gem::Specification.new do |gem|
   gem.version       = GitFame::VERSION
   gem.authors       = ["Linus Oleander"]
   gem.email         = ["oleander@users.noreply.github.com"]
+  gem.license       = "MIT"
 
   gem.description   = <<~DESC
     A command-line tool that helps you summarize and
@@ -16,7 +17,7 @@ Gem::Specification.new do |gem|
     Generates stats like:
       - Number of files changed by a user
       - Number of commits by user
-      - Lines of code by a user'
+      - Lines of code by a user
   DESC
 
   gem.summary = <<~SUMMARY
@@ -26,22 +27,27 @@ Gem::Specification.new do |gem|
   SUMMARY
 
   gem.homepage = "https://github.com/oleander/git-fame-rb"
-  gem.required_ruby_version = ">= 3.1"
-  gem.files = Dir["lib/**/*", "exe/*"]
+  gem.required_ruby_version = ">= 3.3"
+  gem.files = Dir["lib/**/*", "exe/*", "CHANGELOG.md", "LICENSE", "README.md"]
   gem.executables << "git-fame"
   gem.bindir = "exe"
 
-  gem.add_dependency "activesupport", ">= 7", "< 9"
+  gem.add_dependency "activesupport", ">= 7.1", "< 9"
   gem.add_dependency "dry-initializer", "~> 3.0"
   gem.add_dependency "dry-struct", "~> 1.0"
   gem.add_dependency "dry-types", "~> 1.0"
-  gem.add_dependency "neatjson", "~> 0.9"
+  gem.add_dependency "logger", "~> 1.5"
   gem.add_dependency "rugged", "~> 1.0"
-  gem.add_dependency "tty-box", "~> 0.5"
-  gem.add_dependency "tty-option", "~> 0.2"
-  gem.add_dependency "tty-screen", "~> 0.5"
+  gem.add_dependency "tty-option", "~> 0.3"
+  gem.add_dependency "tty-screen", "~> 0.8"
   gem.add_dependency "tty-spinner", "~> 0.9"
-  gem.add_dependency "tty-table", "<= 0.10.0", "~> 0.9"
+  gem.add_dependency "tty-table", "~> 0.12.0"
   gem.add_dependency "zeitwerk", "~> 2.0"
-  gem.metadata = { "rubygems_mfa_required" => "true" }
+
+  gem.metadata = {
+    "bug_tracker_uri" => "https://github.com/oleander/git-fame-rb/issues",
+    "changelog_uri" => "https://github.com/oleander/git-fame-rb/blob/main/CHANGELOG.md",
+    "rubygems_mfa_required" => "true",
+    "source_code_uri" => "https://github.com/oleander/git-fame-rb"
+  }
 end

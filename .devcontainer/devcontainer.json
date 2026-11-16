@@ -1,15 +1,15 @@
 {
-  "name": "Ruby Dev Container",
+  "name": "git-fame",
   "build": {
     "context": "..",
     "dockerfile": "Dockerfile"
   },
-  "extensions": [
-    "castwide.solargraph",
-    "rebornix.Ruby"
-  ],
-  "settings": {
-    "solargraph.diagnostics": true
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp"
+      ]
+    }
   },
   "postCreateCommand": "bundle install",
   "mounts": [
@@ -17,4 +17,3 @@
   ],
   "workspaceFolder": "/workspace"
 }
-
