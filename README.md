@@ -11,7 +11,7 @@ The statistics are mostly based on the output of `git blame` on the current bran
 
 `gem install git_fame`
 
-Requires Ruby 3.2 or later. The `rugged` dependency compiles libgit2 during installation, which needs [CMake](https://cmake.org) (`brew install cmake`, `apt-get install cmake`).
+Requires Ruby 3.3 or later. The `rugged` dependency compiles libgit2 during installation, which needs [CMake](https://cmake.org) (`brew install cmake`, `apt-get install cmake`).
 
 ## Usage
 

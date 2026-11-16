@@ -27,7 +27,7 @@ Gem::Specification.new do |gem|
   SUMMARY
 
   gem.homepage = "https://github.com/oleander/git-fame-rb"
-  gem.required_ruby_version = ">= 3.2"
+  gem.required_ruby_version = ">= 3.3"
   gem.files = Dir["lib/**/*", "exe/*", "CHANGELOG.md", "LICENSE", "README.md"]
   gem.executables << "git-fame"
   gem.bindir = "exe"
