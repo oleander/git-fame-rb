@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
 # A new push to a pull request cancels its outdated run. Every push to main
-# gets a group of its own, so a newer push never cancels or replaces it and the
-# release job runs for the commit that changed the version.
+# gets a group of its own, so a newer push never cancels or replaces it. The
+# release job has its own group on top of that; see its comment.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -141,6 +141,10 @@ jobs:
     needs: [rubocop, rspec, gem, devcontainer, dockerfile]
     permissions:
       contents: write
+    # One release at a time. GitHub keeps only the newest waiting job in a
+    # group: if several pushes to main finish their tests while a release runs,
+    # the older waiting ones are cancelled and the newest version is released
+    # (an intermediate version number can be skipped).
     concurrency:
       group: release
       cancel-in-progress: false
