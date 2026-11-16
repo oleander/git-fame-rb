@@ -3,11 +3,13 @@
 require "active_support/core_ext/enumerable"
 require "active_support/core_ext/object/blank"
 require "tty-option"
+require "tty-screen"
 require "tty-spinner"
 
 module GitFame
   class Command
     include TTY::Option
+
     using Extension
 
     usage do
@@ -125,7 +127,7 @@ module GitFame
       end
 
       thread = spinner.run do
-        Render.new(result:, **options(:branch))
+        Render.new(result:, width: terminal_width, **options(:branch))
       end
 
       thread.value.call
@@ -145,6 +147,11 @@ module GitFame
       @spinner ||= TTY::Spinner.new("[:spinner] git-fame is crunching the numbers, hold on ...", interval: 1)
     end
 
+    # Output that is piped or redirected is not limited to a screen width
+    def terminal_width
+      TTY::Screen.width if $stdout.tty?
+    end
+
     def repo
       Rugged::Repository.discover(params[:path])
     end
@@ -157,8 +164,8 @@ module GitFame
       Diff.new(commit:, **options)
     end
 
-    def options(*args)
-      params.to_h.only(*args, :log_level).compact_blank
+    def options(*)
+      params.to_h.only(*, :log_level).compact_blank
     end
 
     def commit

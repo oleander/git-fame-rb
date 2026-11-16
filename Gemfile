@@ -5,9 +5,9 @@ source "https://rubygems.org"
 gemspec
 
 group :development, :test do
-  gem "bundler"
   gem "pry"
-  gem "rubocop", "~> 1.42.0"
+  gem "rubocop"
+  gem "rubocop-factory_bot"
   gem "rubocop-md"
   gem "rubocop-performance"
   gem "rubocop-rake"
@@ -23,7 +23,4 @@ end
 
 group :test do
   gem "simplecov"
-  gem "simplecov-cobertura"
 end
-
-gem "racc", "~> 1.8"

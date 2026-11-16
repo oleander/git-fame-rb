@@ -29,13 +29,13 @@ module GitFame
         say("File %s ignored due to [created > after] (%p > %p)", path, created_at, after)
       in [{ orig_path: path, final_signature: { time: created_at } }, { before: }] unless created_at < before
         say("File %s ignored due to [created < before] (%p < %p)", path, created_at, before)
-      in [{ orig_path: path}, { exclude: excluded }] if excluded.any? { File.fnmatch?(_1, path, OPT) }
+      in [{ orig_path: path }, { exclude: excluded }] if excluded.any? { File.fnmatch?(_1, path, OPT) }
         say("File %s excluded by [exclude] (%p)", path, excluded)
       in [{ orig_path: path }, { include: included }] unless included.any? { File.fnmatch?(_1, path, OPT) }
         say("File %s excluded by [include] (%p)", path, included)
       in [{ orig_path: path }, { extensions: }] unless extensions.any? { File.extname(path) == _1 }
         say("File %s excluded by [extensions] (%p)", path, extensions)
-      in [{final_signature: { name:, email:}, final_commit_id: oid, lines_in_hunk: lines, orig_path: path}, Hash]
+      in [{ final_signature: { name:, email: }, final_commit_id: oid, lines_in_hunk: lines, orig_path: path }, Hash]
         block[lines, path, oid, name, email]
       end
     end
