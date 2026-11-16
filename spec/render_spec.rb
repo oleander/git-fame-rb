@@ -31,8 +31,24 @@ describe GitFame::Render do
       ]
     end
 
+    context "when there are no contributions" do
+      let(:render) { build(:render, result: build(:result, contributions: [])) }
+
+      it "prints nothing to stdout" do
+        expect { expect { render.call }.not_to output.to_stdout }.to output.to_stderr
+      end
+
+      it "explains why the table is missing" do
+        expect { render.call }.to output(/No lines of code found in HEAD/).to_stderr
+      end
+    end
+
     context "without a terminal width" do
       let(:render) { build(:render, result:) }
+
+      it "ends with a newline" do
+        expect(stdout).to end_with("┘\n")
+      end
 
       it "prints every name and email in full" do
         expect(stdout).to include("Margaret Hamilton", "margaret.hamilton@apollo.example.com", "조성빈", "René Descartes")

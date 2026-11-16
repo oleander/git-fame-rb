@@ -20,9 +20,10 @@ module GitFame
       example "Include commits made before 2015", "git fame --before 2015-01-01"
       example "Include commits made since 2010 and before 2015", "git fame --after 2010-01-01 --before 2015-01-01"
       example "Only changes made to the main branch", "git fame --branch main"
+      example "Lines as of a tag or commit", "git fame --branch v1.0.0"
       example "Only ruby and javascript files", "git fame --extensions .rb .js"
-      example "Exclude spec files and the README", "git fame --exclude */**/*_spec.rb README.md"
-      example "Only spec files and markdown files", "git fame --include */**/*_spec.rb */**/*.md"
+      example "Exclude spec files and the README", "git fame --exclude '*/**/*_spec.rb' README.md"
+      example "Only spec files and markdown files", "git fame --include '*/**/*_spec.rb' '*/**/*.md'"
       example "A parent directory of the current directory", "git fame ../other/git/repo"
     end
 
@@ -36,7 +37,7 @@ module GitFame
       desc "Exclude files matching the given glob pattern"
       long "--exclude [GLOB]"
       arity zero_or_more
-      short "-E [BLOB]"
+      short "-E [GLOB]"
       convert :list
     end
 
@@ -44,7 +45,7 @@ module GitFame
       desc "Include files matching the given glob pattern"
       long "--include [GLOB]"
       arity zero_or_more
-      short "-I [BLOB]"
+      short "-I [GLOB]"
       convert :list
     end
 
@@ -52,7 +53,7 @@ module GitFame
       desc "File extensions to be included starting with a period"
       arity zero_or_more
       long "--extensions [EXT]"
-      short "-ex [EXT]"
+      short "-e [EXT]"
       convert :list
 
       validate -> input do
@@ -61,7 +62,7 @@ module GitFame
     end
 
     option :before do
-      desc "Only changes made after this date"
+      desc "Only changes made before this date"
       long "--before [DATE]"
       short "-B [DATE]"
       validate -> input do
@@ -70,7 +71,7 @@ module GitFame
     end
 
     option :after do
-      desc "Only changes made before this date"
+      desc "Only changes made after this date"
       long "--after [DATE]"
       short "-A [DATE]"
 
@@ -90,7 +91,7 @@ module GitFame
     end
 
     option :branch do
-      desc "Branch to be used as starting point"
+      desc "Branch, tag or commit to be used as starting point"
       long "--branch [NAME]"
       default "HEAD"
     end
@@ -111,7 +112,7 @@ module GitFame
       cmd = new
       cmd.parse(argv, raise_on_parse_error: true)
       cmd.run
-    rescue TTY::Option::InvalidParameter, TTY::Option::InvalidArgument => e
+    rescue TTY::Option::ParseError => e
       abort e.message
     end
 
@@ -126,21 +127,31 @@ module GitFame
         exit
       end
 
-      thread = spinner.run do
+      render = spin do
         Render.new(result:, width: terminal_width, **options(:branch))
       end
 
-      thread.value.call
+      render.call
     rescue Dry::Struct::Error => e
       abort e.message
+    rescue Rugged::Error, Rugged::InvalidError, Rugged::OSError => e
+      abort "Error: #{e.message}"
     rescue Interrupt
-      exit
+      exit 130
     end
 
     private
 
     def filter
-      Filter.new(**params.to_h.compact_blank.except(:branch))
+      @filter ||= Filter.new(**params.to_h.compact_blank.except(:branch))
+    end
+
+    # Runs the block in this thread while the spinner animates in another
+    def spin
+      spinner.auto_spin
+      yield
+    ensure
+      spinner.stop
     end
 
     def spinner
@@ -153,7 +164,7 @@ module GitFame
     end
 
     def repo
-      Rugged::Repository.discover(params[:path])
+      @repo ||= Rugged::Repository.discover(params[:path])
     end
 
     def collector
@@ -161,15 +172,31 @@ module GitFame
     end
 
     def diff
-      Diff.new(commit:, **options)
+      Diff.new(commit:, path_filter: filter, **options)
     end
 
     def options(*)
       params.to_h.only(*, :log_level).compact_blank
     end
 
+    # @raise [Rugged::ReferenceError] if the current branch has no commits
+    #   or the revision is not a branch, tag or commit
     def commit
-      repo.rev_parse(params[:branch])
+      revision = params[:branch]
+
+      # An empty repository, or an orphan branch that has no commits yet
+      if revision == "HEAD" && repo.head_unborn?
+        raise Rugged::ReferenceError, "the current branch of '#{repo.workdir || repo.path}' has no commits"
+      end
+
+      resolve(revision)
+    end
+
+    # Peels annotated tags to the commit they point to
+    def resolve(revision)
+      repo.rev_parse("#{revision}^{commit}")
+    rescue Rugged::InvalidError, Rugged::ReferenceError, Rugged::ObjectError
+      raise Rugged::ReferenceError, "unknown revision '#{revision}'"
     end
 
     def result

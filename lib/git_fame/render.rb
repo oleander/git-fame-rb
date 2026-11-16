@@ -27,13 +27,18 @@ module GitFame
     #
     # @return [void]
     def call
+      if contributions.empty?
+        # Not Kernel#warn: exe/git-fame runs Ruby with -W0, which silences it
+        return $stderr.puts "No lines of code found in #{branch} for the given filters" # rubocop:disable Style/StderrPuts
+      end
+
       table = TTY::Table.new(header: FIELDS)
 
       contributions.reverse_each do |c|
         table << [escape(c.name), escape(c.email), c.lines.f, c.commits.count.f, c.files.count.f, c.dist(self)]
       end
 
-      print render(table)
+      puts render(table)
     end
 
     private
