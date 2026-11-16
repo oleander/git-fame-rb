@@ -102,6 +102,15 @@ describe GitFame::Render do
       end
     end
 
+    context "when a name is not valid UTF-8" do
+      let(:name) { (+"Ren\xE9 Descartes").force_encoding(Encoding::UTF_8) }
+      let(:render) { build(:render, result: build(:result, contributions: [build(:contribution, author: { name:, email: "rene@example.com" })])) }
+
+      it "prints the name with a replacement character" do
+        expect(stdout).to include("Ren\uFFFD Descartes")
+      end
+    end
+
     context "with a terminal wider than the table" do
       let(:render) { build(:render, result:, width: 500) }
 
