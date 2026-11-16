@@ -9,8 +9,11 @@ FactoryBot.define do
   sequence(:time) { Faker::Time.between(from: DateTime.now - 1, to: DateTime.now) }
   sequence(:number) { Faker::Number.number(digits: 2) }
   sequence(:change) do
+    path = FactoryBot.generate(:file)
+
     {
-      orig_path: FactoryBot.generate(:file),
+      path:,
+      orig_path: path,
       final_signature: {
         time: FactoryBot.generate(:time),
         email: FactoryBot.generate(:email),

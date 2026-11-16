@@ -10,6 +10,7 @@ require "rspec"
 require "pry"
 
 require_relative "factories"
+require_relative "support/git_repo"
 
 RSpec.configure do |config|
   config.example_status_persistence_file_path = ".stats.rspec"

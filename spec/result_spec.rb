@@ -19,5 +19,18 @@ describe GitFame::Result do
 
   describe "#files" do
     its(:files) { is_expected.to be_present }
+
+    context "when several authors contributed to the same file" do
+      subject(:result) do
+        build(:result, contributions: [
+          build(:contribution, files: ["README.md", "lib/a.rb"]),
+          build(:contribution, files: ["README.md"])
+        ])
+      end
+
+      it "lists each file once" do
+        expect(result.files).to contain_exactly("README.md", "lib/a.rb")
+      end
+    end
   end
 end

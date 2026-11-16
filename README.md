@@ -26,14 +26,16 @@ Arguments:
 Options:
   -A, --after [DATE]       Only changes made after this date
   -B, --before [DATE]      Only changes made before this date
-      --branch [NAME]      Branch to be used as starting point (default
-                           "HEAD")
+      --branch [NAME]      Branch, tag or commit to be used as starting point
+                           (default "HEAD")
   -E, --exclude [GLOB]     Exclude files matching the given glob pattern
   -e, --extensions [EXT]   File extensions to be included starting with a
                            period
   -h, --help               Print usage
   -I, --include [GLOB]     Include files matching the given glob pattern
-      --log-level [LEVEL]  Log level (permitted: debug,info,warn,error,fatal)
+      --log-level [LEVEL]  Log level (permitted: debug, info, warn, error,
+                           fatal)
+  -v, --version            Current version
 
 Examples:
   Include commits made since 2010
@@ -48,18 +50,36 @@ Examples:
   Only changes made to the main branch
   git fame --branch main
 
+  Lines as of a tag or commit
+  git fame --branch v1.0.0
+
   Only ruby and javascript files
   git fame --extensions .rb .js
 
   Exclude spec files and the README
-  git fame --exclude */**/*_spec.rb README.md
+  git fame --exclude '*/**/*_spec.rb' README.md
 
   Only spec files and markdown files
-  git fame --include */**/*_spec.rb */**/*.md
+  git fame --include '*/**/*_spec.rb' '*/**/*.md'
 
   A parent directory of the current directory
   git fame ../other/git/repo
 ```
+
+Use `git fame -h` or `git-fame --help` for this text. Git turns `git fame --help` into `git help fame`, which looks for a man page that does not exist.
+
+Quote glob patterns, as in the examples, so the shell passes them to `git fame` instead of expanding them.
+
+### What is counted
+
+`git fame` blames every text file in the given branch, tag or commit (`HEAD` by default). Binary files and submodules are skipped.
+
+- `lines`: lines in those files that the author changed last.
+- `commits`: commits by the author that are still the last change to at least one line.
+- `files`: files with at least one such line.
+- `dist`: the author's share of all lines, commits and files. A file with lines from several authors counts for each of them, so the file shares can add up to more than 100%.
+
+Authors are told apart by email address.
 
 ## Development
 
