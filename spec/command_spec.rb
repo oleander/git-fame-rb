@@ -31,6 +31,14 @@ describe GitFame::Command do
     it "counts only files with that extension" do
       expect { run }.to output(/Ada Lovelace *│ *ada@example.com *│ *2 *│/).to_stdout
     end
+
+    it "does not blame files with other extensions" do
+      allow(Rugged::Blame).to receive(:new).and_call_original
+
+      expect { run }.to output.to_stdout
+      expect(Rugged::Blame).to have_received(:new).with(anything, "README.md", anything).once
+      expect(Rugged::Blame).not_to have_received(:new).with(anything, "lib/a.rb", anything)
+    end
   end
 
   context "with an annotated tag as --branch" do
@@ -66,7 +74,35 @@ describe GitFame::Command do
     after { empty.remove }
 
     it "exits with an error message" do
-      expect { run }.to raise_error(SystemExit).and output(/\AError: repository at .+ has no commits/).to_stderr
+      expect { run }.to raise_error(SystemExit).and output(/\AError: the current branch of .+ has no commits/).to_stderr
+    end
+  end
+
+  context "when the current branch has no commits but another branch has" do
+    let(:args) { [git.workdir] }
+
+    before { git.orphan("trunk") }
+
+    it "exits with an error message" do
+      expect { run }.to raise_error(SystemExit).and output(/\AError: the current branch of .+ has no commits/).to_stderr
+    end
+  end
+
+  context "when the repository cannot be read" do
+    let(:args) { [git.workdir] }
+
+    before { allow(Rugged::Repository).to receive(:discover).and_raise(Rugged::OSError, "failed to open: Permission denied") }
+
+    it "exits with an error message" do
+      expect { run }.to raise_error(SystemExit).and output(/\AError: failed to open: Permission denied/).to_stderr
+    end
+  end
+
+  context "with an invalid --log-level" do
+    let(:args) { [git.workdir, "--log-level", "loud"] }
+
+    it "exits with the parser's message" do
+      expect { run }.to raise_error(SystemExit).and output(/unpermitted value `loud` for '--log-level' option/).to_stderr
     end
   end
 

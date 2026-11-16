@@ -151,7 +151,7 @@ describe GitFame::Filter do
     end
 
     context "when the [exclude] pattern and the path contain non-ASCII characters" do
-      subject(:filter) { build(:filter, exclude: Set["项*"], log_level: :debug) }
+      subject(:filter) { build(:filter, exclude: Set["项*"]) }
 
       let(:changes) { super().merge(path: "项目记录.txt", orig_path: "项目记录.txt".b) }
 
@@ -159,8 +159,12 @@ describe GitFame::Filter do
         expect { |b| filter.call(changes, &b) }.not_to yield_control
       end
 
-      it "logs the excluded file" do
-        expect { filter.call(changes) { nil } }.to output(/项目记录.txt excluded by \[exclude\]/).to_stdout
+      context "with debug logging" do
+        subject(:filter) { build(:filter, exclude: Set["项*"], log_level: :debug) }
+
+        it "logs the excluded file" do
+          expect { filter.call(changes) { nil } }.to output(/项目记录.txt excluded by \[exclude\]/).to_stdout
+        end
       end
     end
 
@@ -201,6 +205,10 @@ describe GitFame::Filter do
 
     it "rejects a file with another extension" do
       expect(filter.path?("README.md")).to be(false)
+    end
+
+    it "handles a file name that is not valid UTF-8" do
+      expect(filter.path?((+"caf\xE9.rb").force_encoding(Encoding::UTF_8))).to be(true)
     end
   end
 end

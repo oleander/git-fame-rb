@@ -112,7 +112,7 @@ module GitFame
       cmd = new
       cmd.parse(argv, raise_on_parse_error: true)
       cmd.run
-    rescue TTY::Option::InvalidParameter, TTY::Option::InvalidArgument => e
+    rescue TTY::Option::ParseError => e
       abort e.message
     end
 
@@ -134,7 +134,7 @@ module GitFame
       render.call
     rescue Dry::Struct::Error => e
       abort e.message
-    rescue Rugged::Error, Rugged::InvalidError => e
+    rescue Rugged::Error, Rugged::InvalidError, Rugged::OSError => e
       abort "Error: #{e.message}"
     rescue Interrupt
       exit 130
@@ -179,19 +179,24 @@ module GitFame
       params.to_h.only(*, :log_level).compact_blank
     end
 
-    # @raise [Rugged::Error] if the repository has no commits or the
-    #   revision is not a branch, tag or commit
+    # @raise [Rugged::ReferenceError] if the current branch has no commits
+    #   or the revision is not a branch, tag or commit
     def commit
-      if repo.empty?
-        raise Rugged::ReferenceError, "repository at '#{repo.workdir || repo.path}' has no commits"
+      revision = params[:branch]
+
+      # An empty repository, or an orphan branch that has no commits yet
+      if revision == "HEAD" && repo.head_unborn?
+        raise Rugged::ReferenceError, "the current branch of '#{repo.workdir || repo.path}' has no commits"
       end
 
-      # Peels annotated tags to the commit they point to
-      repo.rev_parse("#{params[:branch]}^{commit}")
-    rescue Rugged::InvalidError, Rugged::ReferenceError, Rugged::ObjectError
-      raise if repo.empty?
+      resolve(revision)
+    end
 
-      raise Rugged::ReferenceError, "unknown revision '#{params[:branch]}'"
+    # Peels annotated tags to the commit they point to
+    def resolve(revision)
+      repo.rev_parse("#{revision}^{commit}")
+    rescue Rugged::InvalidError, Rugged::ReferenceError, Rugged::ObjectError
+      raise Rugged::ReferenceError, "unknown revision '#{revision}'"
     end
 
     def result

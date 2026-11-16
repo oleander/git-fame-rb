@@ -35,7 +35,7 @@ describe GitFame::Render do
       let(:render) { build(:render, result: build(:result, contributions: [])) }
 
       it "prints nothing to stdout" do
-        expect { render.call }.not_to output.to_stdout
+        expect { expect { render.call }.not_to output.to_stdout }.to output.to_stderr
       end
 
       it "explains why the table is missing" do

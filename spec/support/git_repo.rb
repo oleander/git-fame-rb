@@ -43,6 +43,11 @@ class GitRepo
                                 parents:, update_ref: "HEAD")
   end
 
+  # Points HEAD at a branch without commits, like `git switch --orphan`
+  def orphan(branch)
+    repo.head = "refs/heads/#{branch}"
+  end
+
   # Tags HEAD with an annotated tag
   def tag(name)
     repo.tags.create(name, "HEAD", message: "Release #{name}", tagger: DEFAULT_AUTHOR.merge(time: Time.now))

@@ -18,6 +18,8 @@ module GitFame
     #
     # @return [void]
     def each(&block)
+      return enum_for(:each) unless block
+
       tree.walk(:preorder).each do |root, entry|
         path = root + entry[:name]
 

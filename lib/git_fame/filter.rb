@@ -44,6 +44,10 @@ module GitFame
     #
     # @return [Boolean]
     def path?(path)
+      # File names are bytes; one that is not valid UTF-8 would make
+      # File.fnmatch? raise ArgumentError
+      path = path.scrub
+
       case attributes
       in { exclude: excluded } if excluded.any? { File.fnmatch?(_1, path, OPT) }
         say("File %s excluded by [exclude] (%p)", path, excluded)

@@ -35,6 +35,14 @@ describe GitFame::Diff do
     end
   end
 
+  context "without a block" do
+    before { git.commit({ "README.md" => "hello\n" }) }
+
+    it "returns an enumerator" do
+      expect(diff.each).to be_an(Enumerator)
+    end
+  end
+
   context "with a filter" do
     let(:diff) { described_class.new(commit: git.repo.head.target, path_filter: build(:filter, extensions: Set[".rb"])) }
 
