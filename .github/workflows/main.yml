@@ -6,9 +6,11 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Runs on main are never cancelled: the release job must not stop halfway.
+# A new push to a pull request cancels its outdated run. Every push to main
+# gets a group of its own, so a newer push never cancels or replaces it and the
+# release job runs for the commit that changed the version.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
@@ -131,10 +133,11 @@ jobs:
 
   # Publishes the version in lib/git_fame/version.rb once. Pushes to main that
   # do not change the version find it already released and skip every step.
+  # Run the workflow by hand on main to finish a release that failed halfway.
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     needs: [rubocop, rspec, gem, devcontainer, dockerfile]
     permissions:
       contents: write
@@ -158,11 +161,14 @@ jobs:
           version="$(ruby -e 'require "./lib/git_fame/version"; print GitFame::VERSION')"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
-            echo "tagged=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "tagged=false" >> "$GITHUB_OUTPUT"
-          fi
+          # With --exit-code, git ls-remote exits 2 when the tag does not exist
+          status=0
+          git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null || status=$?
+          case "$status" in
+            0) echo "tagged=true" >> "$GITHUB_OUTPUT" ;;
+            2) echo "tagged=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::git ls-remote failed with exit status $status"; exit 1 ;;
+          esac
 
           status="$(curl -sS -o /dev/null -w '%{http_code}' "https://rubygems.org/api/v2/rubygems/git_fame/versions/$version.json")"
           case "$status" in
@@ -177,26 +183,34 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.state.outputs.version }}
         run: |
-          # Release notes come from the CHANGELOG.md section for this version,
-          # or from the merged pull requests when that section is missing.
+          # Release notes come from the "## [X.Y.Z]" section of CHANGELOG.md, up
+          # to the next heading or link definition, or from the merged pull
+          # requests when that section is missing or empty.
           touch release-notes.md
           if [ -f CHANGELOG.md ]; then
-            awk -v version="$VERSION" '
-              index($0, "## [" version "]") == 1 || index($0, "## " version) == 1 { found = 1; next }
-              found && /^## / { exit }
+            awk -v heading="## [$VERSION]" '
+              found && (/^## / || /^\[[^]]+\]: /) { exit }
               found { print }
+              index($0, heading) == 1 { found = 1 }
             ' CHANGELOG.md > release-notes.md
           fi
 
-          if [ -s release-notes.md ]; then
+          if grep -q '[^[:space:]]' release-notes.md; then
             gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file release-notes.md
           else
             gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes
           fi
 
-      - name: Build gem
+      # Build from the tag: when an earlier run tagged an older commit and then
+      # failed to push the gem, the gem must match that tag, not this commit
+      - name: Build gem from the tag
         if: steps.state.outputs.published == 'false'
-        run: gem build git_fame.gemspec
+        env:
+          VERSION: ${{ steps.state.outputs.version }}
+        run: |
+          git fetch --no-tags origin "refs/tags/v$VERSION:refs/tags/v$VERSION"
+          git checkout --detach "v$VERSION"
+          gem build git_fame.gemspec
 
       - name: Publish gem to RubyGems
         if: steps.state.outputs.published == 'false'
