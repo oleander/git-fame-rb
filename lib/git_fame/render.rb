@@ -44,11 +44,13 @@ module GitFame
     end
 
     # Writes tabs and line breaks as \t, \r and \n, like the escape step in
-    # tty-table, but before the column widths are measured
+    # tty-table, but before the column widths are measured. Rugged labels
+    # author names UTF-8 even when a commit stored them in another encoding;
+    # invalid bytes become U+FFFD instead of raising ArgumentError.
     #
     # @return [String]
     def escape(text)
-      text.gsub(/[\t\r\n]/) { |char| char.dump.delete('"') }
+      text.scrub.gsub(/[\t\r\n]/) { |char| char.dump.delete('"') }
     end
 
     # Natural column widths, with name and email truncated as needed to fit
