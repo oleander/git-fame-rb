@@ -1,5 +1,6 @@
 # Dependabot version updates. Each ecosystem opens one grouped pull request
-# per week instead of one pull request per dependency.
+# per week instead of one pull request per dependency, and waits 7 days after
+# a release before proposing it.
 # Options: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 
 version: 2
@@ -9,6 +10,8 @@ updates:
     versioning-strategy: increase
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       bundler:
         patterns: ["*"]
@@ -17,6 +20,8 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns: ["*"]
