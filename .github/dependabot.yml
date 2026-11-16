@@ -1,12 +1,27 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# Dependabot version updates. Each ecosystem opens one grouped pull request
+# per week instead of one pull request per dependency, and waits 7 days after
+# a release before proposing it.
+# Options: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 
 version: 2
 updates:
   - package-ecosystem: bundler
-    directory: '/'
+    directory: "/"
     versioning-strategy: increase
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      bundler:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ["*"]

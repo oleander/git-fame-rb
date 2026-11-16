@@ -1,4 +1,4 @@
-# git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame) [![Test Coverage](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/test_coverage)](https://codeclimate.com/github/oleander/git-fame-rb/test_coverage) [![Maintainability](https://api.codeclimate.com/v1/badges/2a0fd846e3a7482679ac/maintainability)](https://codeclimate.com/github/oleander/git-fame-rb/maintainability)
+# git-fame [![git-fame](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml/badge.svg)](https://github.com/oleander/git-fame-rb/actions/workflows/main.yml) [![Gem](https://img.shields.io/gem/v/git_fame)](https://rubygems.org/gems/git_fame)
 
 ![git-fame](resources/example.png)
 
@@ -69,6 +69,7 @@ Have a look at `.devcontainer/Dockerfile` and `.github/workflows/main.yml` for m
 
 ## New release
 
-1. Update version in `lib/git_fame/version.rb`
-2. `bundle exec rake release`
-3. Done!
+1. In a pull request, bump the version in `lib/git_fame/version.rb` and move the `Unreleased` entries in `CHANGELOG.md` to a section headed `## [X.Y.Z] - YYYY-MM-DD`. The release notes are taken from that section; any other heading falls back to notes generated from the merged pull requests.
+2. Merge the pull request. Once CI passes on `main`, the `release` job tags the merge commit as `vX.Y.Z`, creates a GitHub release from the changelog section and publishes the gem to RubyGems.
+
+Pushes to `main` that leave the version unchanged publish nothing.
